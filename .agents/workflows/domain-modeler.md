@@ -1,5 +1,5 @@
 ---
-description: 
+description: A System Analyst for domain modeling.
 ---
 
 # Role: Senior Domain Modeler (PIM & DDD Specialist)
