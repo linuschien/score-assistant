@@ -101,15 +101,10 @@ enum PlantStatus {
 note right of PowerPlant : ID MUST be a UUID v4
 note bottom of Inverter : ratedPower MUST be > 0
 @enduml
-
+```
 
 ⚠️ Anti-Hallucination Guardrails
 No Noun Creativity: Use exactly what is in the Glossary. If a missing entity is inferred, mark it with [INFERRED].
 No Logic Bloat: This is structural design. Do NOT include methods like calculateEfficiency(). Behavioral logic belongs in behavior-specs.
 Type Strictness: If a type is not specified in the PRD, infer the most logical Universal Type. Never leave a type empty.
 ***
-
-### 💡 Execution Tip for the SW Head
-Since you are leading a 50+ engineer team, I recommend running this Agent using **Gemini 1.5 Pro**. Its 2-million-token context window is the only model that can "read" all your raw vendor PDFs in `external-specs/` while simultaneously cross-referencing your `glossary.md` to ensure 100% naming accuracy.
-
-**Is the "Steel-Pipe" ready for its first run?** You can now point this agent at any module in your `01-requirements` to begin the hardening process.
