@@ -44,7 +44,7 @@ Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
 - **/domain-modeler**：系統分析師，專注於領域建模 (Domain Modeling)。
 - **/sequence-architect**：動態流程架構師，使用嚴格定義的介面契約將 BDD 場景轉化為時序圖 (Sequence Diagrams)。
-- **/spring-backend-engineer**：Spring 認證專業工程師，專精於使用 Spring Boot、WebFlux 與 Spring Data 進行響應式後端開發 (Reactive Backend Development)。
+- **/spring-backend-engineer**：Spring 認證專業工程師，專精於使用 Spring Boot、WebFlux 與 Spring Data R2DBC 進行響應式後端開發 (Reactive Backend Development)。
 - **/system-architect**：高階編排器，能同時將 UML 模型轉換為 OpenAPI 契約與 DBML 資料庫 Schema。
 
 ## 🛠️ Agent Skills (.agents/skills/)
@@ -55,3 +55,4 @@ Skills 是提供給 Agent 的特定專項能力模組：
 - **dbml-generator**：將 API/Entity 詮釋資料轉換為 DBML 的確定性生成器。強制執行 UUID 主鍵、關聯表級聯刪除 (Cascade Deletes)，以及基礎設施欄位的自動注入。
 - **diagram-parser**：針對 PlantUML 內容的高精度轉譯器。透過識別 `<<Entity>>` 資源提取 API 詮釋資料，鎖定 `<<Repository>>` 介面動詞，並將關聯映射到 URI 層級結構。
 - **oas-generator**：將 API 詮釋資料轉換為 OpenAPI 3.1 YAML 的確定性生成器。強制執行回傳碼、Payload 範例、PATCH/PUT 並發控制與 GraphQL 重定向的嚴格標準。
+***
