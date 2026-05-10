@@ -44,6 +44,7 @@ Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
 - **/domain-modeler**：系統分析師，專注於領域建模 (Domain Modeling)。
 - **/sequence-architect**：動態流程架構師，使用嚴格定義的介面契約將 BDD 場景轉化為時序圖 (Sequence Diagrams)。
+- **/spring-backend-engineer**：Spring 認證專業工程師，專精於使用 Spring Boot、WebFlux 與 Spring Data 進行響應式後端開發 (Reactive Backend Development)。
 - **/system-architect**：高階編排器，能同時將 UML 模型轉換為 OpenAPI 契約與 DBML 資料庫 Schema。
 
 ## 🛠️ Agent Skills (.agents/skills/)
