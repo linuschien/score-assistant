@@ -35,6 +35,7 @@
 6. **external-integrations/ (外部系統整合)**
    - **內容**：外部系統的映射與 Mock 規格。
    - **意義**：作為**防腐層 (Anticorruption Layer)**，將廠商雜亂的暫存器 (如 Modbus `0x4001`) 轉換為系統內部的清潔模型 (如 `Grid_Voltage`)。
+   - **`hexagonal-service-manifest-schema.yaml`**：標準化的六角架構微服務清單 (Hexagonal Microservice Manifest) Schema 定義。它強制執行 Ports 與 Adapters 的嚴格驗證，確保所有的介面與外部實作均遵守架構規範。
 
 ## 🤖 Agent Workflows (.agents/workflows/)
 
