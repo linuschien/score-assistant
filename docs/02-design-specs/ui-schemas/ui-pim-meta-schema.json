@@ -1,0 +1,84 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Universal SDD UI PIM Meta-Schema",
+    "description": "SDD Production Line: Semantic Intent Spec based on Web Components and Contract Triangulation.",
+    "$defs": {
+        "ui_element": {
+            "type": "object",
+            "required": [
+                "id",
+                "abstract_type"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the element. Used for state management and DOM mapping."
+                },
+                "abstract_type": {
+                    "description": "Web Components based semantic category.",
+                    "enum": [
+                        "Container",
+                        "Section",
+                        "Grid",
+                        "Stack",
+                        "Heading",
+                        "Text",
+                        "Metric",
+                        "Chart",
+                        "Table",
+                        "Field",
+                        "Selection",
+                        "Switch",
+                        "Trigger",
+                        "Overlay"
+                    ]
+                },
+                "semantic_variant": {
+                    "type": "string",
+                    "description": "Optional hint for the Jig (e.g., Shadcn/UI). Examples: 'primary', 'dangerous', 'accordion', 'tabs', 'modal'."
+                },
+                "label": {
+                    "type": "string",
+                    "description": "The display name or i18n key for the element."
+                },
+                "data_ref": {
+                    "type": "string",
+                    "description": "Contract Link: Must map to a specific operationId in api-contracts/openapi.yaml."
+                },
+                "behavior_ref": {
+                    "type": "string",
+                    "description": "Contract Link: Must map to a specific Scenario title in behavior-specs/*.feature."
+                },
+                "children": {
+                    "type": "array",
+                    "description": "Recursive structure to represent nested UI trees.",
+                    "items": {
+                        "$ref": "#/$defs/ui_element"
+                    }
+                }
+            }
+        }
+    },
+    "type": "object",
+    "required": [
+        "ui_id",
+        "domain_module",
+        "root_element"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "ui_id": {
+            "type": "string",
+            "description": "Unique ID for this UI specification file."
+        },
+        "domain_module": {
+            "type": "string",
+            "description": "The target domain module. Must match the Package Name in UML Domain Models."
+        },
+        "root_element": {
+            "$ref": "#/$defs/ui_element",
+            "description": "The single entry point for the UI component tree."
+        }
+    }
+}
