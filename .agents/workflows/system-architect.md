@@ -35,7 +35,7 @@ This agent manages the pipeline as a "Fan-out" operation to ensure cross-layer c
     - For **each** `<<Entity>>` in the metadata snapshot:
         1. Determine which Controller operations are enabled by `allowed_verbs`.
         2. Determine which Repository operations are defined by the source `<<Repository>>` interface.
-        3. Apply CQRS separation: emit `*CommandUseCase` / `*QueryUseCase` ports only when custom actions are present.
+        3. Apply CQRS separation: emit `*CommandService` / `*QueryService` ports only when custom actions are present.
         4. Emit one `{entity_snake_case}_contract.puml` to the **Contract Output** directory.
     - Enforce: PascalCase interface names, camelCase parameters, `FIXME_OPERATION` for unresolvable mappings.
 

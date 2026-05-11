@@ -1,12 +1,12 @@
 ---
 name: contract-generator
-description: Deterministic generator that transforms Entity/Repository metadata into PlantUML interface contracts (*_contract.puml). Enforces Onion Architecture layer boundaries, CQRS command/query separation, and mandates explicit Controller and Repository interface definitions.
+description: Deterministic generator that transforms Entity/Repository metadata into PlantUML interface contracts (*_contract.puml). Enforces Onion Architecture layer boundaries, CQRS command/query separation, and mandates explicit Controller and Repository interface definitions. Optional Service interfaces follow the same layer contract.
 ---
 
 # Skill: PlantUML Interface Contract Generator
 
 ## ℹ️ Objective
-Receives the same structured metadata snapshot produced by the `diagram-parser` skill and emits one `*_contract.puml` file per `<<Entity>>` resource. Each file formally declares the mandatory **Controller** and **Repository** interfaces for that resource, including all operation signatures, following the Onion Architecture and CQRS patterns.
+Receives the same structured metadata snapshot produced by the `diagram-parser` skill and emits one `*_contract.puml` file per `<<Entity>>` resource. Each file formally declares the mandatory **Controller** and **Repository** interfaces for that resource, including all operation signatures, following the Onion Architecture and CQRS patterns. Optional **Service** ports are generated when custom actions are present.
 
 ## 🏗️ Architecture Constraints
 
@@ -15,15 +15,15 @@ Receives the same structured metadata snapshot produced by the `diagram-parser` 
 |---|---|---|
 | `<<Controller>>` | `<<interface>>` | `adapter.in.web` |
 | `<<Repository>>` | `<<interface>>` | `adapter.out.persistence` |
-| `<<UseCase>>` (Command) | `<<interface>>` | `application.port.in` |
-| `<<UseCase>>` (Query) | `<<interface>>` | `application.port.in` |
+| `<<Service>>` (Command) | `<<interface>>` | `application.port.in` |
+| `<<Service>>` (Query) | `<<interface>>` | `application.port.in` |
 
-> Only **Controller** and **Repository** are mandatory outputs. `UseCase` ports are generated only when the metadata includes custom actions.
+> Only **Controller** and **Repository** are mandatory outputs. `Service` ports are generated only when the metadata includes custom actions.
 
 ### CQRS Separation Rule
-- **Command operations** (`Create`, `Update`, `Delete`, custom actions) → belong to a `*CommandUseCase` interface.
-- **Query operations** (`GetById`, collection reads) → belong to a `*QueryUseCase` interface.
-- Controllers depend on **both** use-case interfaces via constructor injection (shown as `..>` dependency arrows).
+- **Command operations** (`Create`, `Update`, `Delete`, custom actions) → belong to a `*CommandService` interface.
+- **Query operations** (`GetById`, collection reads) → belong to a `*QueryService` interface.
+- Controllers depend on **both** service interfaces via constructor injection (shown as `..>` dependency arrows).
 
 ---
 
@@ -61,23 +61,23 @@ Generate an interface in the `adapter.out.persistence` package derived directly 
 - Annotate with `<<Repository>>`
 - Extend `JpaRepository<{Entity}, UUID>` when the metadata `hardening_flags.put_sync` is true (signals Spring Data backing).
 
-### 4. Optional Interfaces: `<<UseCase>>` Ports (CQRS)
+### 4. Optional Interfaces: `<<Service>>` Ports (CQRS)
 Generate only when **custom actions** exist in metadata:
 
-- `{Entity}CommandUseCase` — one method per Create/Update/Delete/Custom Action verb.
-- `{Entity}QueryUseCase` — one method per Get/Query verb.
+- `{Entity}CommandService` — one method per Create/Update/Delete/Custom Action verb.
+- `{Entity}QueryService` — one method per Get/Query verb.
 
 ### 5. Dependency Arrows
 Draw the following `..>` (usage/dependency) arrows to express wiring:
 
 ```
-{Entity}Controller ..> {Entity}CommandUseCase : uses
-{Entity}Controller ..> {Entity}QueryUseCase   : uses
-{Entity}CommandUseCase ..> {Entity}Repository  : uses
-{Entity}QueryUseCase   ..> {Entity}Repository  : uses
+{Entity}Controller ..> {Entity}CommandService : uses
+{Entity}Controller ..> {Entity}QueryService   : uses
+{Entity}CommandService ..> {Entity}Repository  : uses
+{Entity}QueryService   ..> {Entity}Repository  : uses
 ```
 
-If no UseCase interfaces are generated, draw Controller → Repository directly.
+If no Service interfaces are generated, draw Controller → Repository directly.
 
 ### 6. Version / Concurrency Annotation
 If `hardening_flags.409_required` is `true`, add the note:
