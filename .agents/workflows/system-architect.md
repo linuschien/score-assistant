@@ -33,11 +33,13 @@ This agent manages the pipeline as a "Fan-out" operation to ensure cross-layer c
     - Enforce UUID Primary Keys, M:M Join Table generation, and Cascade Deletes.
 - **Track C (Interface Contracts)**: Pass the metadata to `contract-generator`.
     - For **each** `<<Entity>>` in the metadata snapshot:
-        1. Determine which Controller operations are enabled by `allowed_verbs`.
-        2. Determine which Repository operations are defined by the source `<<Repository>>` interface.
-        3. Apply CQRS separation: emit `*CommandService` / `*QueryService` ports only when custom actions are present.
-        4. Emit one `{entity_snake_case}_contract.puml` to the **Contract Output** directory.
+        1. Emit a `{Entity}RestController` (`adapter.in.web.rest`) for mutation verbs (POST/PUT/DELETE) and optional single-resource GET.
+        2. Emit a `{Entity}GraphQLResolver` (`adapter.in.web.graphql`) for collection/filtered queries (Collection GET is always GraphQL-only).
+        3. Emit a `{Entity}Repository` (`adapter.out.persistence`) from the source `<<Repository>>` interface operations.
+        4. Apply CQRS separation: emit `*CommandService` / `*QueryService` ports only when custom actions are present.
+        5. Emit one `{entity_snake_case}_contract.puml` to the **Contract Output** directory.
     - Enforce: PascalCase interface names, camelCase parameters, `FIXME_OPERATION` for unresolvable mappings.
+    - Enforce: Mutations MUST NOT appear in `GraphQLResolver`; Collection queries MUST NOT appear in `RestController`.
 
 ### Phase 3: Integrity Audit & Persistence
 - Verify that every `<<Entity>>` parsed from the source is represented in **all three** outputs: OAS path, DBML table, and a `*_contract.puml` file.
