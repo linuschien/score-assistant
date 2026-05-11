@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Universal SDD UI PIM Meta-Schema",
-    "description": "SDD Production Line: Semantic Intent Spec based on Web Components and Contract Triangulation.",
+    "title": "Universal SDD UI PIM Meta-Schema (Full Spec)",
+    "description": "SDD Production Line: Semantic Intent Specification with Interaction Logic and Contractual Linkage.",
     "$defs": {
         "ui_element": {
             "type": "object",
@@ -13,10 +13,10 @@
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "Unique identifier for the element. Used for state management and DOM mapping."
+                    "description": "The unique functional identifier for this element. Used as a key for State Management and as a 'target_id' for interactions."
                 },
                 "abstract_type": {
-                    "description": "Web Components based semantic category.",
+                    "description": "The Web Components-based semantic category. Dictates the core behavior and role of the component in a platform-independent manner.",
                     "enum": [
                         "Container",
                         "Section",
@@ -36,23 +36,55 @@
                 },
                 "semantic_variant": {
                     "type": "string",
-                    "description": "Optional hint for the Jig (e.g., Shadcn/UI). Examples: 'primary', 'dangerous', 'accordion', 'tabs', 'modal'."
+                    "description": "A hint for the Transpiler/Jig to select a specific implementation variant (e.g., 'primary', 'destructive', 'accordion', 'tabs', 'modal')."
                 },
                 "label": {
                     "type": "string",
-                    "description": "The display name or i18n key for the element."
+                    "description": "The human-readable label or the internationalization (i18n) key for the component's display name."
                 },
                 "data_ref": {
                     "type": "string",
-                    "description": "Contract Link: Must map to a specific operationId in api-contracts/openapi.yaml."
+                    "description": "Contractual Pointer: The exact 'operationId' in docs/02-design-specs/api-contracts/openapi.yaml that provides data for this component."
                 },
                 "behavior_ref": {
                     "type": "string",
-                    "description": "Contract Link: Must map to a specific Scenario title in behavior-specs/*.feature."
+                    "description": "Contractual Pointer: The Scenario title in docs/02-design-specs/behavior-specs/*.feature that defines the UI logic/validation."
+                },
+                "interactions": {
+                    "type": "array",
+                    "description": "Defines declarative event-driven logic between components within the same UI scope.",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "on_event",
+                            "target_id",
+                            "behavior_ref"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "on_event": {
+                                "enum": [
+                                    "on_click",
+                                    "on_change",
+                                    "on_submit",
+                                    "on_hover"
+                                ],
+                                "description": "The UI event that triggers this interaction."
+                            },
+                            "target_id": {
+                                "type": "string",
+                                "description": "The 'id' of another ui_element in this schema that will react to this event."
+                            },
+                            "behavior_ref": {
+                                "type": "string",
+                                "description": "Points to a BDD Scenario explaining the transformation or data-flow during this interaction."
+                            }
+                        }
+                    }
                 },
                 "children": {
                     "type": "array",
-                    "description": "Recursive structure to represent nested UI trees.",
+                    "description": "Recursive list of nested ui_elements. Enables complex tree-based UI layouts.",
                     "items": {
                         "$ref": "#/$defs/ui_element"
                     }
@@ -70,15 +102,15 @@
     "properties": {
         "ui_id": {
             "type": "string",
-            "description": "Unique ID for this UI specification file."
+            "description": "Unique identifier for this specific UI specification file (e.g., 'charging-session-monitor')."
         },
         "domain_module": {
             "type": "string",
-            "description": "The target domain module. Must match the Package Name in UML Domain Models."
+            "description": "Domain containment. Must align with the Package/Namespace defined in UML models and the Glossary."
         },
         "root_element": {
             "$ref": "#/$defs/ui_element",
-            "description": "The single entry point for the UI component tree."
+            "description": "The single entry point for the UI component tree. All visual elements are nested within this node."
         }
     }
 }
