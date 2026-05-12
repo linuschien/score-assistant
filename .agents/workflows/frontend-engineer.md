@@ -25,10 +25,10 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 
 | Artifact | Path | Description |
 |---|---|---|
-| **JSON-Render Spec** | `src/schemas/{ui_id}.render-schema.json` | The recursive JSON spec tree passed to `<Renderer spec={spec} />` |
-| **Component Registry** | `src/json-render/component-registry.ts` | Extends `@json-render/shadcn` preset with custom components |
-| **API Hook Stubs** | `src/hooks/use-{operationId}.ts` | Typed TanStack Query hooks |
-| **Page Entry Point** | `src/pages/{ui_id}.page.tsx` | Natively renders `<Renderer spec={spec} registry={registry} />` |
+| **JSON-Render Spec** | `engineers/03-implementations/frontend/src/schemas/{ui_id}.render-schema.json` | The recursive JSON spec tree passed to `<Renderer spec={spec} />` |
+| **Component Registry** | `engineers/03-implementations/frontend/src/json-render/component-registry.ts` | Extends `@json-render/shadcn` preset with custom components |
+| **API Hook Stubs** | `engineers/03-implementations/frontend/src/hooks/use-{operationId}.ts` | Typed TanStack Query hooks |
+| **Page Entry Point** | `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx` | Natively renders `<Renderer spec={spec} registry={registry} />` |
 
 ---
 
@@ -52,14 +52,14 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 
 ### Phase 4 — Component Registry Generation
 > **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  
-> Emit or update `src/json-render/component-registry.ts`. The registry directly imports the base preset from `@json-render/shadcn` and merges any custom components. This file is strictly **additive** — never remove existing keys.
+> Emit or update `engineers/03-implementations/frontend/src/json-render/component-registry.ts`. The registry directly imports the base preset from `@json-render/shadcn` and merges any custom components. This file is strictly **additive** — never remove existing keys.
 
 ### Phase 5 — API Hook Stub Generation
 > **Invoke Skill**: Read `.agents/skills/api-hook-generator/SKILL.md`.  
-> Generate `src/hooks/use-{operationId}.ts` for every unique `data_ref` operationId. Skip placeholders.
+> Generate `engineers/03-implementations/frontend/src/hooks/use-{operationId}.ts` for every unique `data_ref` operationId. Skip placeholders.
 
 ### Phase 6 — Page Entry Point
-Generate a completely standard, clean entry point leveraging the official library natively at `src/pages/{ui_id}.page.tsx`:
+Generate a completely standard, clean entry point leveraging the official library natively at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx`:
 ```tsx
 // AUTO-GENERATED — DO NOT EDIT MANUALLY
 import React from 'react';
@@ -81,5 +81,5 @@ Emit a Markdown Generation Report covering: output files written, component reso
 - **Prioritize @json-render/shadcn**: Always leverage the 36 pre-built components out of the box. Do not recreate standard buttons, inputs, selects, or layout wrappers manually.
 - **Pure JSON Specs**: Render schemas are pure JSON data — zero JSX or framework syntax.
 - **Registry is Additive**: Only add new registry keys; never remove existing ones to guarantee reverse compatibility for existing deployed pages.
-- **Read-Only Sources**: Never write to `docs/`. All output goes strictly to `src/`.
+- **Read-Only Sources**: Never write to `docs/`. All output goes strictly to `engineers/03-implementations/frontend/src/`.
 - **Idempotency**: Providing the same manifest input MUST yield byte-identical schema output.

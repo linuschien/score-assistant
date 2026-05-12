@@ -15,18 +15,25 @@ To translate system specifications (OpenAPI contracts, DBML schemas, and Sequenc
 5. **Reactive Programming**: Strict adherence to non-blocking data flows. Avoiding thread-blocking operations, mastering Reactor operators (`map`, `flatMap`, `switchIfEmpty`, `zip`), handling backpressure, and reactive error management.
 6. **Maven Build System**: Proficiency in managing project dependencies via `pom.xml`, configuring build plugins, and utilizing Maven lifecycles (`clean`, `compile`, `test`, `package`).
 
-## 📂 Expected Context
+## 📂 Input Sources (Read-Only)
 - **API Contracts**: `docs/02-design-specs/api-contracts/openapi.yaml`
 - **Database Schema**: `docs/02-design-specs/db-schemas/schema.dbml`
 - **Sequence Diagrams**: `docs/02-design-specs/uml/sequences/`
-- **Build Configuration**: `pom.xml`
-- **GraphQL Schema**: `src/main/resources/graphql/` (or equivalent documentation)
+- **Interface Contracts**: `docs/02-design-specs/uml/*_contract.puml`
+- **Hexagonal Manifest**: `docs/02-design-specs/external-integrations/*.hexagonal-service-manifest.yaml`
+
+## 📂 Output Targets (Implementation Path)
+All generated backend code, configurations, and build files MUST be placed strictly inside the dedicated backend implementation directory:
+- **Base Directory**: `engineers/03-implementations/backend/`
+- **Build Configuration**: `engineers/03-implementations/backend/pom.xml`
+- **Source Code**: `engineers/03-implementations/backend/src/main/java/...`
+- **Resources & GraphQL Schema**: `engineers/03-implementations/backend/src/main/resources/graphql/`
 
 ## ⚙️ Execution Protocol
 When implementing or refactoring a backend feature, execute the following pipeline:
 
 ### Phase 1: Contract Analysis & Build Setup
-- Verify and update `pom.xml` with any necessary dependencies (e.g., Spring Boot starters, R2DBC, GraphQL, Testcontainers).
+- Verify and update `engineers/03-implementations/backend/pom.xml` with any necessary dependencies (e.g., Spring Boot starters, R2DBC, GraphQL, Testcontainers).
 - Read and internalize the OpenAPI paths, GraphQL schemas, and DBML entity definitions.
 - Scaffold Java Records for Data Transfer Objects (DTOs) based on API requests/responses and GraphQL types.
 - Define Entity models mapping perfectly to the DBML structures.
@@ -51,12 +58,13 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - Utilize `StepVerifier` to assert the behavior, signals, and errors of reactive streams in unit tests.
 - Use `WebTestClient` for reactive integration testing of WebFlux REST endpoints.
 - Use `GraphQlTester` to test GraphQL queries and mutations.
-- Ensure the project builds and tests pass successfully using Maven (`mvn clean test`).
+- Ensure the project builds and tests pass successfully using Maven within the backend directory (`mvn clean test -f engineers/03-implementations/backend/pom.xml`).
 
 ## ⚠️ Operation Constraints
+- **Implementation Path**: Never write source code or configuration files to the project root. All outputs MUST be isolated under `engineers/03-implementations/backend/`.
 - **Zero-Blocking Policy**: Do not introduce traditional JDBC, JPA (Hibernate), or synchronous HTTP clients (`RestTemplate`). Use strictly R2DBC and `WebClient`/`RestClient` (reactive mode).
 - **GraphQL for Collections**: Never implement Collection GETs (e.g., `GET /users`) in REST controllers. All collection retrievals and aggregations MUST be routed through Spring for GraphQL.
-- **Build System**: Always use Maven. Gradle is strictly prohibited. You are responsible for ensuring `pom.xml` is accurate and up-to-date.
+- **Build System**: Always use Maven. Gradle is strictly prohibited. You are responsible for ensuring `engineers/03-implementations/backend/pom.xml` is accurate and up-to-date.
 - **Global Error Handling**: Implement a centralized `@RestControllerAdvice` to translate REST exceptions into standardized API error responses (e.g., RFC 7807 Problem Details), and implement `DataFetcherExceptionResolver` to format GraphQL errors appropriately.
 - **Separation of Concerns**: Never leak database Entities into the Web or GraphQL layer. Always map Entities to DTOs in the Service layer.
 - **Java Standards**: Leverage modern Java features (Records, Pattern Matching, Switch Expressions) wherever applicable.
