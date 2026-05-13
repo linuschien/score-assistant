@@ -106,7 +106,7 @@ For **each adapter** identified in Phase 2, emit exactly one entry conforming to
 ```yaml
 - name: "{Interface}Adapter"          # Pattern: .*Adapter$ — MANDATORY
   type: "Primary" | "Secondary"       # Enum — MANDATORY
-  tech: "{technology string}"         # e.g. "Spring WebFlux", "Spring for GraphQL", "Spring Data R2DBC (H2)" — MANDATORY
+  tech: "{technology string}"         # e.g. "Spring WebFlux + Reactor Netty", "Spring for GraphQL + Reactor Netty", "Spring Data R2DBC (H2)" — MANDATORY
   stereotype: "<<{Stereotype}>>"      # Default: <<Service>> if not otherwise determined
   port:
     interface: "{InterfaceName}"      # Interface name from contract scan — MANDATORY
@@ -117,8 +117,8 @@ For **each adapter** identified in Phase 2, emit exactly one entry conforming to
 
 | Priority | Context Signal | Assigned `tech` Value |
 |---|---|---|
-| 1 | REST verbs in OpenAPI + Spring indicators | `Spring WebFlux` |
-| 2 | GraphQL path in OpenAPI | `Spring for GraphQL` |
+| 1 | REST verbs in OpenAPI + Spring indicators | `Spring WebFlux + Reactor Netty` |
+| 2 | GraphQL path in OpenAPI | `Spring for GraphQL + Reactor Netty` |
 | 3 | DBML Table — no explicit DB comment (default) | `Spring Data R2DBC (H2)` |
 | 4 | DBML Table — comment explicitly states PostgreSQL | `Spring Data R2DBC (PostgreSQL)` |
 | 5 | DBML Table — comment explicitly states MongoDB | `Spring Data MongoDB Reactive` |
@@ -128,6 +128,8 @@ For **each adapter** identified in Phase 2, emit exactly one entry conforming to
 | — | No clear signal | `FIXME_TECH` ← emit warning in Phase 4 report |
 
 > **DB Selection Policy**: H2 and PostgreSQL both use **Spring Data R2DBC** as the framework layer (via `io.r2dbc:r2dbc-h2` and `io.r2dbc:r2dbc-postgresql` drivers respectively). The default is **H2** (`Spring Data R2DBC (H2)`) for embedded, zero-config development. Upgrade to `Spring Data R2DBC (PostgreSQL)` only when the DBML schema has an explicit comment such as `// db: postgresql`. Never assume a production driver without explicit evidence.
+
+> **Web Server Selection Policy**: All non-blocking reactive web endpoints utilizing **Spring WebFlux** or **Spring for GraphQL** MUST be natively paired with **Reactor Netty** as the underlying asynchronous runtime engine. Assign `tech: "Spring WebFlux + Reactor Netty"` for REST Primary Adapters and `tech: "Spring for GraphQL + Reactor Netty"` for GraphQL Primary Adapters to reflect this mandated combination.
 
 > **Broker Selection Policy**: The designated message broker for all pub/sub event channels is a **lightweight broker** (e.g., RabbitMQ / MQTT). Heavyweight streaming platforms (e.g., Apache Kafka) are **prohibited** unless explicitly approved by the project architect. Always pair the broker with **Spring Integration** for channel routing, message transformation, and adapter wiring.
 
