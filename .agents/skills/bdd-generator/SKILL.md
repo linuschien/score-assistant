@@ -23,6 +23,10 @@ When generating Gherkin, follow these semantic rules:
   - *Example*: "Then the 'PostgreSQLAdapter' should persist the record with UUID format."
   - *Example*: "Then the 'EventPublisher' should emit a 'BatteryWarning' event."
 
+### 3. Example Mappings
+- **Scenario Outlines**: When producing Gherkins, utilize the `Examples` keyword within `Scenario Outline` blocks to explicitly describe example mappings.
+- Clearly map distinct input permutations, state conditions, and expected outcomes/side-effects using structured markdown data tables under `Examples:`.
+
 ## ⚠️ Hard Constraints
 - **Naming**: NEVER invent names. Use `glossary.md` for terms and `openapi.yaml` for methods.
 - **Language**: English only for Gherkin keywords; use Traditional Chinese for descriptions if requested, but maintain Technical English for domain nouns.

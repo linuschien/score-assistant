@@ -24,6 +24,9 @@ Classify behaviors based on the Hexagonal Manifest:
   - Focus: Integration & Unit logic.
   - Output: `docs/02-design-specs/behavior-specs/system/` -> Target: **Unit/Integration Tests**.
 
+## 📝 Execution Guidelines
+- **Example Mappings**: When producing Gherkins, utilize the `Examples` keyword (via `Scenario Outline`) to describe example mappings for various input conditions, expected behaviors, and side-effects.
+
 ## 🛠️ Skill Integration
 - **BDD Generator**: #file:.agents/skills/bdd-generator/SKILL.md
 ***
