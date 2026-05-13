@@ -39,7 +39,27 @@
 
 ## 🤖 Agent Workflows (.agents/workflows/)
 
-Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格：
+Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格。從最初的需求解析到最終的端到端驗證，十項核心工作流程在開發管線中展開為 11 個依序執行的生命週期節點：
+
+```mermaid
+graph TD
+    PO["1. /product-owner (需求解析與 User Stories)"]
+    DM["2. /domain-modeler (PlantUML 領域建模)"]
+    SysA["3. /system-architect (系統介面與契約硬化)"]
+    BA["4. /behavior-architect (User/System BDD 行為規格)"]
+    SA["5. /sequence-architect (動態時序圖繪製)"]
+    TL["6. /tech-lead (六角架構微服務清單驗證)"]
+    UID["7. /ui-designer (UI Manifests 介面設計)"]
+    QA1["8. /qa-engineer [Mode 1] (介面感知 E2E 測試案例生成)"]
+    BE["9. /spring-backend-engineer (響應式後端實作)"]
+    FE["10. /frontend-engineer (JSON-render 規格轉譯)"]
+    QA2["11. /qa-engineer [Mode 2] (瀏覽器自動化驗證與報告)"]
+
+    PO --> DM --> SysA --> BA --> SA --> TL --> UID --> QA1 --> BE --> FE --> QA2
+```
+
+以下為各 Agent Workflow 的詳細職責說明：
+
 
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
 - **/domain-modeler**：資深領域建模師，專精於領域驅動設計 (DDD) 與平台無關建模 (PIM)，將原始需求轉換為結構化、型別安全的 PlantUML 類別圖。
