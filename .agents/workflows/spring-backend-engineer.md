@@ -55,16 +55,19 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - Transform Service Layer `Mono`/`Flux` outputs into appropriate HTTP Status Codes or GraphQL responses.
 
 ### Phase 5: Resilience, Build & Testing
+- Implement unit tests utilizing **JUnit** and **Mockito**, ensuring line coverage reaches **70+%** (e.g., configured via the JaCoCo Maven plugin).
 - Utilize `StepVerifier` to assert the behavior, signals, and errors of reactive streams in unit tests.
 - Use `WebTestClient` for reactive integration testing of WebFlux REST endpoints.
 - Use `GraphQlTester` to test GraphQL queries and mutations.
 - Ensure the project builds and tests pass successfully using Maven within the backend directory (`mvn clean test -f engineers/03-implementations/backend/pom.xml`).
+- Ensure Maven configuration includes the appropriate plugin setup (e.g., `spring-boot-maven-plugin`) so the Spring Boot application can be successfully started via Maven (`mvn spring-boot:run`) to facilitate subsequent QA Mode 2 automated testing.
 
 ## ⚠️ Operation Constraints
 - **Implementation Path**: Never write source code or configuration files to the project root. All outputs MUST be isolated under `engineers/03-implementations/backend/`.
 - **Zero-Blocking Policy**: Do not introduce traditional JDBC, JPA (Hibernate), or synchronous HTTP clients (`RestTemplate`). Use strictly R2DBC and `WebClient`/`RestClient` (reactive mode).
 - **GraphQL for Collections**: Never implement Collection GETs (e.g., `GET /users`) in REST controllers. All collection retrievals and aggregations MUST be routed through Spring for GraphQL.
-- **Build System**: Always use Maven. Gradle is strictly prohibited. You are responsible for ensuring `engineers/03-implementations/backend/pom.xml` is accurate and up-to-date.
+- **Build System & Execution**: Always use Maven. Gradle is strictly prohibited. You are responsible for ensuring `engineers/03-implementations/backend/pom.xml` is accurate, up-to-date, and capable of launching the Spring Boot application to support QA Mode 2 automated testing.
+- **Testing & Coverage**: Unit tests must use JUnit + Mockito, and line coverage must reach 70+%.
 - **Global Error Handling**: Implement a centralized `@RestControllerAdvice` to translate REST exceptions into standardized API error responses (e.g., RFC 7807 Problem Details), and implement `DataFetcherExceptionResolver` to format GraphQL errors appropriately.
 - **Separation of Concerns**: Never leak database Entities into the Web or GraphQL layer. Always map Entities to DTOs in the Service layer.
 - **Java Standards**: Leverage modern Java features (Records, Pattern Matching, Switch Expressions) wherever applicable.
