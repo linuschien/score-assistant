@@ -42,19 +42,25 @@
 Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格：
 
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
-- **/domain-modeler**：系統分析師，專注於領域建模 (Domain Modeling)。
+- **/domain-modeler**：資深領域建模師，專精於領域驅動設計 (DDD) 與平台無關建模 (PIM)，將原始需求轉換為結構化、型別安全的 PlantUML 類別圖。
+- **/frontend-engineer**：資深前端工程師，專精於 React、JSON-render 與 `@json-render/shadcn`，原生利用預置的 shadcn/ui 組件將 UI Manifest 檔案轉換為執行期的 JSON-render 規格。
 - **/product-owner**：專業產品負責人，專精於將功能需求解構為結構化的 User Stories，並彙整統一的領域術語表 (Domain Glossary) 作為唯一真相來源 (Source of Truth)。
+- **/qa-engineer**：資深 QA 工程師，專精於自動化端到端 (E2E) 測試，具備兩種操作模式：自規格生成確定性的 E2E 測試案例，以及透過瀏覽器子代理 (browser subagents) 執行自動化測試並產出稽核報告。
 - **/sequence-architect**：動態流程架構師，使用嚴格定義的介面契約將 BDD 場景轉化為時序圖 (Sequence Diagrams)。
-- **/spring-backend-engineer**：Spring 認證專業工程師，專精於使用 Spring Boot、WebFlux 與 Spring Data R2DBC 進行響應式後端開發 (Reactive Backend Development)。
+- **/spring-backend-engineer**：Spring 認證專業工程師，專精於使用 Spring Boot、WebFlux、Spring Data 與 GraphQL 進行響應式後端開發。
 - **/system-architect**：高階編排器，能同時將 UML 模型轉換為 OpenAPI 契約、DBML 資料庫 Schema，以及 PlantUML 介面契約 (`*_contract.puml`)。
+- **/tech-lead**：技術總監 (Tech Lead)，負責綜合 OpenAPI 契約、UML 圖表、PlantUML 介面契約與 DBML Schemas，生成並驗證標準化的六角架構微服務清單 (Hexagonal Service Manifest YAML)。
+- **/ui-designer**：專業 Web UX/UI 設計師，將需求與行為規格轉換為符合 `ui-manifest-schema.json` 驗證標準的 UI Manifests。
 
 ## 🛠️ Agent Skills (.agents/skills/)
 
 Skills 是提供給 Agent 的特定專項能力模組：
 
+- **api-hook-generator**：自 UI Manifests 中作為 `data_ref` 參照的 OpenAPI `operationId` 項目，生成帶有型別的 TanStack Query (React Query) Hook 存根 (Stubs)。
 - **bdd-generator**：將需求轉換為 Gherkin 特性文件 (Features) 的邏輯引擎，並具備 EDA 架構感知能力。
 - **contract-generator**：將 Entity/Repository 詮釋資料轉換為 PlantUML 介面契約 (`*_contract.puml`) 的確定性生成器。強制執行 Onion Architecture 層邊界、CQRS 命令/查詢分離，並強制生成 `RestController`（REST 異動）、`GraphQLResolver`（集合查詢）與 `Repository` 介面定義。選用的 `Service` 介面遵循相同層級契約。
 - **dbml-generator**：將 API/Entity 詮釋資料轉換為 DBML 的確定性生成器。強制執行 UUID 主鍵、關聯表級聯刪除 (Cascade Deletes)，以及基礎設施欄位的自動注入。
 - **diagram-parser**：針對 PlantUML 內容的高精度轉譯器。透過識別 `<<Entity>>` 資源提取 API 詮釋資料，鎖定 `<<Repository>>` 介面動詞，並將關聯映射到 URI 層級結構。
+- **json-render-transpiler**：確定性轉譯器，將 `ui-manifest.json` 組件樹轉換為輕量級執行期 JSON-render 規格，原生優先使用 `@json-render/shadcn` 的 36 個預置組件。
 - **oas-generator**：將 API 詮釋資料轉換為 OpenAPI 3.1 YAML 的確定性生成器。強制執行回傳碼、Payload 範例、PATCH/PUT 並發控制與 GraphQL 重定向的嚴格標準。
 ***
