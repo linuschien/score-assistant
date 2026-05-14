@@ -23,6 +23,7 @@ package "adapter.out.persistence" {
   interface "GradeRecordRepository" <<Repository>> {
     + save(entity: GradeRecord): GradeRecord
     + findById(id: UUID): Optional<GradeRecord>
+    + findByExample(example: Example<GradeRecord>): List<GradeRecord>
     + deleteById(id: UUID): void
   }
   note right of GradeRecordRepository

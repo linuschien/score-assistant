@@ -23,6 +23,7 @@ package "adapter.out.persistence" {
   interface "AttachmentRepository" <<Repository>> {
     + save(entity: Attachment): Attachment
     + findById(id: UUID): Optional<Attachment>
+    + findByExample(example: Example<Attachment>): List<Attachment>
     + deleteById(id: UUID): void
   }
 }

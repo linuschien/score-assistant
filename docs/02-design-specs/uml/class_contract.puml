@@ -23,6 +23,7 @@ package "adapter.out.persistence" {
   interface "ClassRepository" <<Repository>> {
     + save(entity: Class): Class
     + findById(id: UUID): Optional<Class>
+    + findByExample(example: Example<Class>): List<Class>
     + deleteById(id: UUID): void
   }
 }

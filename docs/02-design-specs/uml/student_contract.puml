@@ -23,6 +23,7 @@ package "adapter.out.persistence" {
   interface "StudentRepository" <<Repository>> {
     + save(entity: Student): Student
     + findById(id: UUID): Optional<Student>
+    + findByExample(example: Example<Student>): List<Student>
     + deleteById(id: UUID): void
   }
 }
