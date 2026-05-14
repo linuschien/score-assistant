@@ -1,0 +1,34 @@
+@startuml attachment_contract
+
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam defaultFontName Inter
+
+package "adapter.in.web.rest" {
+  interface "AttachmentRestController" <<RestController>> {
+    + createAttachment(req: AttachmentRequest): ResponseEntity<AttachmentResponse>
+    + updateAttachment(id: UUID, req: AttachmentRequest): ResponseEntity<AttachmentResponse>
+    + deleteAttachment(id: UUID): ResponseEntity<Void>
+    + getAttachmentById(id: UUID): ResponseEntity<AttachmentResponse>
+  }
+}
+
+package "adapter.in.web.graphql" {
+  interface "AttachmentGraphQLResolver" <<GraphQLResolver>> {
+    + listAttachments(filter: AttachmentFilterInput): List<Attachment>
+  }
+}
+
+package "adapter.out.persistence" {
+  interface "AttachmentRepository" <<Repository>> {
+    + save(entity: Attachment): Attachment
+    + findById(id: UUID): Optional<Attachment>
+    + deleteById(id: UUID): void
+  }
+}
+
+' === Dependency Arrows ===
+"AttachmentRestController"  ..> "AttachmentRepository" : uses
+"AttachmentGraphQLResolver" ..> "AttachmentRepository" : uses
+
+@enduml

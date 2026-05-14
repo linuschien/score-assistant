@@ -1,0 +1,1193 @@
+openapi: 3.1.0
+info:
+  title: Score Assistant API Specification
+  version: 1.0.0
+  description: Hardened OpenAPI 3.1.0 specification derived from Core Domain model for the Score Assistant module. Enforces strict REST boundaries, UUID identifiers, CQRS compatibility, and GraphQL query gateway redirection.
+paths:
+  /semesters:
+    post:
+      summary: Create a new Semester
+      operationId: createSemester
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List Semesters (Deprecated to GraphQL)
+      operationId: listSemesters
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Semester'
+
+  /semesters/{semesterId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+    get:
+      summary: Get Semester by ID
+      operationId: getSemesterById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync a Semester
+      operationId: updateSemester
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      summary: Partially update a Semester
+      operationId: patchSemester
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete a Semester
+      operationId: deleteSemester
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+    post:
+      summary: Create a new Class within a Semester
+      operationId: createClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List Classes within a Semester (Deprecated to GraphQL)
+      operationId: listClasses
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+  /semesters/{semesterId}/classes/{classId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    get:
+      summary: Get Class by ID
+      operationId: getClassById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync a Class
+      operationId: updateClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      summary: Partially update a Class
+      operationId: patchClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete a Class
+      operationId: deleteClass
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}/students:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Create a new Student within a Class
+      operationId: createStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List Students within a Class (Deprecated to GraphQL)
+      operationId: listStudents
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+  /semesters/{semesterId}/classes/{classId}/students/{studentId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+    get:
+      summary: Get Student by ID
+      operationId: getStudentById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync a Student
+      operationId: updateStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      summary: Partially update a Student
+      operationId: patchStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete a Student
+      operationId: deleteStudent
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Create a new GradeItem within a Class
+      operationId: createGradeItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeItemRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeItem'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List GradeItems within a Class (Deprecated to GraphQL)
+      operationId: listGradeItems
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeItem'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: gradeItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+    get:
+      summary: Get GradeItem by ID
+      operationId: getGradeItemById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeItem'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync a GradeItem
+      operationId: updateGradeItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeItemRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeItem'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      summary: Partially update a GradeItem
+      operationId: patchGradeItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeItemPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeItem'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete a GradeItem
+      operationId: deleteGradeItem
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: gradeItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+    post:
+      summary: Create a new GradeRecord within a GradeItem
+      operationId: createGradeRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeRecordRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeRecord'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List GradeRecords within a GradeItem (Deprecated to GraphQL)
+      operationId: listGradeRecords
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeRecord'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: gradeItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+      - name: gradeRecordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e"
+    get:
+      summary: Get GradeRecord by ID
+      operationId: getGradeRecordById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeRecord'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync a GradeRecord
+      operationId: updateGradeRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeRecordRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeRecord'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    patch:
+      summary: Partially update a GradeRecord
+      operationId: patchGradeRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeRecordPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeRecord'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+    delete:
+      summary: Delete a GradeRecord
+      operationId: deleteGradeRecord
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}/attachments:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: gradeItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+      - name: gradeRecordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e"
+    post:
+      summary: Create a new Attachment within a GradeRecord
+      operationId: createAttachment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+    get:
+      summary: List Attachments within a GradeRecord (Deprecated to GraphQL)
+      operationId: listAttachments
+      deprecated: true
+      description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
+      responses:
+        '200':
+          description: Successful query (deprecated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+
+  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}/attachments/{attachmentId}:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      - name: gradeItemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+      - name: gradeRecordId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e"
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b"
+    get:
+      summary: Get Attachment by ID
+      operationId: getAttachmentById
+      responses:
+        '200':
+          description: Successful lookup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    put:
+      summary: Replace/Sync an Attachment
+      operationId: updateAttachment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    patch:
+      summary: Partially update an Attachment
+      operationId: patchAttachment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentPatchRequest'
+      responses:
+        '200':
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Delete an Attachment
+      operationId: deleteAttachment
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+components:
+  responses:
+    400BadRequest:
+      description: Invalid request payload or parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404NotFound:
+      description: Requested resource could not be found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    409Conflict:
+      description: Optimistic locking conflict detected
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConflictError'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Validation failed"
+      required:
+        - code
+        - message
+
+    ConflictError:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 409
+        message:
+          type: string
+          example: "Optimistic locking conflict: version mismatch"
+        currentVersion:
+          type: integer
+          example: 2
+      required:
+        - code
+        - message
+
+    Semester:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+        semester_name:
+          type: string
+          example: "2026-Fall"
+        start_date:
+          type: string
+          format: date-time
+          example: "2026-09-01T00:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          example: "2027-01-31T23:59:59Z"
+      required:
+        - id
+        - semester_name
+        - start_date
+        - end_date
+
+    SemesterRequest:
+      type: object
+      properties:
+        semester_name:
+          type: string
+          example: "2026-Fall"
+        start_date:
+          type: string
+          format: date-time
+          example: "2026-09-01T00:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          example: "2027-01-31T23:59:59Z"
+      required:
+        - semester_name
+        - start_date
+        - end_date
+
+    SemesterPatchRequest:
+      type: object
+      properties:
+        semester_name:
+          type: string
+          example: "2026-Fall"
+        start_date:
+          type: string
+          format: date-time
+          example: "2026-09-01T00:00:00Z"
+        end_date:
+          type: string
+          format: date-time
+          example: "2027-01-31T23:59:59Z"
+
+    Class:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+        class_name:
+          type: string
+          example: "Computer Science 101"
+      required:
+        - id
+        - class_name
+
+    ClassRequest:
+      type: object
+      properties:
+        class_name:
+          type: string
+          example: "Computer Science 101"
+      required:
+        - class_name
+
+    ClassPatchRequest:
+      type: object
+      properties:
+        class_name:
+          type: string
+          example: "Computer Science 101"
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+        student_number:
+          type: integer
+          example: 2026001
+        student_name:
+          type: string
+          example: "Linus Torvalds"
+      required:
+        - id
+        - student_number
+        - student_name
+
+    StudentRequest:
+      type: object
+      properties:
+        student_number:
+          type: integer
+          example: 2026001
+        student_name:
+          type: string
+          example: "Linus Torvalds"
+      required:
+        - student_number
+        - student_name
+
+    StudentPatchRequest:
+      type: object
+      properties:
+        student_number:
+          type: integer
+          example: 2026001
+        student_name:
+          type: string
+          example: "Linus Torvalds"
+
+    GradeItemType:
+      type: string
+      enum:
+        - ATTENDANCE
+        - CLASSROOM_PERFORMANCE
+        - ASSIGNMENT
+        - REPORT
+        - OTHER
+      example: "ASSIGNMENT"
+
+    GradeItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+        item_name:
+          type: string
+          example: "Midterm Assignment"
+        item_type:
+          $ref: '#/components/schemas/GradeItemType'
+        item_date:
+          type: string
+          format: date-time
+          example: "2026-10-15T10:00:00Z"
+        item_description:
+          type: string
+          example: "Implement basic algorithms"
+        max_score:
+          type: number
+          format: double
+          example: 100.0
+        weight:
+          type: number
+          format: double
+          example: 0.25
+      required:
+        - id
+        - item_name
+        - item_type
+        - item_date
+        - item_description
+        - max_score
+        - weight
+
+    GradeItemRequest:
+      type: object
+      properties:
+        item_name:
+          type: string
+          example: "Midterm Assignment"
+        item_type:
+          $ref: '#/components/schemas/GradeItemType'
+        item_date:
+          type: string
+          format: date-time
+          example: "2026-10-15T10:00:00Z"
+        item_description:
+          type: string
+          example: "Implement basic algorithms"
+        max_score:
+          type: number
+          format: double
+          example: 100.0
+        weight:
+          type: number
+          format: double
+          example: 0.25
+      required:
+        - item_name
+        - item_type
+        - item_date
+        - item_description
+        - max_score
+        - weight
+
+    GradeItemPatchRequest:
+      type: object
+      properties:
+        item_name:
+          type: string
+          example: "Midterm Assignment"
+        item_type:
+          $ref: '#/components/schemas/GradeItemType'
+        item_date:
+          type: string
+          format: date-time
+          example: "2026-10-15T10:00:00Z"
+        item_description:
+          type: string
+          example: "Implement basic algorithms"
+        max_score:
+          type: number
+          format: double
+          example: 100.0
+        weight:
+          type: number
+          format: double
+          example: 0.25
+
+    GradeRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e"
+        score:
+          type: number
+          format: double
+          nullable: true
+          example: 95.5
+        last_modified_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:30:00Z"
+      required:
+        - id
+        - last_modified_at
+
+    GradeRecordRequest:
+      type: object
+      properties:
+        score:
+          type: number
+          format: double
+          nullable: true
+          example: 95.5
+        last_modified_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:30:00Z"
+      required:
+        - last_modified_at
+
+    GradeRecordPatchRequest:
+      type: object
+      properties:
+        score:
+          type: number
+          format: double
+          nullable: true
+          example: 95.5
+        last_modified_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:30:00Z"
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b"
+        file_name:
+          type: string
+          example: "solution.pdf"
+        file_data:
+          type: string
+          format: binary
+          example: "dGVzdF9kYXRh"
+        uploaded_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:25:00Z"
+      required:
+        - id
+        - file_name
+        - file_data
+        - uploaded_at
+
+    AttachmentRequest:
+      type: object
+      properties:
+        file_name:
+          type: string
+          example: "solution.pdf"
+        file_data:
+          type: string
+          format: binary
+          example: "dGVzdF9kYXRh"
+        uploaded_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:25:00Z"
+      required:
+        - file_name
+        - file_data
+        - uploaded_at
+
+    AttachmentPatchRequest:
+      type: object
+      properties:
+        file_name:
+          type: string
+          example: "solution.pdf"
+        file_data:
+          type: string
+          format: binary
+          example: "dGVzdF9kYXRh"
+        uploaded_at:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:25:00Z"

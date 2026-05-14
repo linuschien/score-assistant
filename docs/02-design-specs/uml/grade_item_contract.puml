@@ -1,0 +1,34 @@
+@startuml grade_item_contract
+
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam defaultFontName Inter
+
+package "adapter.in.web.rest" {
+  interface "GradeItemRestController" <<RestController>> {
+    + createGradeItem(req: GradeItemRequest): ResponseEntity<GradeItemResponse>
+    + updateGradeItem(id: UUID, req: GradeItemRequest): ResponseEntity<GradeItemResponse>
+    + deleteGradeItem(id: UUID): ResponseEntity<Void>
+    + getGradeItemById(id: UUID): ResponseEntity<GradeItemResponse>
+  }
+}
+
+package "adapter.in.web.graphql" {
+  interface "GradeItemGraphQLResolver" <<GraphQLResolver>> {
+    + listGradeItems(filter: GradeItemFilterInput): List<GradeItem>
+  }
+}
+
+package "adapter.out.persistence" {
+  interface "GradeItemRepository" <<Repository>> {
+    + save(entity: GradeItem): GradeItem
+    + findById(id: UUID): Optional<GradeItem>
+    + deleteById(id: UUID): void
+  }
+}
+
+' === Dependency Arrows ===
+"GradeItemRestController"  ..> "GradeItemRepository" : uses
+"GradeItemGraphQLResolver" ..> "GradeItemRepository" : uses
+
+@enduml

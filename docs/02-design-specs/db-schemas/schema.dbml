@@ -1,0 +1,94 @@
+enum grade_item_type {
+    ATTENDANCE
+    CLASSROOM_PERFORMANCE
+    ASSIGNMENT
+    REPORT
+    OTHER
+}
+
+enum attendance_status {
+    PRESENT
+    EXCUSED
+    ABSENT
+}
+
+Table semester {
+    id uuid [pk]
+    semester_name varchar [unique]
+    start_date timestamp
+    end_date timestamp
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+}
+
+Table class {
+    id uuid [pk]
+    semester_id uuid
+    class_name varchar
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+
+    indexes {
+        (semester_id, class_name) [unique]
+    }
+}
+
+Table student {
+    id uuid [pk]
+    class_id uuid
+    student_number integer
+    student_name varchar
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+
+    indexes {
+        (class_id, student_number) [unique]
+    }
+}
+
+Table grade_item {
+    id uuid [pk]
+    class_id uuid
+    item_name varchar
+    item_type grade_item_type
+    item_date timestamp
+    item_description varchar
+    max_score decimal [default: 100]
+    weight decimal
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+}
+
+Table grade_record {
+    id uuid [pk]
+    grade_item_id uuid
+    student_id uuid
+    score decimal
+    last_modified_at timestamp
+    version integer [default: 1]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+}
+
+Table attachment {
+    id uuid [pk]
+    grade_record_id uuid
+    file_name varchar
+    file_data blob
+    uploaded_at timestamp
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp
+}
+
+Ref: semester.id < class.semester_id [delete: cascade]
+Ref: class.id < student.class_id [delete: cascade]
+Ref: class.id < grade_item.class_id [delete: cascade]
+Ref: grade_item.id < grade_record.grade_item_id [delete: cascade]
+Ref: student.id < grade_record.student_id [delete: cascade]
+Ref: grade_record.id < attachment.grade_record_id [delete: cascade]

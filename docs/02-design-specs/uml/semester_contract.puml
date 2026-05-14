@@ -1,0 +1,34 @@
+@startuml semester_contract
+
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam defaultFontName Inter
+
+package "adapter.in.web.rest" {
+  interface "SemesterRestController" <<RestController>> {
+    + createSemester(req: SemesterRequest): ResponseEntity<SemesterResponse>
+    + updateSemester(id: UUID, req: SemesterRequest): ResponseEntity<SemesterResponse>
+    + deleteSemester(id: UUID): ResponseEntity<Void>
+    + getSemesterById(id: UUID): ResponseEntity<SemesterResponse>
+  }
+}
+
+package "adapter.in.web.graphql" {
+  interface "SemesterGraphQLResolver" <<GraphQLResolver>> {
+    + listSemesters(filter: SemesterFilterInput): List<Semester>
+  }
+}
+
+package "adapter.out.persistence" {
+  interface "SemesterRepository" <<Repository>> {
+    + save(entity: Semester): Semester
+    + findById(id: UUID): Optional<Semester>
+    + deleteById(id: UUID): void
+  }
+}
+
+' === Dependency Arrows ===
+"SemesterRestController"  ..> "SemesterRepository" : uses
+"SemesterGraphQLResolver" ..> "SemesterRepository" : uses
+
+@enduml

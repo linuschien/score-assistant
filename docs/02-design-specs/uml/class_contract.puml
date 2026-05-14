@@ -1,0 +1,34 @@
+@startuml class_contract
+
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam defaultFontName Inter
+
+package "adapter.in.web.rest" {
+  interface "ClassRestController" <<RestController>> {
+    + createClass(req: ClassRequest): ResponseEntity<ClassResponse>
+    + updateClass(id: UUID, req: ClassRequest): ResponseEntity<ClassResponse>
+    + deleteClass(id: UUID): ResponseEntity<Void>
+    + getClassById(id: UUID): ResponseEntity<ClassResponse>
+  }
+}
+
+package "adapter.in.web.graphql" {
+  interface "ClassGraphQLResolver" <<GraphQLResolver>> {
+    + listClasses(filter: ClassFilterInput): List<Class>
+  }
+}
+
+package "adapter.out.persistence" {
+  interface "ClassRepository" <<Repository>> {
+    + save(entity: Class): Class
+    + findById(id: UUID): Optional<Class>
+    + deleteById(id: UUID): void
+  }
+}
+
+' === Dependency Arrows ===
+"ClassRestController"  ..> "ClassRepository" : uses
+"ClassGraphQLResolver" ..> "ClassRepository" : uses
+
+@enduml

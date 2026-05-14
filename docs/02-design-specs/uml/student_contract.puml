@@ -1,0 +1,34 @@
+@startuml student_contract
+
+!pragma layout smetana
+skinparam packageStyle rectangle
+skinparam defaultFontName Inter
+
+package "adapter.in.web.rest" {
+  interface "StudentRestController" <<RestController>> {
+    + createStudent(req: StudentRequest): ResponseEntity<StudentResponse>
+    + updateStudent(id: UUID, req: StudentRequest): ResponseEntity<StudentResponse>
+    + deleteStudent(id: UUID): ResponseEntity<Void>
+    + getStudentById(id: UUID): ResponseEntity<StudentResponse>
+  }
+}
+
+package "adapter.in.web.graphql" {
+  interface "StudentGraphQLResolver" <<GraphQLResolver>> {
+    + listStudents(filter: StudentFilterInput): List<Student>
+  }
+}
+
+package "adapter.out.persistence" {
+  interface "StudentRepository" <<Repository>> {
+    + save(entity: Student): Student
+    + findById(id: UUID): Optional<Student>
+    + deleteById(id: UUID): void
+  }
+}
+
+' === Dependency Arrows ===
+"StudentRestController"  ..> "StudentRepository" : uses
+"StudentGraphQLResolver" ..> "StudentRepository" : uses
+
+@enduml
