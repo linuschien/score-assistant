@@ -1,0 +1,120 @@
+@startuml
+skinparam style strictuml
+title Domain Model - Score Assistant Module
+
+package "Core Domain" {
+    class Semester <<Entity>> {
+        +String id
+        +String semester_name
+        +DateTime start_date
+        +DateTime end_date
+    }
+
+    class Class <<Entity>> {
+        +String id
+        +String class_name
+    }
+
+    class Student <<Entity>> {
+        +String id
+        +Integer student_number
+        +String student_name
+    }
+
+    class GradeItem <<Entity>> {
+        +String id
+        +String item_name
+        +GradeItemType item_type <<Enum>>
+        +DateTime item_date
+        +String item_description
+        +Decimal max_score
+        +Decimal weight
+    }
+
+    class GradeRecord <<Entity>> {
+        +String id
+        +Decimal score
+        +DateTime last_modified_at
+    }
+
+    class Attachment <<Entity>> {
+        +String id
+        +String file_name [INFERRED]
+        +String file_url [INFERRED]
+        +DateTime uploaded_at [INFERRED]
+    }
+}
+
+package "Persistence Contracts" {
+    interface SemesterRepository <<Interface>> {
+        +Create(Semester data): Semester
+        +GetById(String id): Semester?
+        +Update(String id, Semester delta): Semester
+        +Delete(String id): Boolean
+    }
+
+    interface ClassRepository <<Interface>> {
+        +Create(Class data): Class
+        +GetById(String id): Class?
+        +Update(String id, Class delta): Class
+        +Delete(String id): Boolean
+    }
+
+    interface StudentRepository <<Interface>> {
+        +Create(Student data): Student
+        +GetById(String id): Student?
+        +Update(String id, Student delta): Student
+        +Delete(String id): Boolean
+    }
+
+    interface GradeItemRepository <<Interface>> {
+        +Create(GradeItem data): GradeItem
+        +GetById(String id): GradeItem?
+        +Update(String id, GradeItem delta): GradeItem
+        +Delete(String id): Boolean
+    }
+
+    interface GradeRecordRepository <<Interface>> {
+        +Create(GradeRecord data): GradeRecord
+        +GetById(String id): GradeRecord?
+        +Update(String id, GradeRecord delta): GradeRecord
+        +Delete(String id): Boolean
+    }
+
+    interface AttachmentRepository <<Interface>> {
+        +Create(Attachment data): Attachment
+        +GetById(String id): Attachment?
+        +Update(String id, Attachment delta): Attachment
+        +Delete(String id): Boolean
+    }
+}
+
+' Relationships: Strong ownership with multiplicity
+Semester "1" *-- "*" Class : "organizes and manages"
+Class "1" *-- "*" Student : "contains"
+Class "1" *-- "*" GradeItem : "defines"
+GradeItem "1" *-- "*" GradeRecord : "records"
+Student "1" *-- "*" GradeRecord : "owns"
+GradeRecord "1" *-- "*" Attachment : "attaches"
+
+enum GradeItemType {
+    ATTENDANCE
+    CLASSROOM_PERFORMANCE
+    ASSIGNMENT
+    REPORT
+    OTHER
+}
+
+enum AttendanceStatus {
+    PRESENT
+    EXCUSED
+    ABSENT
+}
+
+note right of Semester : semester_name MUST be unique in the system
+note right of Class : class_name MUST be unique within a Semester
+note right of Student : student_number MUST be unique within a Class
+note bottom of GradeItem : max_score defaults to 100.\nOnly CLASSROOM_PERFORMANCE allows negative scores.
+note bottom of GradeRecord : score can be null (未登記).\nAllows negative values for CLASSROOM_PERFORMANCE.
+note bottom of Attachment : Max size 10MB.\nMax 5 attachments per student per GradeItem.
+@enduml
