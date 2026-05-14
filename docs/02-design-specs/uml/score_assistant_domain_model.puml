@@ -40,7 +40,7 @@ package "Core Domain" {
     class Attachment <<Entity>> {
         +String id
         +String file_name [INFERRED]
-        +String file_url [INFERRED]
+        +Blob file_data [INFERRED]
         +DateTime uploaded_at [INFERRED]
     }
 }
@@ -116,5 +116,5 @@ note right of Class : class_name MUST be unique within a Semester
 note right of Student : student_number MUST be unique within a Class
 note bottom of GradeItem : max_score defaults to 100.\nOnly CLASSROOM_PERFORMANCE allows negative scores.
 note bottom of GradeRecord : score can be null (未登記).\nAllows negative values for CLASSROOM_PERFORMANCE.
-note bottom of Attachment : Max size 10MB.\nMax 5 attachments per student per GradeItem.
+note bottom of Attachment : Max size 10MB. Stored directly as BLOB.\nMax 5 attachments per student per GradeItem.
 @enduml
