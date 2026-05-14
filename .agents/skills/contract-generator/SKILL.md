@@ -76,12 +76,13 @@ Generate an interface in the `adapter.in.web.graphql` package for **query** oper
 ### 3. Mandatory Interface: `<<Repository>>`
 Generate an interface in the `adapter.out.persistence` package derived directly from the `<<Repository>>` operations in the metadata:
 
-| Repository method in UML | Interface method signature |
+| Repository method in UML / Query support | Interface method signature |
 |---|---|
 | `Create()` | `+ save(entity: {Entity}): {Entity}` |
 | `GetById()` | `+ findById(id: UUID): Optional<{Entity}>` |
 | `Update()` | `+ save(entity: {Entity}): {Entity}` *(same as Create — unified `save`)* |
 | `Delete()` | `+ deleteById(id: UUID): void` |
+| `Collection Query` support | `+ findByExample(example: Example<{Entity}>): List<{Entity}>` |
 
 - Class name: `{Entity}Repository`
 - Annotate with `<<Repository>>`
@@ -152,6 +153,7 @@ package "adapter.out.persistence" {
   interface "{Entity}Repository" <<Repository>> {
     + save(entity: {Entity}): {Entity}
     + findById(id: UUID): Optional<{Entity}>
+    + findByExample(example: Example<{Entity}>): List<{Entity}>
     + deleteById(id: UUID): void
     ' ... (only include ops enabled by metadata)
   }

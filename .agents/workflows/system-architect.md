@@ -35,7 +35,7 @@ This agent manages the pipeline as a "Fan-out" operation to ensure cross-layer c
     - For **each** `<<Entity>>` in the metadata snapshot:
         1. Emit a `{Entity}RestController` (`adapter.in.web.rest`) for mutation verbs (POST/PUT/DELETE) and optional single-resource GET.
         2. Emit a `{Entity}GraphQLResolver` (`adapter.in.web.graphql`) for collection/filtered queries (Collection GET is always GraphQL-only).
-        3. Emit a `{Entity}Repository` (`adapter.out.persistence`) from the source `<<Repository>>` interface operations.
+        3. Emit a `{Entity}Repository` (`adapter.out.persistence`) from the source `<<Repository>>` interface operations, mandating `findByExample(example: Example<{Entity}>): List<{Entity}>` to support GraphQL resolvers.
         4. Apply CQRS separation: emit `*CommandService` / `*QueryService` ports only when custom actions are present.
         5. Emit one `{entity_snake_case}_contract.puml` to the **Contract Output** directory.
     - Enforce: PascalCase interface names, camelCase parameters, `FIXME_OPERATION` for unresolvable mappings.
