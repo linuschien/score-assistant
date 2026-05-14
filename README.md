@@ -46,16 +46,16 @@ graph TD
     PO["1. /product-owner (需求解析與 User Stories)"]
     DM["2. /domain-modeler (PlantUML 領域建模)"]
     SysA["3. /system-architect (系統介面與契約硬化)"]
-    BA["4. /behavior-architect (User/System BDD 行為規格)"]
-    SA["5. /sequence-architect (動態時序圖繪製)"]
-    TL["6. /tech-lead (六角架構微服務清單驗證)"]
+    TL["4. /tech-lead (六角架構微服務清單驗證)"]
+    BA["5. /behavior-architect (User/System BDD 行為規格)"]
+    SA["6. /sequence-architect (動態時序圖繪製)"]
     UID["7. /ui-designer (UI Manifests 介面設計)"]
     QA1["8. /qa-engineer [Mode 1] (介面感知 E2E 測試案例生成)"]
     BE["9. /spring-backend-engineer (響應式後端實作)"]
     FE["10. /frontend-engineer (JSON-render 規格轉譯)"]
     QA2["11. /qa-engineer [Mode 2] (瀏覽器自動化驗證與報告)"]
 
-    PO --> DM --> SysA --> BA --> SA --> TL --> UID --> QA1 --> BE --> FE --> QA2
+    PO --> DM --> SysA --> TL --> BA --> SA --> UID --> QA1 --> BE --> FE --> QA2
 ```
 
 以下為各 Agent Workflow 的詳細職責說明：
