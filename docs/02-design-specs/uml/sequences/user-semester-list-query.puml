@@ -1,0 +1,31 @@
+@startuml user-semester-list-query
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "SemesterGraphQLResolverAdapter" as PA <<PrimaryAdapter>>
+participant "SemesterRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : GraphQL Query: listSemesters(filter)
+activate PA
+
+PA -> SA : findByExample(example)
+activate SA
+
+SA -> DB : SELECT * FROM semesters WHERE ...
+activate DB
+DB --> SA : ResultSet
+deactivate DB
+
+SA --> PA : List<Semester>
+deactivate SA
+
+PA --> U : JSON GraphQL Response
+deactivate PA
+
+@enduml

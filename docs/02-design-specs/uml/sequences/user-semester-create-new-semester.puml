@@ -1,0 +1,31 @@
+@startuml user-semester-create-new-semester
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "SemesterRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "SemesterRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : POST /semesters (SemesterRequest)
+activate PA
+
+PA -> SA : save(entity: Semester)
+activate SA
+
+SA -> DB : INSERT INTO semesters
+activate DB
+DB --> SA : row persisted
+deactivate DB
+
+SA --> PA : Semester (with UUID)
+deactivate SA
+
+PA --> U : 201 Created (SemesterResponse)
+deactivate PA
+
+@enduml

@@ -1,0 +1,78 @@
+@startuml sys-semester-persistence-cascade-deletion
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+participant "SemesterRepositoryAdapter" as SRA <<SecondaryAdapter>>
+participant "ClassRepositoryAdapter" as CRA <<SecondaryAdapter>>
+participant "StudentRepositoryAdapter" as STRA <<SecondaryAdapter>>
+participant "GradeItemRepositoryAdapter" as GIRA <<SecondaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as GRRA <<SecondaryAdapter>>
+participant "AttachmentRepositoryAdapter" as ARA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+[-> SRA : deleteById(id: UUID)
+activate SRA
+
+SRA -> DB : DELETE FROM semesters WHERE id = ?
+activate DB
+DB --> SRA : success
+deactivate DB
+
+group Cascade Deletion (Deep Cleanup)
+    SRA -> CRA : deleteBySemesterId(id: UUID)
+    activate CRA
+    CRA -> DB : DELETE FROM classes WHERE semester_id = ?
+    activate DB
+    DB --> CRA : success
+    deactivate DB
+    
+    CRA -> STRA : deleteByClassId(...)
+    activate STRA
+    STRA -> DB : DELETE FROM students ...
+    activate DB
+    DB --> STRA : success
+    deactivate DB
+    STRA --> CRA : done
+    deactivate STRA
+
+    CRA -> GIRA : deleteByClassId(...)
+    activate GIRA
+    GIRA -> DB : DELETE FROM grade_items ...
+    activate DB
+    DB --> GIRA : success
+    deactivate DB
+    
+    GIRA -> GRRA : deleteByGradeItemId(...)
+    activate GRRA
+    GRRA -> DB : DELETE FROM grade_records ...
+    activate DB
+    DB --> GRRA : success
+    deactivate DB
+
+    GRRA -> ARA : deleteByGradeRecordId(...)
+    activate ARA
+    ARA -> DB : DELETE FROM attachments ...
+    activate DB
+    DB --> ARA : success
+    deactivate DB
+    ARA --> GRRA : done
+    deactivate ARA
+
+    GRRA --> GIRA : done
+    deactivate GRRA
+
+    GIRA --> CRA : done
+    deactivate GIRA
+
+    CRA --> SRA : done
+    deactivate CRA
+end
+
+[<-- SRA : void
+deactivate SRA
+
+@enduml

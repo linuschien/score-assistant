@@ -1,0 +1,35 @@
+@startuml user-grade-item-create
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "GradeItemRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeItemRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : POST /.../grade-items (GradeItemRequest)
+activate PA
+
+note right of PA
+  Validate item_type and max_score
+end note
+
+PA -> SA : save(entity: GradeItem)
+activate SA
+
+SA -> DB : INSERT INTO grade_items
+activate DB
+DB --> SA : row persisted
+deactivate DB
+
+SA --> PA : GradeItem
+deactivate SA
+
+PA --> U : 201 Created (GradeItemResponse)
+deactivate PA
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml user-class-management
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "ClassRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "ClassRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+== Create Class ==
+U -> PA : POST /semesters/{id}/classes (ClassRequest)
+activate PA
+PA -> SA : save(entity: Class)
+activate SA
+SA -> DB : INSERT INTO classes
+activate DB
+DB --> SA : success
+deactivate DB
+SA --> PA : Class
+deactivate SA
+PA --> U : 201 Created
+deactivate PA
+
+== Update Class ==
+U -> PA : PUT /semesters/{sid}/classes/{cid} (ClassRequest)
+activate PA
+PA -> SA : save(entity: Class)
+activate SA
+SA -> DB : UPDATE classes
+activate DB
+DB --> SA : success
+deactivate DB
+SA --> PA : Class
+deactivate SA
+PA --> U : 200 OK
+deactivate PA
+
+@enduml

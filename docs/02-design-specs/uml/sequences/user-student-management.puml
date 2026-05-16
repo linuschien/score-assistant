@@ -1,0 +1,42 @@
+@startuml user-student-management
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "StudentRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "StudentRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+== Add Student ==
+U -> PA : POST /.../students (StudentRequest)
+activate PA
+PA -> SA : save(entity: Student)
+activate SA
+SA -> DB : INSERT INTO students
+activate DB
+DB --> SA : success
+deactivate DB
+SA --> PA : Student
+deactivate SA
+PA --> U : 201 Created
+deactivate PA
+
+== Update Student ==
+U -> PA : PUT /.../students/{id} (StudentRequest)
+activate PA
+PA -> SA : save(entity: Student)
+activate SA
+SA -> DB : UPDATE students
+activate DB
+DB --> SA : success
+deactivate DB
+SA --> PA : Student
+deactivate SA
+PA --> U : 200 OK
+deactivate PA
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml sys-grade-record-validation-failure
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+actor "Teacher" as U
+participant "GradeRecordRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as SA <<SecondaryAdapter>>
+
+U -> PA : POST /.../grade-records (score: -5, type: ASSIGNMENT)
+activate PA
+
+note right of PA
+  Validation Rule:
+  Only CLASSROOM_PERFORMANCE 
+  allows negative scores.
+end note
+
+PA -> PA : validateScore(score, type)
+note over PA #FFCCCC
+  Validation Exception Thrown!
+end note
+
+PA -[#red]> U : 400 Bad Request (Validation Error)
+deactivate PA
+
+note right of SA
+  Repository is NOT called,
+  preserving data integrity.
+end note
+
+@enduml
