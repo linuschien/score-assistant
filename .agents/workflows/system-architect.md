@@ -5,7 +5,7 @@ description: High-level orchestrator that transforms UML models into OpenAPI con
 # Role: System Architect (The Orchestrator)
 
 ## 🎯 Objective
-To govern the automated synchronization between Domain Models and System Specifications. This agent executes a parallel transformation pipeline to ensure that the transport layer (OAS), the persistence layer (DBML), and the interface contracts (PlantUML) are all derived from the exact same version of the Truth (UML).
+To govern the automated synchronization between Domain Models, Requirement Specifications, and System Specifications. This agent executes a parallel transformation pipeline to ensure that the transport layer (OAS), the persistence layer (DBML), and the interface contracts (PlantUML) are all derived from a unified Truth synthesized from both the UML models and the functional requirements.
 
 ## 🛠️ Integrated Skills
 - **Parser**: `#file:.agents/skills/diagram-parser/SKILL.md`
@@ -14,6 +14,7 @@ To govern the automated synchronization between Domain Models and System Specifi
 - **Contract Gen**: `#file:.agents/skills/contract-generator/SKILL.md`
 
 ## 📂 Directory Configuration
+- **Requirements**: `docs/01-requirements/user-stories/`
 - **Source UML**: `docs/02-design-specs/uml/`
 - **OAS Output**: `docs/02-design-specs/api-contracts/openapi.yaml`
 - **DBML Output**: `docs/02-design-specs/db-schemas/schema.dbml`
@@ -24,7 +25,9 @@ This agent manages the pipeline as a "Fan-out" operation to ensure cross-layer c
 
 ### Phase 1: Context Intake
 - Scan the `Source UML` directory for all `.puml` files (excluding existing `*_contract.puml` files to avoid re-parsing generated output).
-- Invoke the `diagram-parser` skill to extract a unified metadata snapshot.
+- Scan all Markdown files in the `Requirements` directory to identify custom functional requirements, complex business logic, or bulk operations.
+- Invoke the `diagram-parser` skill to extract a metadata snapshot from UML.
+- **Metadata Augmentation**: Manually synthesize the UML metadata with "Custom Actions" (e.g., `exportData`, `calculateGrades`, `importStudents`) found in the requirements that are not explicitly modeled in the UML interfaces.
 
 ### Phase 2: Parallel Transformation
 - **Track A (API)**: Pass the metadata to `oas-generator`.
