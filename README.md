@@ -52,7 +52,7 @@ graph TD
     UID["7. /ui-designer (UI Manifests 介面設計)"]
     QA1["8. /qa-engineer [Mode 1] (介面感知 E2E 測試案例生成)"]
     BE["9. /spring-backend-engineer (響應式後端實作)"]
-    FE["10. /frontend-engineer (JSON-render 規格轉譯)"]
+    FE["10. /react-frontend-engineer (JSON-render 規格轉譯)"]
     QA2["11. /qa-engineer [Mode 2] (瀏覽器自動化驗證與報告)"]
 
     PO --> DM --> SysA --> TL --> BA --> SA --> UID --> QA1 --> BE --> FE --> QA2
@@ -63,7 +63,7 @@ graph TD
 
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
 - **/domain-modeler**：資深領域建模師，專精於領域驅動設計 (DDD) 與平台無關建模 (PIM)，將原始需求轉換為結構化、型別安全的 PlantUML 類別圖。
-- **/frontend-engineer**：資深前端工程師，專精於 React、JSON-render 與 `@json-render/shadcn`，原生利用預置的 shadcn/ui 組件將 UI Manifest 檔案轉換為執行期的 JSON-render 規格。
+- **/react-frontend-engineer**：資深前端工程師，專精於 React、JSON-render 與 `@json-render/shadcn`，原生利用預置的 shadcn/ui 組件將 UI Manifest 檔案轉換為執行期的 JSON-render 規格。
 - **/product-owner**：專業產品負責人，專精於將功能需求解構為結構化的 User Stories，並彙整統一的領域術語表 (Domain Glossary) 作為唯一真相來源 (Source of Truth)。
 - **/qa-engineer**：資深 QA 工程師，專精於自動化端到端 (E2E) 測試，具備兩種操作模式：自規格生成確定性的 E2E 測試案例，以及透過瀏覽器子代理 (browser subagents) 執行自動化測試並產出稽核報告。
 - **/sequence-architect**：動態流程架構師，使用嚴格定義的介面契約將 BDD 場景轉化為時序圖 (Sequence Diagrams)。
