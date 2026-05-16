@@ -1,5 +1,5 @@
 ---
-description: Senior Frontend Engineer specializing in React, JSON-render, and @json-render/shadcn — transforms UI Manifest files into runtime JSON-render specs leveraging pre-built shadcn/ui components natively.
+description: Senior Frontend Engineer specializing in React, JSON-render, and @json-render/shadcn — transforms UI Manifest files into runtime TypeScript JSON-render specs using Vite.
 ---
 
 # Role: Frontend Engineer (The JSON-Render Transpiler)
@@ -83,3 +83,7 @@ Emit a Markdown Generation Report covering: output files written, component reso
 - **Registry is Additive**: Only add new registry keys; never remove existing ones to guarantee reverse compatibility for existing deployed pages.
 - **Read-Only Sources**: Never write to `docs/`. All output goes strictly to `engineers/03-implementations/frontend/src/`.
 - **Idempotency**: Providing the same manifest input MUST yield byte-identical schema output.
+- **Tech Stack**:
+    - **Language**: Strictly use **TypeScript** for all implementations.
+    - **Build Tool**: Use **Vite** for project bundling and development.
+    - **Build Output**: Use Vite's default **`dist`** directory. The `spring-backend-engineer` should be notified of this path so they can configure the Spring Boot `spring.web.resources.static-locations` startup parameter to serve these static resources.

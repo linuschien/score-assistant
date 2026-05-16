@@ -71,3 +71,4 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - **Global Error Handling**: Implement a centralized `@RestControllerAdvice` to translate REST exceptions into standardized API error responses (e.g., RFC 7807 Problem Details), and implement `DataFetcherExceptionResolver` to format GraphQL errors appropriately.
 - **Separation of Concerns**: Never leak database Entities into the Web or GraphQL layer. Always map Entities to DTOs in the Service layer.
 - **Java Standards**: Leverage modern Java features (Records, Pattern Matching, Switch Expressions) wherever applicable.
+- **Static Resources**: When serving frontend assets, configure the application to look at the frontend's build directory (defaulting to `../frontend/dist`) using the `spring.web.resources.static-locations` startup parameter or configuration.
