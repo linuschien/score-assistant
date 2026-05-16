@@ -496,31 +496,9 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records:
-    parameters:
-      - name: semesterId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "d3b07384-d113-404c-9f8a-020524032a9a"
-      - name: classId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
-      - name: gradeItemId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+  /grade-records:
     post:
-      summary: Create a new GradeRecord within a GradeItem
+      summary: Create a new GradeRecord
       operationId: createGradeRecord
       requestBody:
         required: true
@@ -538,7 +516,7 @@ paths:
         '400':
           $ref: '#/components/responses/400BadRequest'
     get:
-      summary: List GradeRecords within a GradeItem (Deprecated to GraphQL)
+      summary: List GradeRecords (Deprecated to GraphQL)
       operationId: listGradeRecords
       deprecated: true
       description: DEPRECATED_TO_GRAPHQL. Collection GET operations are banned on the REST transport layer. Please query collections via the designated GraphQL gateway.
@@ -552,29 +530,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/GradeRecord'
 
-  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}:
+  /grade-records/{gradeRecordId}:
     parameters:
-      - name: semesterId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "d3b07384-d113-404c-9f8a-020524032a9a"
-      - name: classId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
-      - name: gradeItemId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
       - name: gradeRecordId
         in: path
         required: true
@@ -647,29 +604,8 @@ paths:
         '404':
           $ref: '#/components/responses/404NotFound'
 
-  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}/attachments:
+  /grade-records/{gradeRecordId}/attachments:
     parameters:
-      - name: semesterId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "d3b07384-d113-404c-9f8a-020524032a9a"
-      - name: classId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
-      - name: gradeItemId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
       - name: gradeRecordId
         in: path
         required: true
@@ -710,29 +646,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/Attachment'
 
-  /semesters/{semesterId}/classes/{classId}/grade-items/{gradeItemId}/grade-records/{gradeRecordId}/attachments/{attachmentId}:
+  /grade-records/{gradeRecordId}/attachments/{attachmentId}:
     parameters:
-      - name: semesterId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "d3b07384-d113-404c-9f8a-020524032a9a"
-      - name: classId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
-      - name: gradeItemId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
       - name: gradeRecordId
         in: path
         required: true
@@ -807,6 +722,7 @@ paths:
           description: Deleted successfully
         '404':
           $ref: '#/components/responses/404NotFound'
+
 
 components:
   responses:
@@ -1091,51 +1007,68 @@ components:
 
     GradeRecord:
       type: object
+      required:
+        - id
+        - gradeItemId
+        - studentId
+        - score
+        - lastModifiedAt
+        - version
       properties:
         id:
           type: string
           format: uuid
           example: "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e"
+        gradeItemId:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+        studentId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
         score:
           type: number
-          format: double
+          format: decimal
           nullable: true
-          example: 95.5
-        last_modified_at:
+          example: 85.5
+        lastModifiedAt:
           type: string
           format: date-time
-          example: "2026-10-16T14:30:00Z"
-      required:
-        - id
-        - last_modified_at
+          example: "2026-05-16T22:54:19Z"
+        version:
+          type: integer
+          example: 1
 
     GradeRecordRequest:
       type: object
+      required:
+        - gradeItemId
+        - studentId
+        - score
       properties:
+        gradeItemId:
+          type: string
+          format: uuid
+          example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
+        studentId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
         score:
           type: number
-          format: double
+          format: decimal
           nullable: true
-          example: 95.5
-        last_modified_at:
-          type: string
-          format: date-time
-          example: "2026-10-16T14:30:00Z"
-      required:
-        - last_modified_at
+          example: 85.5
 
     GradeRecordPatchRequest:
       type: object
       properties:
         score:
           type: number
-          format: double
+          format: decimal
           nullable: true
-          example: 95.5
-        last_modified_at:
-          type: string
-          format: date-time
-          example: "2026-10-16T14:30:00Z"
+          example: 90.0
 
     Attachment:
       type: object

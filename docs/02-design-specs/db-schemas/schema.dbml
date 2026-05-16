@@ -73,6 +73,10 @@ Table grade_record {
     created_at timestamp
     updated_at timestamp
     deleted_at timestamp
+
+    indexes {
+        (grade_item_id, student_id) [unique]
+    }
 }
 
 Table attachment {

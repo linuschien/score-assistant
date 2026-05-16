@@ -93,8 +93,8 @@ package "Persistence Contracts" {
 Semester "1" *-- "*" Class : "organizes and manages"
 Class "1" *-- "*" Student : "contains"
 Class "1" *-- "*" GradeItem : "defines"
-GradeItem "1" *-- "*" GradeRecord : "records"
-Student "1" *-- "*" GradeRecord : "owns"
+GradeRecord "*" -- "1" GradeItem : "belongs to"
+GradeRecord "*" -- "1" Student : "belongs to"
 GradeRecord "1" *-- "*" Attachment : "attaches"
 
 enum GradeItemType {
@@ -115,6 +115,6 @@ note right of Semester : semester_name MUST be unique in the system
 note right of Class : class_name MUST be unique within a Semester
 note right of Student : student_number MUST be unique within a Class
 note bottom of GradeItem : max_score defaults to 100.\nOnly CLASSROOM_PERFORMANCE allows negative scores.
-note bottom of GradeRecord : score can be null (未登記).\nAllows negative values for CLASSROOM_PERFORMANCE.
+note bottom of GradeRecord : score can be null (未登記).\nAllows negative values for CLASSROOM_PERFORMANCE.\nUNIQUE(student_id, grade_item_id) constraint enforced.
 note bottom of Attachment : Max size 10MB. Stored directly as BLOB.\nMax 5 attachments per student per GradeItem.
 @enduml
