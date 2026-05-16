@@ -1,12 +1,12 @@
 ---
 name: oas-generator
-description: A deterministic generator that transforms API metadata into OpenAPI 3.1 YAML. Enforces strict standards for return codes, payload examples, PATCH/PUT concurrency, and GraphQL redirection.
+description: A deterministic generator that transforms API metadata into OpenAPI 3.2 YAML. Enforces strict standards for return codes, payload examples, PATCH/PUT concurrency, and GraphQL redirection.
 ---
 
 # Skill: Hardened OpenAPI Specification Generator
 
 ## ℹ️ Objective
-Receives structured metadata to produce a standardized OpenAPI 3.1.0 contract. This generator acts as a "Strict Compiler," ensuring that functional details like status codes, PATCH operations, and payload examples are baked into every output.
+Receives structured metadata to produce a standardized OpenAPI 3.2.0 contract. This generator acts as a "Strict Compiler," ensuring that functional details like status codes, PATCH operations, and payload examples are baked into every output.
 
 ## 🛠️ Generator Rules
 
@@ -31,12 +31,13 @@ Receives structured metadata to produce a standardized OpenAPI 3.1.0 contract. T
 - **Collection GET Ban**: For any Collection `GET` path, set `deprecated: true` and inject a description directing users to a GraphQL gateway.
 - **Custom Action Syntax**: Implement `POST {path}/{id}:{action}` for business behaviors.
 - **Path Parameters**: Use unique, descriptive parameters (e.g., `{inverter_id}`) for nested hierarchies.
+- **Default Base Path**: If no base path is specified in metadata, default to `/api/v1` in the `servers` block.
 
 ### 4. Concurrency & Sync Guardrails
 - **409 Conflict Injection**: When `409_required` is true, both `PUT` and `PATCH` MUST include the `409 Conflict` response definition with the `ConflictError` schema.
 - **Idempotency**: Document `PUT` as the primary synchronization point for `external_id` if sync is flagged.
 
 ## ⚠️ Output Requirements
-- **Format**: Pure YAML (OpenAPI 3.1.0).
+- **Format**: Pure YAML (OpenAPI 3.2.0).
 - **Constraints**: No conversational filler. Use `FIXME_REQUIRED` placeholders for missing mandatory metadata.
 ***
