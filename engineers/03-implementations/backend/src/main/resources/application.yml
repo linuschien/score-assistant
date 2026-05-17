@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: score-assistant
+
+  r2dbc:
+    url: r2dbc:h2:mem:///scoreassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  graphql:
+    websocket:
+      path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+  web:
+    resources:
+      static-locations: file:../frontend/dist/, classpath:/static/
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
+    com.scoreassistant: DEBUG

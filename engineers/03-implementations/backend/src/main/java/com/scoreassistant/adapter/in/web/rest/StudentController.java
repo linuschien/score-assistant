@@ -1,0 +1,88 @@
+package com.scoreassistant.adapter.in.web.rest;
+
+import com.scoreassistant.adapter.in.web.dto.OperationStatusDto;
+import com.scoreassistant.adapter.in.web.dto.StudentDto.*;
+import com.scoreassistant.application.service.StudentService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/semesters/{semesterId}/classes/{classId}/students")
+public class StudentController {
+
+    private final StudentService studentService;
+
+    public StudentController(StudentService studentService) {
+        this.studentService = studentService;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<StudentResponse> createStudent(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @Valid @RequestBody StudentRequest req) {
+        return studentService.create(classId, req);
+    }
+
+    @GetMapping("/{studentId}")
+    public Mono<StudentResponse> getStudentById(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @PathVariable UUID studentId) {
+        return studentService.findById(studentId);
+    }
+
+    @PutMapping("/{studentId}")
+    public Mono<StudentResponse> updateStudent(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @PathVariable UUID studentId,
+            @Valid @RequestBody StudentRequest req) {
+        return studentService.update(studentId, req);
+    }
+
+    @PatchMapping("/{studentId}")
+    public Mono<StudentResponse> patchStudent(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @PathVariable UUID studentId,
+            @RequestBody StudentPatchRequest req) {
+        return studentService.patch(studentId, req);
+    }
+
+    @DeleteMapping("/{studentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteStudent(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @PathVariable UUID studentId) {
+        return studentService.delete(studentId);
+    }
+
+    /**
+     * Custom action: import students from multipart CSV.
+     * Path: POST /semesters/{semesterId}/classes/{classId}/students:importStudents
+     */
+    @PostMapping(":importStudents")
+    public Mono<OperationStatusDto> importStudents(
+            @PathVariable UUID semesterId,
+            @PathVariable UUID classId,
+            @RequestPart("fileData") FilePart filePart) {
+        return filePart.content()
+                .reduce(new byte[0], (acc, buf) -> {
+                    byte[] bytes = new byte[buf.readableByteCount()];
+                    buf.read(bytes);
+                    byte[] combined = new byte[acc.length + bytes.length];
+                    System.arraycopy(acc, 0, combined, 0, acc.length);
+                    System.arraycopy(bytes, 0, combined, acc.length, bytes.length);
+                    return combined;
+                })
+                .flatMap(bytes -> studentService.importStudents(classId, bytes));
+    }
+}

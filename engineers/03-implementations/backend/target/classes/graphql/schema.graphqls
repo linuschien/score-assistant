@@ -1,0 +1,105 @@
+type Query {
+    listSemesters(filter: SemesterFilterInput): [Semester!]!
+    listClasses(filter: ClassFilterInput): [Class!]!
+    listStudents(filter: StudentFilterInput): [Student!]!
+    listGradeItems(filter: GradeItemFilterInput): [GradeItem!]!
+    listGradeRecords(filter: GradeRecordFilterInput): [GradeRecord!]!
+    listAttachments(filter: AttachmentFilterInput): [Attachment!]!
+}
+
+# ── Semester ───────────────────────────────────────────────────
+
+type Semester {
+    id:            ID!
+    semesterName:  String!
+    startDate:     String!
+    endDate:       String!
+}
+
+input SemesterFilterInput {
+    semesterName: String
+}
+
+# ── Class ─────────────────────────────────────────────────────
+
+type Class {
+    id:               ID!
+    semesterId:       ID!
+    className:        String!
+    passingThreshold: Float
+}
+
+input ClassFilterInput {
+    semesterId: ID
+    className:  String
+}
+
+# ── Student ───────────────────────────────────────────────────
+
+type Student {
+    id:            ID!
+    classId:       ID!
+    studentNumber: Int!
+    studentName:   String!
+}
+
+input StudentFilterInput {
+    classId: ID
+}
+
+# ── GradeItem ─────────────────────────────────────────────────
+
+enum GradeItemType {
+    ATTENDANCE
+    CLASSROOM_PERFORMANCE
+    ASSIGNMENT
+    REPORT
+    OTHER
+}
+
+type GradeItem {
+    id:              ID!
+    classId:         ID!
+    itemName:        String!
+    itemType:        GradeItemType!
+    itemDate:        String
+    itemDescription: String
+    maxScore:        Float!
+    weight:          Float!
+}
+
+input GradeItemFilterInput {
+    classId:  ID
+    itemType: GradeItemType
+}
+
+# ── GradeRecord ───────────────────────────────────────────────
+
+type GradeRecord {
+    id:             ID!
+    gradeItemId:    ID!
+    studentId:      ID!
+    score:          Float
+    lastModifiedAt: String!
+    version:        Int!
+}
+
+input GradeRecordFilterInput {
+    gradeItemId: ID
+    studentId:   ID
+}
+
+# ── Attachment ────────────────────────────────────────────────
+
+type Attachment {
+    id:            ID!
+    gradeRecordId: ID!
+    fileName:      String!
+    mimeType:      String!
+    fileSize:      Int!
+    uploadedAt:    String!
+}
+
+input AttachmentFilterInput {
+    gradeRecordId: ID
+}

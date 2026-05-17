@@ -1,0 +1,19 @@
+package com.scoreassistant.adapter.out.persistence;
+
+import com.scoreassistant.domain.model.SemesterEntity;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+
+import java.util.UUID;
+
+@Repository
+public interface SemesterRepository extends R2dbcRepository<SemesterEntity, UUID> {
+
+    @Query("SELECT * FROM semester WHERE deleted_at IS NULL")
+    Flux<SemesterEntity> findAllActive();
+
+    @Query("SELECT * FROM semester WHERE deleted_at IS NULL AND LOWER(semester_name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Flux<SemesterEntity> findByNameContaining(String name);
+}
