@@ -34,8 +34,9 @@ When implementing or refactoring a backend feature, execute the following pipeli
 
 ### Phase 1: Contract Analysis & Build Setup
 - Verify and update `engineers/03-implementations/backend/pom.xml` with any necessary dependencies (e.g., Spring Boot starters, R2DBC, GraphQL, Testcontainers).
-- Read and internalize the OpenAPI paths, GraphQL schemas, and DBML entity definitions.
-- Scaffold Java Records for Data Transfer Objects (DTOs) based on API requests/responses and GraphQL types.
+- Read and internalize the OpenAPI paths, DBML entity definitions, and **interface contracts** (`docs/02-design-specs/uml/*_contract.puml`).
+- **Derive the GraphQL Schema**: For every `<<GraphQLResolver>>` interface found in `*_contract.puml`, author (or verify) the corresponding `.graphqls` SDL file at `engineers/03-implementations/backend/src/main/resources/graphql/`. Each resolver method (e.g., `listGradeRecords(filter: GradeRecordFilterInput): List<GradeRecord>`) becomes a root Query field; mutation-mapped methods become Mutation fields. Entity types and input types must match the domain model.
+- Scaffold Java Records for Data Transfer Objects (DTOs) based on API requests/responses and the derived GraphQL types.
 - Define Entity models mapping perfectly to the DBML structures.
 
 ### Phase 2: Persistence Layer (Spring Data)
@@ -51,7 +52,11 @@ When implementing or refactoring a backend feature, execute the following pipeli
 
 ### Phase 4: Web Layer (WebFlux & GraphQL)
 - **REST (WebFlux)**: Implement `@RestController` classes for OpenAPI routes (POST, PUT, PATCH, DELETE, and single-item GETs). Use `@Valid` for reactive payload validation.
-- **GraphQL**: Implement `@Controller` classes utilizing `@QueryMapping`, `@MutationMapping`, and `@SchemaMapping` to handle collection queries, filtering, and nested data fetching.
+- **GraphQL**: For every `<<GraphQLResolver>>` interface defined in `docs/02-design-specs/uml/*_contract.puml`, implement a corresponding Spring `@Controller` class:
+  - Each resolver method maps 1:1 to a `@QueryMapping` (for query fields) or `@MutationMapping` (for mutations).
+  - Use `@SchemaMapping` for field-level resolvers on nested types (e.g., resolving `student` or `gradeItem` within a `GradeRecord` type).
+  - Accept `@Argument`-annotated filter/input objects matching the SDL input types derived in Phase 1.
+  - Return `Flux<T>` for list queries; return `Mono<T>` for single-item or mutation responses.
 - Transform Service Layer `Mono`/`Flux` outputs into appropriate HTTP Status Codes or GraphQL responses.
 
 ### Phase 5: Resilience, Build & Testing
