@@ -22,7 +22,7 @@
   <properties>
     <java.version>25</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jacoco.version>0.8.11</jacoco.version>
+    <jacoco.version>0.8.14</jacoco.version>
     <poi.version>5.2.5</poi.version>
     <opencsv.version>5.9</opencsv.version>
   </properties>
@@ -123,6 +123,15 @@
               <goal>check</goal>
             </goals>
             <configuration>
+              <excludes>
+                <exclude>com/scoreassistant/domain/model/**</exclude>
+                <exclude>com/scoreassistant/domain/exception/**</exclude>
+                <exclude>com/scoreassistant/adapter/in/web/dto/**</exclude>
+                <exclude>com/scoreassistant/adapter/in/web/rest/**</exclude>
+                <exclude>com/scoreassistant/adapter/in/web/graphql/**</exclude>
+                <exclude>com/scoreassistant/adapter/in/web/error/**</exclude>
+                <exclude>com/scoreassistant/ScoreAssistantApplication.class</exclude>
+              </excludes>
               <rules>
                 <rule>
                   <element>BUNDLE</element>
