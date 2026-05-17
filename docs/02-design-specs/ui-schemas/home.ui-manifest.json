@@ -51,52 +51,67 @@
                 "behavior_ref": "List all Semesters via GraphQL"
               }
             ]
+          }
+        ]
+      },
+      {
+        "id": "workflow-guide",
+        "abstract_type": "Section",
+        "semantic_variant": "workflow-guide",
+        "children": [
+          {
+            "id": "workflow-guide-title",
+            "abstract_type": "Heading",
+            "label": "操作流程導覽"
           },
           {
-            "id": "grade-recording-card",
-            "abstract_type": "Container",
-            "semantic_variant": "card",
+            "id": "setup-workflow",
+            "abstract_type": "Stack",
+            "semantic_variant": "workflow-step",
             "children": [
               {
-                "id": "grade-recording-card-title",
-                "abstract_type": "Heading",
-                "label": "成績登記"
-              },
-              {
-                "id": "grade-recording-card-desc",
+                "id": "setup-workflow-label",
                 "abstract_type": "Text",
-                "label": "為班級成績項目逐一登記學生分數"
+                "label": "① 系統設定"
               },
               {
-                "id": "go-to-grade-entry-trigger",
-                "abstract_type": "Trigger",
-                "semantic_variant": "primary",
-                "label": "前往登記",
-                "behavior_ref": "Record a numeric score for a Student"
+                "id": "setup-workflow-steps",
+                "abstract_type": "Text",
+                "label": "建立學期 → 建立班級 → 管理學生名單"
               }
             ]
           },
           {
-            "id": "grade-preview-card",
-            "abstract_type": "Container",
-            "semantic_variant": "card",
+            "id": "grade-workflow",
+            "abstract_type": "Stack",
+            "semantic_variant": "workflow-step",
             "children": [
               {
-                "id": "grade-preview-card-title",
-                "abstract_type": "Heading",
-                "label": "成績預覽與匯出"
-              },
-              {
-                "id": "grade-preview-card-desc",
+                "id": "grade-workflow-label",
                 "abstract_type": "Text",
-                "label": "預覽加權總分並匯出 Excel / CSV 報表"
+                "label": "② 成績管理"
               },
               {
-                "id": "go-to-preview-trigger",
-                "abstract_type": "Trigger",
-                "semantic_variant": "primary",
-                "label": "前往預覽",
-                "behavior_ref": "Preview class Grade Summary matrix via GraphQL"
+                "id": "grade-workflow-steps",
+                "abstract_type": "Text",
+                "label": "建立成績項目 → 設定權重 → 登記學生分數"
+              }
+            ]
+          },
+          {
+            "id": "preview-workflow",
+            "abstract_type": "Stack",
+            "semantic_variant": "workflow-step",
+            "children": [
+              {
+                "id": "preview-workflow-label",
+                "abstract_type": "Text",
+                "label": "③ 成績輸出"
+              },
+              {
+                "id": "preview-workflow-steps",
+                "abstract_type": "Text",
+                "label": "預覽加權總分 → 匯出 Excel / CSV 報表"
               }
             ]
           }
