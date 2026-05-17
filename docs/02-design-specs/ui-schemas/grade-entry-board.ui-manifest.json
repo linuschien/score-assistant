@@ -1,0 +1,164 @@
+{
+  "ui_id": "grade-entry-board",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "grade-entry-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "page-breadcrumb",
+        "abstract_type": "Stack",
+        "semantic_variant": "breadcrumb",
+        "children": [
+          {
+            "id": "home-link",
+            "abstract_type": "Trigger",
+            "label": "首頁",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "semester-list-link",
+            "abstract_type": "Trigger",
+            "label": "學期列表",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "class-list-link",
+            "abstract_type": "Trigger",
+            "label": "班級管理",
+            "behavior_ref": "List all Classes in a Semester via GraphQL"
+          },
+          {
+            "id": "current-page-crumb",
+            "abstract_type": "Text",
+            "label": "成績登記總表"
+          }
+        ]
+      },
+      {
+        "id": "header-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "page-title",
+            "abstract_type": "Heading",
+            "label": "成績登記總表"
+          },
+          {
+            "id": "current-context",
+            "abstract_type": "Stack",
+            "children": [
+              {
+                "id": "semester-name",
+                "abstract_type": "Text",
+                "label": "學期：",
+                "data_ref": "getSemesterById"
+              },
+              {
+                "id": "class-name",
+                "abstract_type": "Text",
+                "label": "班級：",
+                "data_ref": "getClassById"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "grade-matrix-section",
+        "abstract_type": "Section",
+        "semantic_variant": "list-section",
+        "children": [
+          {
+            "id": "grade-matrix-table",
+            "abstract_type": "Table",
+            "semantic_variant": "data-table",
+            "label": "成績登記矩陣",
+            "data_ref": "listGradeRecords",
+            "children": [
+              {
+                "id": "student-number-column",
+                "abstract_type": "Text",
+                "label": "座號"
+              },
+              {
+                "id": "student-name-column",
+                "abstract_type": "Text",
+                "label": "姓名"
+              },
+              {
+                "id": "dynamic-grade-column",
+                "abstract_type": "Container",
+                "label": "評量項目 (動態)",
+                "children": [
+                  {
+                    "id": "score-cell-stack",
+                    "abstract_type": "Stack",
+                    "children": [
+                      {
+                        "id": "score-input",
+                        "abstract_type": "Field",
+                        "label": "分數",
+                        "behavior_ref": "Update an existing GradeRecord"
+                      },
+                      {
+                        "id": "attendance-selector",
+                        "abstract_type": "Selection",
+                        "semantic_variant": "dropdown",
+                        "label": "狀態",
+                        "behavior_ref": "Record Attendance with automatic status-to-score mapping",
+                        "interactions": [
+                          {
+                            "on_event": "on_change",
+                            "target_id": "score-input",
+                            "behavior_ref": "Record Attendance with automatic status-to-score mapping"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "attachment-trigger",
+                        "abstract_type": "Trigger",
+                        "semantic_variant": "icon",
+                        "label": "附件",
+                        "interactions": [
+                          {
+                            "on_event": "on_click",
+                            "target_id": "attachment-overlay",
+                            "behavior_ref": "Upload an Attachment for a GradeRecord"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "attachment-overlay",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "附件管理",
+        "children": [
+          {
+            "id": "attachment-list",
+            "abstract_type": "Table",
+            "semantic_variant": "data-table",
+            "data_ref": "listAttachments"
+          },
+          {
+            "id": "upload-attachment-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "上傳附件",
+            "behavior_ref": "Upload an Attachment for a GradeRecord"
+          }
+        ]
+      }
+    ]
+  }
+}

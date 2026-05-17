@@ -1,0 +1,175 @@
+{
+  "ui_id": "class-list",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "class-list-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "page-breadcrumb",
+        "abstract_type": "Stack",
+        "semantic_variant": "breadcrumb",
+        "children": [
+          {
+            "id": "home-link",
+            "abstract_type": "Trigger",
+            "label": "首頁",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "semester-list-link",
+            "abstract_type": "Trigger",
+            "label": "學期列表",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "current-page-crumb",
+            "abstract_type": "Text",
+            "label": "班級管理"
+          }
+        ]
+      },
+      {
+        "id": "header-section",
+        "abstract_type": "Section",
+        "semantic_variant": "action-bar",
+        "children": [
+          {
+            "id": "page-title",
+            "abstract_type": "Heading",
+            "label": "班級管理"
+          },
+          {
+            "id": "current-semester-context",
+            "abstract_type": "Text",
+            "label": "當前學期：",
+            "data_ref": "getSemesterById"
+          },
+          {
+            "id": "create-class-button",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "建立班級",
+            "behavior_ref": "Create a new Class in a Semester"
+          }
+        ]
+      },
+      {
+        "id": "list-section",
+        "abstract_type": "Section",
+        "semantic_variant": "list-section",
+        "children": [
+          {
+            "id": "class-table",
+            "abstract_type": "Table",
+            "semantic_variant": "data-table",
+            "label": "班級資料表",
+            "data_ref": "listClasses",
+            "children": [
+              {
+                "id": "class-name-column",
+                "abstract_type": "Text",
+                "label": "班級名稱"
+              },
+              {
+                "id": "student-count-column",
+                "abstract_type": "Text",
+                "label": "學生人數"
+              },
+              {
+                "id": "record-grade-matrix-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "primary",
+                "label": "登記成績",
+                "behavior_ref": "Record a numeric score for a Student",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "class-list-page",
+                    "behavior_ref": "Record a numeric score for a Student"
+                  }
+                ]
+              },
+              {
+                "id": "view-students-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "查看學生",
+                "behavior_ref": "List all Students in a Class via GraphQL",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "class-list-page",
+                    "behavior_ref": "List all Students in a Class via GraphQL"
+                  }
+                ]
+              },
+              {
+                "id": "view-grade-items-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "管理成績項目",
+                "behavior_ref": "List all GradeItems in a Class via GraphQL",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "class-list-page",
+                    "behavior_ref": "List all GradeItems in a Class via GraphQL"
+                  }
+                ]
+              },
+              {
+                "id": "edit-class-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "編輯",
+                "behavior_ref": "Update Class information"
+              },
+              {
+                "id": "delete-class-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "destructive",
+                "label": "刪除",
+                "behavior_ref": "Delete a Class",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "delete-class-confirm-dialog",
+                    "behavior_ref": "Delete a Class"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "delete-class-confirm-dialog",
+        "abstract_type": "Overlay",
+        "semantic_variant": "confirm-dialog",
+        "label": "確認刪除班級",
+        "children": [
+          {
+            "id": "delete-class-warning-text",
+            "abstract_type": "Text",
+            "label": "此班級底下的學生名單與所有成績資料將一並永久刪除，此操作無法復原。"
+          },
+          {
+            "id": "confirm-delete-class-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "destructive",
+            "label": "確認刪除",
+            "behavior_ref": "Delete a Class"
+          },
+          {
+            "id": "cancel-delete-class-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "secondary",
+            "label": "取消"
+          }
+        ]
+      }
+    ]
+  }
+}

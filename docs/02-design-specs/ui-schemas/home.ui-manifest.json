@@ -1,0 +1,107 @@
+{
+  "ui_id": "home",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "home-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "welcome-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "welcome-title",
+            "abstract_type": "Heading",
+            "label": "歡迎使用 Score Assistant"
+          },
+          {
+            "id": "welcome-text",
+            "abstract_type": "Text",
+            "label": "請選擇一個學期開始管理成績，或建立新的學期。"
+          }
+        ]
+      },
+      {
+        "id": "quick-access-grid",
+        "abstract_type": "Grid",
+        "semantic_variant": "card-grid",
+        "children": [
+          {
+            "id": "manage-semesters-card",
+            "abstract_type": "Container",
+            "semantic_variant": "card",
+            "children": [
+              {
+                "id": "semester-card-title",
+                "abstract_type": "Heading",
+                "label": "學期管理"
+              },
+              {
+                "id": "semester-card-desc",
+                "abstract_type": "Text",
+                "label": "建立或管理學期、班級與學生名單"
+              },
+              {
+                "id": "go-to-semesters-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "primary",
+                "label": "進入列表",
+                "behavior_ref": "List all Semesters via GraphQL"
+              }
+            ]
+          },
+          {
+            "id": "grade-recording-card",
+            "abstract_type": "Container",
+            "semantic_variant": "card",
+            "children": [
+              {
+                "id": "grade-recording-card-title",
+                "abstract_type": "Heading",
+                "label": "成績登記"
+              },
+              {
+                "id": "grade-recording-card-desc",
+                "abstract_type": "Text",
+                "label": "為班級成績項目逐一登記學生分數"
+              },
+              {
+                "id": "go-to-grade-entry-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "primary",
+                "label": "前往登記",
+                "behavior_ref": "Record a numeric score for a Student"
+              }
+            ]
+          },
+          {
+            "id": "grade-preview-card",
+            "abstract_type": "Container",
+            "semantic_variant": "card",
+            "children": [
+              {
+                "id": "grade-preview-card-title",
+                "abstract_type": "Heading",
+                "label": "成績預覽與匯出"
+              },
+              {
+                "id": "grade-preview-card-desc",
+                "abstract_type": "Text",
+                "label": "預覽加權總分並匯出 Excel / CSV 報表"
+              },
+              {
+                "id": "go-to-preview-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "primary",
+                "label": "前往預覽",
+                "behavior_ref": "Preview class Grade Summary matrix via GraphQL"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

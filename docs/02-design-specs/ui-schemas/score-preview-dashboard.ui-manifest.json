@@ -1,0 +1,92 @@
+{
+  "ui_id": "score-preview-dashboard",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "score-preview-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "page-breadcrumb",
+        "abstract_type": "Stack",
+        "semantic_variant": "breadcrumb",
+        "children": [
+          {
+            "id": "home-link",
+            "abstract_type": "Trigger",
+            "label": "首頁",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "class-list-link",
+            "abstract_type": "Trigger",
+            "label": "班級管理",
+            "behavior_ref": "List all Classes in a Semester via GraphQL"
+          },
+          {
+            "id": "current-page-crumb",
+            "abstract_type": "Text",
+            "label": "成績預覽與匯出"
+          }
+        ]
+      },
+      {
+        "id": "header-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "page-title",
+            "abstract_type": "Heading",
+            "label": "成績總表預覽"
+          },
+          {
+            "id": "export-xlsx-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "匯出 Excel (.xlsx)",
+            "behavior_ref": "Export grades to a file"
+          }
+        ]
+      },
+      {
+        "id": "weight-warning-banner",
+        "abstract_type": "Section",
+        "semantic_variant": "warning-banner",
+        "label": "⚠ 注意：目前總權重未達 100%，加權總分計算結果可能不正確。",
+        "behavior_ref": "Grade Summary preview shows weight warning when total weight is not 100%"
+      },
+      {
+        "id": "preview-table-section",
+        "abstract_type": "Section",
+        "semantic_variant": "list-section",
+        "children": [
+          {
+            "id": "score-summary-table",
+            "abstract_type": "Table",
+            "semantic_variant": "summary-table",
+            "label": "成績總表",
+            "data_ref": "listGradeRecords",
+            "children": [
+              {
+                "id": "student-number-column",
+                "abstract_type": "Text",
+                "label": "座號"
+              },
+              {
+                "id": "student-name-column",
+                "abstract_type": "Text",
+                "label": "姓名"
+              },
+              {
+                "id": "weighted-total-column",
+                "abstract_type": "Metric",
+                "label": "加權總分"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

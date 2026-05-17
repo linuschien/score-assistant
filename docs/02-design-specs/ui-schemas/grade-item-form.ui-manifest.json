@@ -1,0 +1,69 @@
+{
+  "ui_id": "grade-item-form",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "grade-item-form-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "form-section",
+        "abstract_type": "Section",
+        "semantic_variant": "form-section",
+        "label": "成績項目資訊",
+        "children": [
+          {
+            "id": "item-name-field",
+            "abstract_type": "Field",
+            "label": "項目名稱",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "item-type-selection",
+            "abstract_type": "Selection",
+            "semantic_variant": "dropdown",
+            "label": "項目類型",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "item-date-field",
+            "abstract_type": "Field",
+            "label": "日期",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "item-description-field",
+            "abstract_type": "Field",
+            "label": "說明",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "max-score-field",
+            "abstract_type": "Field",
+            "label": "滿分",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "weight-field",
+            "abstract_type": "Field",
+            "label": "權重",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "submit-grade-item-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存",
+            "interactions": [
+              {
+                "on_event": "on_submit",
+                "target_id": "grade-item-form-page",
+                "behavior_ref": "Create a new GradeItem"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

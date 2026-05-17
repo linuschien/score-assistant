@@ -1,0 +1,127 @@
+{
+  "ui_id": "semester-list",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "semester-list-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "header-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "page-title",
+            "abstract_type": "Heading",
+            "label": "學期列表"
+          },
+          {
+            "id": "create-semester-button",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "建立學期",
+            "behavior_ref": "Create a new Semester"
+          }
+        ]
+      },
+      {
+        "id": "list-section",
+        "abstract_type": "Section",
+        "semantic_variant": "list-section",
+        "children": [
+          {
+            "id": "semester-table",
+            "abstract_type": "Table",
+            "semantic_variant": "data-table",
+            "label": "學期資料表",
+            "data_ref": "listSemesters",
+            "children": [
+              {
+                "id": "semester-name-column",
+                "abstract_type": "Text",
+                "label": "學期名稱"
+              },
+              {
+                "id": "start-date-column",
+                "abstract_type": "Text",
+                "label": "起始日期"
+              },
+              {
+                "id": "end-date-column",
+                "abstract_type": "Text",
+                "label": "結束日期"
+              },
+              {
+                "id": "class-count-column",
+                "abstract_type": "Text",
+                "label": "班級數量"
+              },
+              {
+                "id": "view-classes-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "primary",
+                "label": "查看班級",
+                "behavior_ref": "List all Classes in a Semester via GraphQL",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "semester-list-page",
+                    "behavior_ref": "List all Classes in a Semester via GraphQL"
+                  }
+                ]
+              },
+              {
+                "id": "edit-semester-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "編輯",
+                "behavior_ref": "Update Semester information"
+              },
+              {
+                "id": "delete-semester-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "destructive",
+                "label": "刪除",
+                "behavior_ref": "Delete a Semester",
+                "interactions": [
+                  {
+                    "on_event": "on_click",
+                    "target_id": "delete-semester-confirm-dialog",
+                    "behavior_ref": "Delete a Semester"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "delete-semester-confirm-dialog",
+        "abstract_type": "Overlay",
+        "semantic_variant": "confirm-dialog",
+        "label": "確認刪除學期",
+        "children": [
+          {
+            "id": "delete-semester-warning-text",
+            "abstract_type": "Text",
+            "label": "此學期底下的所有班級、學生與成績資料將一並永久刪除，此操作無法復原。"
+          },
+          {
+            "id": "confirm-delete-semester-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "destructive",
+            "label": "確認刪除",
+            "behavior_ref": "Delete a Semester"
+          },
+          {
+            "id": "cancel-delete-semester-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "secondary",
+            "label": "取消"
+          }
+        ]
+      }
+    ]
+  }
+}

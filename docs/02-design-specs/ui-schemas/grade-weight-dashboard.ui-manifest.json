@@ -1,0 +1,128 @@
+{
+  "ui_id": "grade-weight-dashboard",
+  "domain_module": "CoreDomain",
+  "root_element": {
+    "id": "grade-weight-page",
+    "abstract_type": "Container",
+    "semantic_variant": "page",
+    "children": [
+      {
+        "id": "page-breadcrumb",
+        "abstract_type": "Stack",
+        "semantic_variant": "breadcrumb",
+        "children": [
+          {
+            "id": "home-link",
+            "abstract_type": "Trigger",
+            "label": "首頁",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "semester-list-link",
+            "abstract_type": "Trigger",
+            "label": "學期列表",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "class-list-link",
+            "abstract_type": "Trigger",
+            "label": "班級管理",
+            "behavior_ref": "List all Classes in a Semester via GraphQL"
+          },
+          {
+            "id": "current-page-crumb",
+            "abstract_type": "Text",
+            "label": "成績權重管理"
+          }
+        ]
+      },
+      {
+        "id": "header-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "page-title",
+            "abstract_type": "Heading",
+            "label": "成績項目權重管理"
+          },
+          {
+            "id": "total-weight-indicator",
+            "abstract_type": "Metric",
+            "label": "目前總權重",
+            "data_ref": "listGradeItems",
+            "behavior_ref": "Warn when total weight is not 100% during calculation"
+          },
+          {
+            "id": "save-weights-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存權重設定",
+            "behavior_ref": "Allow saving weight when total is not 100% with a warning"
+          }
+        ]
+      },
+      {
+        "id": "weight-summary-section",
+        "abstract_type": "Section",
+        "semantic_variant": "summary-section",
+        "children": [
+          {
+            "id": "weight-distribution-chart",
+            "abstract_type": "Chart",
+            "semantic_variant": "pie",
+            "label": "權重分布圖",
+            "data_ref": "listGradeItems",
+            "behavior_ref": "View weight distribution summary via GraphQL"
+          }
+        ]
+      },
+      {
+        "id": "weight-editor-section",
+        "abstract_type": "Section",
+        "semantic_variant": "list-section",
+        "children": [
+          {
+            "id": "weight-editor-table",
+            "abstract_type": "Table",
+            "semantic_variant": "editable-table",
+            "label": "成績項目權重設定",
+            "data_ref": "listGradeItems",
+            "behavior_ref": "Update weight for a single GradeItem",
+            "children": [
+              {
+                "id": "weight-item-type-column",
+                "abstract_type": "Text",
+                "label": "類型"
+              },
+              {
+                "id": "weight-item-name-column",
+                "abstract_type": "Text",
+                "label": "項目名稱"
+              },
+              {
+                "id": "weight-item-max-score-column",
+                "abstract_type": "Text",
+                "label": "滿分"
+              },
+              {
+                "id": "weight-input",
+                "abstract_type": "Field",
+                "semantic_variant": "number",
+                "label": "權重 (%)",
+                "behavior_ref": "Update weight for a single GradeItem",
+                "interactions": [
+                  {
+                    "on_event": "on_change",
+                    "target_id": "total-weight-indicator",
+                    "behavior_ref": "Warn when total weight is not 100% during calculation"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
