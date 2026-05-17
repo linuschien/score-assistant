@@ -75,6 +75,19 @@ Feature: Persistence Side Effects
     Then the "GradeRecordRepositoryAdapter" should update the record in the database
     And the persisted "last_modified_at" field should be set to the current UTC timestamp
 
+  # GradeRecord Optimistic Lock — version check on update
+  Scenario: GradeRecord update succeeds when version matches and increments version
+    Given a GradeRecord with ID "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e" exists with version 3
+    When the domain logic triggers an Update with version 3 for the GradeRecord
+    Then the "GradeRecordRepositoryAdapter" should update the record in the database
+    And the persisted "version" field should be incremented to 4
+
+  Scenario: GradeRecord update is rejected when version is stale
+    Given a GradeRecord with ID "b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e" exists with version 3
+    When the domain logic triggers an Update with version 2 for the GradeRecord
+    Then the "GradeRecordRepository" should NOT be called
+    And a domain optimistic lock exception should be thrown before reaching the persistence layer
+
   # Attachment persistence (AttachmentRepositoryAdapter)
   Scenario Outline: Attachment persistence side effects
     Given the domain logic triggers a <action> for an Attachment
@@ -98,14 +111,15 @@ Feature: Persistence Side Effects
     And the "GradeRecordRepositoryAdapter" should remove all GradeRecords associated with those Students and GradeItems
     And the "AttachmentRepositoryAdapter" should remove all Attachments associated with those GradeRecords
 
-  # Cascade deletion: Class → Student → GradeRecord
+  # Cascade deletion: Class → Student + GradeItem → GradeRecord → Attachment
   Scenario: Cascade deletion from Class removes all dependent entities
     Given a Class with ID "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a" exists
-    And it contains several Students, GradeItems, and GradeRecords
+    And it contains several Students, GradeItems, GradeRecords, and Attachments
     When the "ClassRepository" deletes the Class with ID "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
     Then the "StudentRepositoryAdapter" should remove all Students associated with Class "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
     And the "GradeItemRepositoryAdapter" should remove all GradeItems associated with Class "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
     And the "GradeRecordRepositoryAdapter" should remove all GradeRecords associated with those Students and GradeItems
+    And the "AttachmentRepositoryAdapter" should remove all Attachments associated with those GradeRecords
 
   # GradeRecord score validation — domain layer blocks persistence
   Scenario: GradeRecord score validation prevents invalid persistence for non-CLASSROOM_PERFORMANCE types
