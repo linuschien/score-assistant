@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Table("class")
 public record ClassEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("semester_id")       UUID semesterId,
         @Column("class_name")        String className,
         @Column("passing_threshold") BigDecimal passingThreshold,

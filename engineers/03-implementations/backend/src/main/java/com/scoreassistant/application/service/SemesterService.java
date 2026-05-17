@@ -25,7 +25,7 @@ public class SemesterService {
     public Mono<SemesterResponse> create(SemesterRequest req) {
         var now = LocalDateTime.now();
         var entity = new SemesterEntity(
-                UUID.randomUUID(),
+                null,
                 req.semester_name(),
                 req.start_date(),
                 req.end_date(),

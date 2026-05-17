@@ -33,7 +33,7 @@ public class AttachmentService {
                 .flatMap(gr -> {
                     var now = LocalDateTime.now();
                     var entity = new AttachmentEntity(
-                            UUID.randomUUID(), gradeRecordId,
+                            null, gradeRecordId,
                             req.file_name(), req.mime_type(), req.file_size(), req.file_data(),
                             req.uploaded_at(), now, now, null
                     );

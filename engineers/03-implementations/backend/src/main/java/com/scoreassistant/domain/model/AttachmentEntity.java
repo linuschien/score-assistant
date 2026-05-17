@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Table("attachment")
 public record AttachmentEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("grade_record_id") UUID gradeRecordId,
         @Column("file_name")       String fileName,
         @Column("mime_type")       String mimeType,

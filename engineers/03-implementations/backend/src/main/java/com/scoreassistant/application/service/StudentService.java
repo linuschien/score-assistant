@@ -33,7 +33,7 @@ public class StudentService {
                 .flatMap(cls -> {
                     var now = LocalDateTime.now();
                     var entity = new StudentEntity(
-                            UUID.randomUUID(), classId,
+                            null, classId,
                             req.student_number(), req.student_name(),
                             now, now, null
                     );
@@ -115,7 +115,7 @@ public class StudentService {
                                 if (parts.length < 2) return Flux.empty();
                                 var now = LocalDateTime.now();
                                 var entity = new StudentEntity(
-                                        UUID.randomUUID(), classId,
+                                        null, classId,
                                         Integer.parseInt(parts[0].trim()),
                                         parts[1].trim(),
                                         now, now, null

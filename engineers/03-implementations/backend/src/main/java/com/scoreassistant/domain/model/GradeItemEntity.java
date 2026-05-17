@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Table("grade_item")
 public record GradeItemEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("class_id")         UUID classId,
         @Column("item_name")        String itemName,
         @Column("item_type")        String itemType,

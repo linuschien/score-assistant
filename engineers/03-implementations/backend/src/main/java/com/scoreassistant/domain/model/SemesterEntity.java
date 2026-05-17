@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Table("semester")
 public record SemesterEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("semester_name") String semesterName,
         @Column("start_date")    LocalDate startDate,
         @Column("end_date")      LocalDate endDate,

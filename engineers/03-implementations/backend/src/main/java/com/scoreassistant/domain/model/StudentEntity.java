@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Table("student")
 public record StudentEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("class_id")       UUID classId,
         @Column("student_number") int studentNumber,
         @Column("student_name")   String studentName,

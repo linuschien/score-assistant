@@ -3,7 +3,7 @@ spring:
     name: score-assistant
 
   r2dbc:
-    url: r2dbc:h2:mem:///scoreassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    url: r2dbc:h2:mem:///scoreassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
     username: sa
     password:
 

@@ -11,12 +11,12 @@ import java.util.UUID;
 
 @Table("grade_record")
 public record GradeRecordEntity(
-        @Id UUID id,
+        @Id @Column("id") UUID id,
         @Column("grade_item_id")    UUID gradeItemId,
         @Column("student_id")       UUID studentId,
-        BigDecimal score,
+        @Column("score")            BigDecimal score,
         @Column("last_modified_at") LocalDateTime lastModifiedAt,
-        @Version int version,
+        @Version @Column("version") int version,
         @Column("created_at")       LocalDateTime createdAt,
         @Column("updated_at")       LocalDateTime updatedAt,
         @Column("deleted_at")       LocalDateTime deletedAt

@@ -33,7 +33,7 @@ public class ClassService {
                 .flatMap(sem -> {
                     var now = LocalDateTime.now();
                     var entity = new ClassEntity(
-                            UUID.randomUUID(), semesterId,
+                            null, semesterId,
                             req.class_name(), req.passing_threshold() != null ? req.passing_threshold() : BigDecimal.valueOf(60.0),
                             now, now, null
                     );

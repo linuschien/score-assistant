@@ -27,9 +27,9 @@ public class GradeRecordService {
     public Mono<GradeRecordResponse> create(GradeRecordRequest req) {
         var now = LocalDateTime.now();
         var entity = new GradeRecordEntity(
-                UUID.randomUUID(),
+                null,
                 req.gradeItemId(), req.studentId(),
-                req.score(), now, 1,
+                req.score(), now, 0,
                 now, now, null
         );
         return gradeRecordRepository.save(entity).map(this::toResponse);

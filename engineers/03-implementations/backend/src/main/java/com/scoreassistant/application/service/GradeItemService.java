@@ -47,7 +47,7 @@ public class GradeItemService {
                 .flatMap(cls -> {
                     var now = LocalDateTime.now();
                     var entity = new GradeItemEntity(
-                            UUID.randomUUID(), classId,
+                            null, classId,
                             req.item_name(), req.item_type(),
                             req.item_date(), req.item_description(),
                             req.max_score(), req.weight(),
@@ -128,7 +128,6 @@ public class GradeItemService {
                 .flatMap(items -> studentRepository.findByClassIdOrdered(classId).collectList()
                         .flatMap(students -> gradeRecordRepository.findByClassId(classId).collectList()
                                 .flatMap(records -> Mono.fromCallable(() -> {
-                                    // Build workbook on bounded elastic scheduler (blocking I/O)
                                     try (var wb = new XSSFWorkbook()) {
                                         var sheet = wb.createSheet("Grades");
                                         var header = sheet.createRow(0);
