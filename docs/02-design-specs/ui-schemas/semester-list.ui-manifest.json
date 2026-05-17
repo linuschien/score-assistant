@@ -7,6 +7,24 @@
     "semantic_variant": "page",
     "children": [
       {
+        "id": "page-breadcrumb",
+        "abstract_type": "Stack",
+        "semantic_variant": "breadcrumb",
+        "children": [
+          {
+            "id": "home-link",
+            "abstract_type": "Trigger",
+            "label": "首頁",
+            "behavior_ref": "List all Semesters via GraphQL"
+          },
+          {
+            "id": "current-page-crumb",
+            "abstract_type": "Text",
+            "label": "學期列表"
+          }
+        ]
+      },
+      {
         "id": "header-section",
         "abstract_type": "Section",
         "semantic_variant": "summary-section",
