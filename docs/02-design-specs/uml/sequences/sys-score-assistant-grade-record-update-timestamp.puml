@@ -1,0 +1,40 @@
+@startuml sys-score-assistant-grade-record-update-timestamp
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應 BDD Scenario: GradeRecord update persists last_modified_at timestamp ──
+' ── 契約來源: grade_record_contract.puml ─────────────────────────────────────
+
+actor "Teacher" as U
+participant "GradeRecordRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : updateGradeRecord(id: UUID, req: GradeRecordRequest)
+activate PA
+
+PA -> SA : save(entity: GradeRecord)
+activate SA
+
+note right of SA
+  entity.last_modified_at = UTC.now()
+  在 save() 執行前由 Adapter
+  自動注入當前 UTC 時間戳記。
+end note
+
+SA -> DB : UPDATE grade_records\nSET ..., last_modified_at = NOW()\nWHERE id = ?
+activate DB
+DB --> SA : row updated
+deactivate DB
+
+SA --> PA : GradeRecord\n(with last_modified_at = current UTC)
+deactivate SA
+
+PA --> U : ResponseEntity<GradeRecordResponse>\n200 OK (last_modified_at updated)
+deactivate PA
+
+@enduml

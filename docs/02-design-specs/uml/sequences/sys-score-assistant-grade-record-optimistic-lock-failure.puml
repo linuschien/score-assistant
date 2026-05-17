@@ -1,0 +1,45 @@
+@startuml sys-score-assistant-grade-record-optimistic-lock-failure
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應 BDD Scenario: GradeRecord update is rejected when version is stale ──
+' ── 契約來源: grade_record_contract.puml ─────────────────────────────────────
+
+actor "Teacher" as U
+participant "GradeRecordRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as SA <<SecondaryAdapter>>
+
+note over SA #EEEEEE
+  （本場景中 save() 永不被呼叫）
+  GradeRecordRepository NOT called for save.
+end note
+
+U -> PA : updateGradeRecord(id: UUID, req: GradeRecordRequest)\n[req includes version=2]
+activate PA
+
+PA -> SA : findById(id: UUID)
+activate SA
+SA --> PA : Optional<GradeRecord> (version=3)
+deactivate SA
+
+note right of PA
+  樂觀鎖定版本比對：
+  request.version (2) ≠ stored.version (3) ❌
+  版本過期，拒絕更新。
+end note
+
+note over PA #FFCCCC
+  ❌ 領域樂觀鎖定例外拋出
+  OptimisticLockException
+  (stale version: expected=3, got=2)
+  在抵達持久層之前即拋出例外。
+end note
+
+PA -[#red]-> U : ResponseEntity<Void>\n409 Conflict (Optimistic Lock Failure)
+deactivate PA
+
+@enduml

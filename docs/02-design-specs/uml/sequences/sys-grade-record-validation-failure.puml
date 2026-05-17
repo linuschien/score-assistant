@@ -6,30 +6,35 @@ skinparam sequence {
     MessageAlign center
 }
 
+' ── 參與者（依六角架構層次排列）──────────────────────────────────
 actor "Teacher" as U
 participant "GradeRecordRestControllerAdapter" as PA <<PrimaryAdapter>>
 participant "GradeRecordRepositoryAdapter" as SA <<SecondaryAdapter>>
 
-U -> PA : POST /.../grade-records (score: -5, type: ASSIGNMENT)
+note over SA #EEEEEE
+  （本場景中永不被呼叫）
+  Repository NOT called — data integrity preserved.
+end note
+
+' ── 主流程 ────────────────────────────────────────────────────────
+U -> PA : createGradeRecord(req: GradeRecordRequest)\n[score=-5, type=ASSIGNMENT]
 activate PA
 
 note right of PA
-  Validation Rule:
-  Only CLASSROOM_PERFORMANCE 
-  allows negative scores.
+  契約規則：score < 0 僅允許
+  CLASSROOM_PERFORMANCE 類型。
+  ASSIGNMENT 觸發驗證例外。
 end note
 
-PA -> PA : validateScore(score, type)
+' 控制器執行自我驗證（屬於 adapter.in 層職責）
+PA -> PA : createGradeRecord(req)
 note over PA #FFCCCC
-  Validation Exception Thrown!
+  ❌ 領域驗證例外拋出
+  DomainValidationException
+  (score out of range for type ASSIGNMENT)
 end note
 
-PA -[#red]> U : 400 Bad Request (Validation Error)
+PA -[#red]-> U : ResponseEntity<Void>\n400 Bad Request
 deactivate PA
-
-note right of SA
-  Repository is NOT called,
-  preserving data integrity.
-end note
 
 @enduml

@@ -1,4 +1,4 @@
-@startuml sys-semester-persistence-cascade-deletion
+@startuml sys-score-assistant-class-cascade-deletion
 !pragma layout smetana
 skinparam backgroundColor #FFFFFF
 skinparam sequence {
@@ -6,8 +6,11 @@ skinparam sequence {
     MessageAlign center
 }
 
-' ── 參與者（依六角架構層次排列）──────────────────────────────────
-participant "SemesterRepositoryAdapter" as SRA <<SecondaryAdapter>>
+' ── 對應 BDD Scenario: Cascade deletion from Class removes all dependent entities
+' ── 契約來源: class_contract.puml, student_contract.puml,
+'             grade_item_contract.puml, grade_record_contract.puml,
+'             attachment_contract.puml ──────────────────────────────────────────
+
 participant "ClassRepositoryAdapter" as CRA <<SecondaryAdapter>>
 participant "StudentRepositoryAdapter" as STRA <<SecondaryAdapter>>
 participant "GradeItemRepositoryAdapter" as GIRA <<SecondaryAdapter>>
@@ -15,35 +18,20 @@ participant "GradeRecordRepositoryAdapter" as GRRA <<SecondaryAdapter>>
 participant "AttachmentRepositoryAdapter" as ARA <<SecondaryAdapter>>
 database "H2 Database" as DB
 
-' ── 觸發點：SemesterRepository.deleteById() ────────────────────
-note over SRA
-  觸發來源：SemesterRestController.deleteSemester(id)
-  呼叫 SemesterRepository.deleteById(id)
+note over CRA
+  觸發來源：ClassRestController.deleteClass(id)
+  呼叫 ClassRepository.deleteById(id)
 end note
 
-[-> SRA : deleteById(id: UUID)
-activate SRA
+[-> CRA : deleteById(id: UUID)
+activate CRA
 
-SRA -> DB : DELETE FROM semesters WHERE id = ?
+CRA -> DB : DELETE FROM classes WHERE id = ?
 activate DB
-DB --> SRA : success (DB CASCADE triggers)
+DB --> CRA : success (DB CASCADE triggers)
 deactivate DB
 
-note right of DB
-  資料庫 CASCADE DELETE 策略
-  依照 DBML 定義自動級聯。
-  以下流程為各 Adapter 逐一
-  執行 deleteById() 呼叫。
-end note
-
-group Cascade Deletion: Semester → Class → Student + GradeItem → GradeRecord → Attachment
-
-    SRA -> CRA : deleteById(classId: UUID)\n[for each Class in Semester]
-    activate CRA
-    CRA -> DB : DELETE FROM classes WHERE id = ?
-    activate DB
-    DB --> CRA : success
-    deactivate DB
+group Cascade Deletion: Class → Student + GradeItem → GradeRecord → Attachment
 
     CRA -> STRA : deleteById(studentId: UUID)\n[for each Student in Class]
     activate STRA
@@ -83,11 +71,9 @@ group Cascade Deletion: Semester → Class → Student + GradeItem → GradeReco
     GIRA --> CRA : void
     deactivate GIRA
 
-    CRA --> SRA : void
-    deactivate CRA
 end
 
-[<-- SRA : void
-deactivate SRA
+[<-- CRA : void
+deactivate CRA
 
 @enduml

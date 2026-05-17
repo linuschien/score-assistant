@@ -1,0 +1,46 @@
+@startuml sys-score-assistant-attachment-count-guard
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應 BDD Scenario: Attachment count limit is enforced before persistence ──
+' ── 契約來源: attachment_contract.puml, grade_record_contract.puml ─────────────
+
+actor "Teacher" as U
+participant "AttachmentRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as GRSA <<SecondaryAdapter>>
+participant "AttachmentRepositoryAdapter" as ATSA <<SecondaryAdapter>>
+
+note over ATSA #EEEEEE
+  （本場景中 save() 永不被呼叫）
+  AttachmentRepository NOT called — guard blocks persistence.
+end note
+
+U -> PA : createAttachment(req: AttachmentRequest)\n[gradeRecordId references a record with 5 attachments]
+activate PA
+
+PA -> GRSA : findById(id: UUID)
+activate GRSA
+GRSA --> PA : Optional<GradeRecord>\n(attachments.size() = 5)
+deactivate GRSA
+
+note right of PA
+  附件數量上限守衛：
+  current attachments (5) >= MAX_ATTACHMENTS (5) ❌
+  超出上限，拒絕新增附件。
+end note
+
+note over PA #FFCCCC
+  ❌ 領域驗證例外拋出
+  DomainValidationException
+  (Attachment limit exceeded: max 5 per GradeRecord)
+  在抵達 AttachmentRepository 之前即拋出例外。
+end note
+
+PA -[#red]-> U : ResponseEntity<Void>\n422 Unprocessable Entity (Attachment Limit Exceeded)
+deactivate PA
+
+@enduml

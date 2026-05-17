@@ -1,0 +1,55 @@
+@startuml sys-score-assistant-grade-record-optimistic-lock-success
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應 BDD Scenario: GradeRecord update succeeds when version matches ──────
+' ── 契約來源: grade_record_contract.puml ─────────────────────────────────────
+
+actor "Teacher" as U
+participant "GradeRecordRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : updateGradeRecord(id: UUID, req: GradeRecordRequest)\n[req includes version=3]
+activate PA
+
+PA -> SA : findById(id: UUID)
+activate SA
+SA -> DB : SELECT * FROM grade_records WHERE id = ?
+activate DB
+DB --> SA : GradeRecord (version=3)
+deactivate DB
+SA --> PA : Optional<GradeRecord> (version=3)
+deactivate SA
+
+note right of PA
+  樂觀鎖定版本比對：
+  request.version (3) == stored.version (3) ✅
+  版本匹配，允許更新。
+end note
+
+PA -> SA : save(entity: GradeRecord)
+activate SA
+
+note right of SA
+  Optimistic Locking enforced.
+  Repository MUST check version field before save.
+  entity.version = stored.version + 1 → 4
+end note
+
+SA -> DB : UPDATE grade_records\nSET ..., version = 4\nWHERE id = ? AND version = 3
+activate DB
+DB --> SA : 1 row updated (version=4)
+deactivate DB
+
+SA --> PA : GradeRecord (version=4)
+deactivate SA
+
+PA --> U : ResponseEntity<GradeRecordResponse>\n200 OK (version incremented to 4)
+deactivate PA
+
+@enduml
