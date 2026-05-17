@@ -30,6 +30,12 @@
             "behavior_ref": "List all Classes in a Semester via GraphQL"
           },
           {
+            "id": "grade-item-list-link",
+            "abstract_type": "Trigger",
+            "label": "管理成績項目",
+            "behavior_ref": "List all GradeItems in a Class via GraphQL"
+          },
+          {
             "id": "current-page-crumb",
             "abstract_type": "Text",
             "label": "成績權重管理"

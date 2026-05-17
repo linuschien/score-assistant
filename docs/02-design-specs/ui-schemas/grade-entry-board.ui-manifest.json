@@ -63,6 +63,13 @@
                 "data_ref": "getClassById"
               }
             ]
+          },
+          {
+            "id": "preview-grades-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "secondary",
+            "label": "預覽成績",
+            "behavior_ref": "Preview class Grade Summary matrix via GraphQL"
           }
         ]
       },

@@ -70,6 +70,13 @@
             "semantic_variant": "primary",
             "label": "建立成績項目",
             "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "manage-weights-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "secondary",
+            "label": "管理權重",
+            "behavior_ref": "View weight distribution summary via GraphQL"
           }
         ]
       },
