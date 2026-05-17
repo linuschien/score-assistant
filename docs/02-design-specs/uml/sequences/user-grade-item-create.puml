@@ -6,30 +6,85 @@ skinparam sequence {
     MessageAlign center
 }
 
+' ── 對應契約: grade_item_contract.puml ───────────────────────────────────────
+' RestController → CommandService/QueryService → Repository
+' Primary Adapter 不得直接呼叫 Secondary Adapter (Hexagonal Integrity)
+
 actor "Teacher" as U
 participant "GradeItemRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeItemCommandService" as CS <<DomainService>>
 participant "GradeItemRepositoryAdapter" as SA <<SecondaryAdapter>>
 database "H2 Database" as DB
 
-U -> PA : POST /.../grade-items (GradeItemRequest)
+== Create GradeItem ==
+U -> PA : createGradeItem(req: GradeItemRequest)
 activate PA
 
 note right of PA
   Validate item_type and max_score
+  before delegating to Service.
 end note
 
-PA -> SA : save(entity: GradeItem)
-activate SA
+PA -> CS : createGradeItem(req: GradeItemRequest)
+activate CS
 
+CS -> SA : save(entity: GradeItem)
+activate SA
 SA -> DB : INSERT INTO grade_items
 activate DB
 DB --> SA : row persisted
 deactivate DB
-
-SA --> PA : GradeItem
+SA --> CS : GradeItem (with UUID)
 deactivate SA
 
-PA --> U : 201 Created (GradeItemResponse)
+CS --> PA : GradeItem
+deactivate CS
+
+PA --> U : ResponseEntity<GradeItemResponse>\n201 Created
+deactivate PA
+
+== Update GradeItem ==
+U -> PA : updateGradeItem(id: UUID, req: GradeItemRequest)
+activate PA
+
+PA -> CS : updateGradeItem(id: UUID, req: GradeItemRequest)
+activate CS
+
+CS -> SA : save(entity: GradeItem)
+activate SA
+SA -> DB : UPDATE grade_items SET ... WHERE id = ?
+activate DB
+DB --> SA : row updated
+deactivate DB
+SA --> CS : GradeItem
+deactivate SA
+
+CS --> PA : GradeItem
+deactivate CS
+
+PA --> U : ResponseEntity<GradeItemResponse>\n200 OK
+deactivate PA
+
+== Delete GradeItem ==
+U -> PA : deleteGradeItem(id: UUID)
+activate PA
+
+PA -> CS : deleteGradeItem(id: UUID)
+activate CS
+
+CS -> SA : deleteById(id: UUID)
+activate SA
+SA -> DB : DELETE FROM grade_items WHERE id = ?
+activate DB
+DB --> SA : void
+deactivate DB
+SA --> CS : void
+deactivate SA
+
+CS --> PA : void
+deactivate CS
+
+PA --> U : ResponseEntity<Void>\n204 No Content
 deactivate PA
 
 @enduml

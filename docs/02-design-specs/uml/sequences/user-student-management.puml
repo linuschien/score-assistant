@@ -6,37 +6,80 @@ skinparam sequence {
     MessageAlign center
 }
 
+' ── 對應契約: student_contract.puml ──────────────────────────────────────────
+' RestController → CommandService/QueryService → Repository
+' Primary Adapter 不得直接呼叫 Secondary Adapter (Hexagonal Integrity)
+
 actor "Teacher" as U
 participant "StudentRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "StudentCommandService" as CS <<DomainService>>
 participant "StudentRepositoryAdapter" as SA <<SecondaryAdapter>>
 database "H2 Database" as DB
 
 == Add Student ==
-U -> PA : POST /.../students (StudentRequest)
+U -> PA : createStudent(req: StudentRequest)
 activate PA
-PA -> SA : save(entity: Student)
+
+PA -> CS : createStudent(req: StudentRequest)
+activate CS
+
+CS -> SA : save(entity: Student)
 activate SA
 SA -> DB : INSERT INTO students
 activate DB
 DB --> SA : success
 deactivate DB
-SA --> PA : Student
+SA --> CS : Student (with UUID)
 deactivate SA
-PA --> U : 201 Created
+
+CS --> PA : Student
+deactivate CS
+
+PA --> U : ResponseEntity<StudentResponse>\n201 Created
 deactivate PA
 
 == Update Student ==
-U -> PA : PUT /.../students/{id} (StudentRequest)
+U -> PA : updateStudent(id: UUID, req: StudentRequest)
 activate PA
-PA -> SA : save(entity: Student)
+
+PA -> CS : updateStudent(id: UUID, req: StudentRequest)
+activate CS
+
+CS -> SA : save(entity: Student)
 activate SA
-SA -> DB : UPDATE students
+SA -> DB : UPDATE students SET ... WHERE id = ?
 activate DB
 DB --> SA : success
 deactivate DB
-SA --> PA : Student
+SA --> CS : Student
 deactivate SA
-PA --> U : 200 OK
+
+CS --> PA : Student
+deactivate CS
+
+PA --> U : ResponseEntity<StudentResponse>\n200 OK
+deactivate PA
+
+== Delete Student ==
+U -> PA : deleteStudent(id: UUID)
+activate PA
+
+PA -> CS : deleteStudent(id: UUID)
+activate CS
+
+CS -> SA : deleteById(id: UUID)
+activate SA
+SA -> DB : DELETE FROM students WHERE id = ?
+activate DB
+DB --> SA : void
+deactivate DB
+SA --> CS : void
+deactivate SA
+
+CS --> PA : void
+deactivate CS
+
+PA --> U : ResponseEntity<Void>\n204 No Content
 deactivate PA
 
 @enduml
