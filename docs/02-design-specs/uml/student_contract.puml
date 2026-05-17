@@ -6,15 +6,34 @@ skinparam defaultFontName Inter
 
 package "adapter.in.web.rest" {
   interface "StudentRestController" <<RestController>> {
+    ' --- Mutations ---
     + createStudent(req: StudentRequest): ResponseEntity<StudentResponse>
     + updateStudent(id: UUID, req: StudentRequest): ResponseEntity<StudentResponse>
     + deleteStudent(id: UUID): ResponseEntity<Void>
+    ' --- Single-resource Query ---
     + getStudentById(id: UUID): ResponseEntity<StudentResponse>
+    ' --- Custom Actions ---
+    + importStudents(req: ImportStudentsRequest): ResponseEntity<OperationStatus>
   }
 }
 
 package "adapter.in.web.graphql" {
   interface "StudentGraphQLResolver" <<GraphQLResolver>> {
+    ' --- Collection / Filtered Queries ---
+    + listStudents(filter: StudentFilterInput): List<Student>
+  }
+}
+
+package "application.port.in" {
+  interface "StudentCommandService" <<Service>> {
+    + createStudent(req: StudentRequest): Student
+    + updateStudent(id: UUID, req: StudentRequest): Student
+    + deleteStudent(id: UUID): void
+    + importStudents(req: ImportStudentsRequest): OperationStatus
+  }
+
+  interface "StudentQueryService" <<Service>> {
+    + getStudentById(id: UUID): Student
     + listStudents(filter: StudentFilterInput): List<Student>
   }
 }
@@ -29,7 +48,10 @@ package "adapter.out.persistence" {
 }
 
 ' === Dependency Arrows ===
-"StudentRestController"  ..> "StudentRepository" : uses
-"StudentGraphQLResolver" ..> "StudentRepository" : uses
+"StudentRestController"   ..> "StudentCommandService" : uses
+"StudentRestController"   ..> "StudentQueryService"   : uses
+"StudentGraphQLResolver"  ..> "StudentQueryService"   : uses
+"StudentCommandService"   ..> "StudentRepository"     : uses
+"StudentQueryService"     ..> "StudentRepository"     : uses
 
 @enduml

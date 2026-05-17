@@ -6,15 +6,38 @@ skinparam defaultFontName Inter
 
 package "adapter.in.web.rest" {
   interface "GradeItemRestController" <<RestController>> {
+    ' --- Mutations ---
     + createGradeItem(req: GradeItemRequest): ResponseEntity<GradeItemResponse>
     + updateGradeItem(id: UUID, req: GradeItemRequest): ResponseEntity<GradeItemResponse>
     + deleteGradeItem(id: UUID): ResponseEntity<Void>
+    ' --- Single-resource Query ---
     + getGradeItemById(id: UUID): ResponseEntity<GradeItemResponse>
+    ' --- Custom Actions (Class-scoped, triggered via classId context) ---
+    + exportGrades(req: ExportGradesRequest): ResponseEntity<OperationStatus>
+    + exportAttendance(req: ExportAttendanceRequest): ResponseEntity<OperationStatus>
+    + calculateWeightedScores(req: CalculateWeightedScoresRequest): ResponseEntity<OperationStatus>
   }
 }
 
 package "adapter.in.web.graphql" {
   interface "GradeItemGraphQLResolver" <<GraphQLResolver>> {
+    ' --- Collection / Filtered Queries ---
+    + listGradeItems(filter: GradeItemFilterInput): List<GradeItem>
+  }
+}
+
+package "application.port.in" {
+  interface "GradeItemCommandService" <<Service>> {
+    + createGradeItem(req: GradeItemRequest): GradeItem
+    + updateGradeItem(id: UUID, req: GradeItemRequest): GradeItem
+    + deleteGradeItem(id: UUID): void
+    + exportGrades(req: ExportGradesRequest): OperationStatus
+    + exportAttendance(req: ExportAttendanceRequest): OperationStatus
+    + calculateWeightedScores(req: CalculateWeightedScoresRequest): OperationStatus
+  }
+
+  interface "GradeItemQueryService" <<Service>> {
+    + getGradeItemById(id: UUID): GradeItem
     + listGradeItems(filter: GradeItemFilterInput): List<GradeItem>
   }
 }
@@ -29,7 +52,10 @@ package "adapter.out.persistence" {
 }
 
 ' === Dependency Arrows ===
-"GradeItemRestController"  ..> "GradeItemRepository" : uses
-"GradeItemGraphQLResolver" ..> "GradeItemRepository" : uses
+"GradeItemRestController"   ..> "GradeItemCommandService" : uses
+"GradeItemRestController"   ..> "GradeItemQueryService"   : uses
+"GradeItemGraphQLResolver"  ..> "GradeItemQueryService"   : uses
+"GradeItemCommandService"   ..> "GradeItemRepository"     : uses
+"GradeItemQueryService"     ..> "GradeItemRepository"     : uses
 
 @enduml
