@@ -1,18 +1,20 @@
-@startuml
+@startuml score_assistant_domain_model
 skinparam style strictuml
-title Domain Model - Score Assistant Module
+title Domain Model - Score Assistant (v1.2 — Reviewed)
 
 package "Core Domain" {
+
     class Semester <<Entity>> {
         +String id
         +String semester_name
-        +DateTime start_date
-        +DateTime end_date
+        +Date start_date
+        +Date end_date
     }
 
     class Class <<Entity>> {
         +String id
         +String class_name
+        +Decimal passing_threshold
     }
 
     class Student <<Entity>> {
@@ -25,7 +27,7 @@ package "Core Domain" {
         +String id
         +String item_name
         +GradeItemType item_type <<Enum>>
-        +DateTime item_date
+        +Date item_date
         +String item_description
         +Decimal max_score
         +Decimal weight
@@ -35,17 +37,21 @@ package "Core Domain" {
         +String id
         +Decimal score
         +DateTime last_modified_at
+        -DateTime created_at
     }
 
     class Attachment <<Entity>> {
         +String id
-        +String file_name [INFERRED]
-        +Blob file_data [INFERRED]
-        +DateTime uploaded_at [INFERRED]
+        +String file_name
+        +String mime_type
+        +Integer file_size
+        +Binary file_data
+        +DateTime uploaded_at
     }
 }
 
 package "Persistence Contracts" {
+
     interface SemesterRepository <<Interface>> {
         +Create(Semester data): Semester
         +GetById(String id): Semester?
@@ -93,9 +99,9 @@ package "Persistence Contracts" {
 Semester "1" *-- "*" Class : "organizes and manages"
 Class "1" *-- "*" Student : "contains"
 Class "1" *-- "*" GradeItem : "defines"
-GradeRecord "*" -- "1" GradeItem : "belongs to"
-GradeRecord "*" -- "1" Student : "belongs to"
-GradeRecord "1" *-- "*" Attachment : "attaches"
+GradeItem "1" *-- "*" GradeRecord : "evaluates"
+Student "1" *-- "*" GradeRecord : "receives"
+GradeRecord "1" *-- "*" Attachment : "stores"
 
 enum GradeItemType {
     ATTENDANCE
@@ -111,10 +117,48 @@ enum AttendanceStatus {
     ABSENT
 }
 
-note right of Semester : semester_name MUST be unique in the system
-note right of Class : class_name MUST be unique within a Semester
-note right of Student : student_number MUST be unique within a Class
-note bottom of GradeItem : max_score defaults to 100.\nOnly CLASSROOM_PERFORMANCE allows negative scores.
-note bottom of GradeRecord : score can be null (未登記).\nAllows negative values for CLASSROOM_PERFORMANCE.\nUNIQUE(student_id, grade_item_id) constraint enforced.
-note bottom of Attachment : Max size 10MB. Stored directly as BLOB.\nMax 5 attachments per student per GradeItem.
+note right of Semester
+  semester_name MUST be unique system-wide.
+  start_date / end_date format: YYYY-MM-DD (Date, not DateTime).
+end note
+
+note right of Class
+  class_name MUST be unique within a Semester.
+  passing_threshold defaults to 60; teacher-adjustable.
+end note
+
+note right of Student
+  student_number MUST be unique within a Class.
+  Used for display ordering (ascending).
+end note
+
+note bottom of GradeItem
+  item_date and item_description are OPTIONAL.
+  max_score defaults to 100; MUST be > 0 except for CLASSROOM_PERFORMANCE.
+  weight defaults to 0. System warns when Σweight ≠ 100%.
+  Only CLASSROOM_PERFORMANCE allows negative max_score / negative GradeRecord.score.
+end note
+
+note bottom of GradeRecord
+  score can be null (未登記 / N/A); treated as 0 in weighted calculation.
+  UNIQUE constraint enforced on (student_id, grade_item_id).
+  created_at is internal audit field (private).
+end note
+
+note bottom of Attachment
+  Allowed types: PDF, .docx, .xlsx, .jpg, .png, .zip.
+  file_size MUST be ≤ 10 MB (10,485,760 bytes).
+  Max 5 attachments per (student, GradeItem) combination.
+  file_data is stored directly in the DB as binary content (BLOB/BYTEA).
+  mime_type is derived from the uploaded file (e.g. application/pdf).
+end note
+
+note right of AttendanceStatus
+  Used as quick-input shortcut for GradeItems of type ATTENDANCE.
+  Default score mapping:
+    PRESENT  → 1
+    EXCUSED  → 0.5
+    ABSENT   → 0
+  Mapping values are teacher-adjustable per GradeItem.
+end note
 @enduml
