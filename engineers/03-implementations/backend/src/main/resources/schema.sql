@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS attachment (
     file_name       VARCHAR(255) NOT NULL,
     mime_type       VARCHAR(100) NOT NULL,
     file_size       INT          NOT NULL,
-    file_data       BLOB         NOT NULL,
+    file_data       BYTEA        NOT NULL,
     uploaded_at     TIMESTAMP,
     created_at      TIMESTAMP,
     updated_at      TIMESTAMP,
