@@ -1,7 +1,7 @@
 service_name: "score-assistant"
 architecture: "Hexagonal"
 adapters:
-  # Primary - REST
+  # ── Primary — REST ────────────────────────────────────────────
   - name: "SemesterRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -9,6 +9,7 @@ adapters:
     port:
       interface: "SemesterRestController"
       layer: "domain.ports.input"
+
   - name: "ClassRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -16,6 +17,7 @@ adapters:
     port:
       interface: "ClassRestController"
       layer: "domain.ports.input"
+
   - name: "StudentRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -23,6 +25,7 @@ adapters:
     port:
       interface: "StudentRestController"
       layer: "domain.ports.input"
+
   - name: "GradeItemRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -30,6 +33,7 @@ adapters:
     port:
       interface: "GradeItemRestController"
       layer: "domain.ports.input"
+
   - name: "GradeRecordRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -37,6 +41,7 @@ adapters:
     port:
       interface: "GradeRecordRestController"
       layer: "domain.ports.input"
+
   - name: "AttachmentRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -45,7 +50,7 @@ adapters:
       interface: "AttachmentRestController"
       layer: "domain.ports.input"
 
-  # Primary - GraphQL
+  # ── Primary — GraphQL ─────────────────────────────────────────
   - name: "SemesterGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -53,6 +58,7 @@ adapters:
     port:
       interface: "SemesterGraphQLResolver"
       layer: "domain.ports.input"
+
   - name: "ClassGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -60,6 +66,7 @@ adapters:
     port:
       interface: "ClassGraphQLResolver"
       layer: "domain.ports.input"
+
   - name: "StudentGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -67,6 +74,7 @@ adapters:
     port:
       interface: "StudentGraphQLResolver"
       layer: "domain.ports.input"
+
   - name: "GradeItemGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -74,6 +82,7 @@ adapters:
     port:
       interface: "GradeItemGraphQLResolver"
       layer: "domain.ports.input"
+
   - name: "GradeRecordGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -81,6 +90,7 @@ adapters:
     port:
       interface: "GradeRecordGraphQLResolver"
       layer: "domain.ports.input"
+
   - name: "AttachmentGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -89,7 +99,40 @@ adapters:
       interface: "AttachmentGraphQLResolver"
       layer: "domain.ports.input"
 
-  # Secondary - Persistence
+  # ── Primary — Application Services (application.port.in) ─────
+  - name: "StudentCommandServiceAdapter"
+    type: "Primary"
+    tech: "Project Reactor"
+    stereotype: "<<Service>>"
+    port:
+      interface: "StudentCommandService"
+      layer: "domain.ports.input"
+
+  - name: "StudentQueryServiceAdapter"
+    type: "Primary"
+    tech: "Project Reactor"
+    stereotype: "<<Service>>"
+    port:
+      interface: "StudentQueryService"
+      layer: "domain.ports.input"
+
+  - name: "GradeItemCommandServiceAdapter"
+    type: "Primary"
+    tech: "Project Reactor"
+    stereotype: "<<Service>>"
+    port:
+      interface: "GradeItemCommandService"
+      layer: "domain.ports.input"
+
+  - name: "GradeItemQueryServiceAdapter"
+    type: "Primary"
+    tech: "Project Reactor"
+    stereotype: "<<Service>>"
+    port:
+      interface: "GradeItemQueryService"
+      layer: "domain.ports.input"
+
+  # ── Secondary — Persistence ───────────────────────────────────
   - name: "SemesterRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
@@ -97,6 +140,7 @@ adapters:
     port:
       interface: "SemesterRepository"
       layer: "domain.ports.output"
+
   - name: "ClassRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
@@ -104,6 +148,7 @@ adapters:
     port:
       interface: "ClassRepository"
       layer: "domain.ports.output"
+
   - name: "StudentRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
@@ -111,6 +156,7 @@ adapters:
     port:
       interface: "StudentRepository"
       layer: "domain.ports.output"
+
   - name: "GradeItemRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
@@ -118,6 +164,7 @@ adapters:
     port:
       interface: "GradeItemRepository"
       layer: "domain.ports.output"
+
   - name: "GradeRecordRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
@@ -125,6 +172,7 @@ adapters:
     port:
       interface: "GradeRecordRepository"
       layer: "domain.ports.output"
+
   - name: "AttachmentRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
