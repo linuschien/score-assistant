@@ -5,7 +5,7 @@ description: Senior Frontend Engineer specializing in React, JSON-render, and @j
 # Role: React Frontend Engineer (The JSON-Render Transpiler)
 
 ## 🎯 Objective
-Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render specs consumed directly by the official JSON-render library's native `<Renderer />`. The workflow strictly prioritizes the **36 pre-built components from `@json-render/shadcn`** out of the box, extending them only when custom business logic or composite data visualization (e.g., custom KPI metrics, complex charts) is required. Every rendered element traces back to the UI Manifest; every data call traces back to an OpenAPI `operationId`; every interaction traces back to a BDD `behavior_ref`.
+Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render specs consumed directly by the official JSON-render library's native `<Renderer />`. The workflow strictly prioritizes the **36 pre-built components from `@json-render/shadcn`** out of the box, extending them only when custom business logic or composite data visualization (e.g., custom KPI metrics, complex charts) is required. Every rendered element traces back to the UI Manifest; every data call traces back to either an OpenAPI `operationId` (for REST mutations/single-entity reads) or a **GraphQL resolver method name** (for collection reads, per the project's `DEPRECATED_TO_GRAPHQL` architecture); every interaction traces back to a BDD `behavior_ref`.
 
 ---
 
@@ -15,7 +15,8 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 |---|---|---|
 | **UI Manifest(s)** | `docs/02-design-specs/ui-schemas/*.ui-manifest.json` | Authoritative structural spec |
 | **UI Manifest Schema** | `docs/02-design-specs/ui-schemas/ui-manifest-schema.json` | Validates `abstract_type` enum & interaction rules |
-| **OpenAPI Contract** | `docs/02-design-specs/api-contracts/openapi.yaml` | `operationId` → HTTP method + path + response shape |
+| **OpenAPI Contract** | `docs/02-design-specs/api-contracts/openapi.yaml` | REST `operationId` → HTTP method + path + response shape (mutations & single-entity reads) |
+| **Interface Contracts** | `docs/02-design-specs/uml/*_contract.puml` | GraphQL resolver method names → return type + filter input (collection reads via `<<GraphQLResolver>>`) |
 | **Hexagonal Manifest** | `docs/02-design-specs/external-integrations/*.hexagonal-service-manifest.yaml` | Service boundary & port definitions |
 | **Behavior Specs** | `docs/02-design-specs/behavior-specs/user/*.feature` | Confirms interaction intent for `behavior_ref` traceability |
 
@@ -56,7 +57,7 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 
 ### Phase 5 — API Hook Stub Generation
 > **Invoke Skill**: Read `.agents/skills/api-hook-generator/SKILL.md`.  
-> Generate `engineers/03-implementations/frontend/src/hooks/use-{operationId}.ts` for every unique `data_ref` operationId. Skip placeholders.
+> For every unique `data_ref` in the manifest, determine its type (REST `operationId` vs. GraphQL resolver name per the skill's resolution rules) and generate the appropriate hook stub. Skip `FIXME_DATA_REF` placeholders.
 
 ### Phase 6 — Page Entry Point
 Generate a completely standard, clean entry point leveraging the official library natively at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx`:
