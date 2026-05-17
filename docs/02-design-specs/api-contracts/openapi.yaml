@@ -279,6 +279,41 @@ paths:
                 items:
                   $ref: '#/components/schemas/Student'
 
+  /semesters/{semesterId}/classes/{classId}/students:importStudents:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Batch-import Students from CSV into a Class
+      operationId: importStudents
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportStudentsRequest'
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+
   /semesters/{semesterId}/classes/{classId}/students/{studentId}:
     parameters:
       - name: semesterId
@@ -493,6 +528,115 @@ paths:
       responses:
         '204':
           description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}:exportGrades:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Export full grade report (Excel/CSV) for a Class
+      operationId: exportGrades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportGradesRequest'
+      responses:
+        '200':
+          description: Export job triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}:exportAttendance:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Export attendance-only report for a Class
+      operationId: exportAttendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportAttendanceRequest'
+      responses:
+        '200':
+          description: Export job triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /semesters/{semesterId}/classes/{classId}:calculateWeightedScores:
+    parameters:
+      - name: semesterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "d3b07384-d113-404c-9f8a-020524032a9a"
+      - name: classId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    post:
+      summary: Calculate weighted scores for all Students in a Class
+      operationId: calculateWeightedScores
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateWeightedScoresRequest'
+      responses:
+        '200':
+          description: Calculation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationStatus'
         '404':
           $ref: '#/components/responses/404NotFound'
 
@@ -787,12 +931,12 @@ components:
           example: "2026-Fall"
         start_date:
           type: string
-          format: date-time
-          example: "2026-09-01T00:00:00Z"
+          format: date
+          example: "2026-09-01"
         end_date:
           type: string
-          format: date-time
-          example: "2027-01-31T23:59:59Z"
+          format: date
+          example: "2027-01-31"
       required:
         - id
         - semester_name
@@ -807,12 +951,12 @@ components:
           example: "2026-Fall"
         start_date:
           type: string
-          format: date-time
-          example: "2026-09-01T00:00:00Z"
+          format: date
+          example: "2026-09-01"
         end_date:
           type: string
-          format: date-time
-          example: "2027-01-31T23:59:59Z"
+          format: date
+          example: "2027-01-31"
       required:
         - semester_name
         - start_date
@@ -826,12 +970,12 @@ components:
           example: "2026-Fall"
         start_date:
           type: string
-          format: date-time
-          example: "2026-09-01T00:00:00Z"
+          format: date
+          example: "2026-09-01"
         end_date:
           type: string
-          format: date-time
-          example: "2027-01-31T23:59:59Z"
+          format: date
+          example: "2027-01-31"
 
     Class:
       type: object
@@ -843,6 +987,10 @@ components:
         class_name:
           type: string
           example: "Computer Science 101"
+        passing_threshold:
+          type: number
+          format: double
+          example: 60.0
       required:
         - id
         - class_name
@@ -853,6 +1001,10 @@ components:
         class_name:
           type: string
           example: "Computer Science 101"
+        passing_threshold:
+          type: number
+          format: double
+          example: 60.0
       required:
         - class_name
 
@@ -862,6 +1014,10 @@ components:
         class_name:
           type: string
           example: "Computer Science 101"
+        passing_threshold:
+          type: number
+          format: double
+          example: 60.0
 
     Student:
       type: object
@@ -928,11 +1084,13 @@ components:
           $ref: '#/components/schemas/GradeItemType'
         item_date:
           type: string
-          format: date-time
-          example: "2026-10-15T10:00:00Z"
+          format: date
+          example: "2026-10-15"
+          nullable: true
         item_description:
           type: string
           example: "Implement basic algorithms"
+          nullable: true
         max_score:
           type: number
           format: double
@@ -940,13 +1098,11 @@ components:
         weight:
           type: number
           format: double
-          example: 0.25
+          example: 0.0
       required:
         - id
         - item_name
         - item_type
-        - item_date
-        - item_description
         - max_score
         - weight
 
@@ -960,11 +1116,13 @@ components:
           $ref: '#/components/schemas/GradeItemType'
         item_date:
           type: string
-          format: date-time
-          example: "2026-10-15T10:00:00Z"
+          format: date
+          example: "2026-10-15"
+          nullable: true
         item_description:
           type: string
           example: "Implement basic algorithms"
+          nullable: true
         max_score:
           type: number
           format: double
@@ -972,12 +1130,10 @@ components:
         weight:
           type: number
           format: double
-          example: 0.25
+          example: 0.0
       required:
         - item_name
         - item_type
-        - item_date
-        - item_description
         - max_score
         - weight
 
@@ -991,11 +1147,13 @@ components:
           $ref: '#/components/schemas/GradeItemType'
         item_date:
           type: string
-          format: date-time
-          example: "2026-10-15T10:00:00Z"
+          format: date
+          example: "2026-10-15"
+          nullable: true
         item_description:
           type: string
           example: "Implement basic algorithms"
+          nullable: true
         max_score:
           type: number
           format: double
@@ -1003,7 +1161,7 @@ components:
         weight:
           type: number
           format: double
-          example: 0.25
+          example: 0.0
 
     GradeRecord:
       type: object
@@ -1080,6 +1238,12 @@ components:
         file_name:
           type: string
           example: "solution.pdf"
+        mime_type:
+          type: string
+          example: "application/pdf"
+        file_size:
+          type: integer
+          example: 204800
         file_data:
           type: string
           format: binary
@@ -1091,6 +1255,8 @@ components:
       required:
         - id
         - file_name
+        - mime_type
+        - file_size
         - file_data
         - uploaded_at
 
@@ -1100,6 +1266,12 @@ components:
         file_name:
           type: string
           example: "solution.pdf"
+        mime_type:
+          type: string
+          example: "application/pdf"
+        file_size:
+          type: integer
+          example: 204800
         file_data:
           type: string
           format: binary
@@ -1110,6 +1282,8 @@ components:
           example: "2026-10-16T14:25:00Z"
       required:
         - file_name
+        - mime_type
+        - file_size
         - file_data
         - uploaded_at
 
@@ -1119,11 +1293,59 @@ components:
         file_name:
           type: string
           example: "solution.pdf"
-        file_data:
+
+    ImportStudentsRequest:
+      type: object
+      properties:
+        fileData:
           type: string
           format: binary
           example: "dGVzdF9kYXRh"
-        uploaded_at:
+      required:
+        - fileData
+
+    ExportGradesRequest:
+      type: object
+      properties:
+        format:
           type: string
-          format: date-time
-          example: "2026-10-16T14:25:00Z"
+          enum: [xlsx, csv]
+          example: "xlsx"
+      required:
+        - format
+
+    ExportAttendanceRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [xlsx]
+          example: "xlsx"
+      required:
+        - format
+
+    CalculateWeightedScoresRequest:
+      type: object
+      properties:
+        classId:
+          type: string
+          format: uuid
+          example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+      required:
+        - classId
+
+    OperationStatus:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+        affectedCount:
+          type: integer
+          example: 30
+      required:
+        - success
+        - message
