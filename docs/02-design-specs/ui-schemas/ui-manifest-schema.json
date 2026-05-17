@@ -44,7 +44,7 @@
                 },
                 "data_ref": {
                     "type": "string",
-                    "description": "Contractual Pointer: The exact 'operationId' in docs/02-design-specs/api-contracts/openapi.yaml that provides data for this component."
+                    "description": "Contractual Pointer: References either (1) the exact 'operationId' in docs/02-design-specs/api-contracts/openapi.yaml for REST mutations and single-entity reads, OR (2) the GraphQL resolver method name from docs/02-design-specs/uml/*_contract.puml for collection reads (e.g., 'listGradeRecords', 'listClasses'). Collection GET operations are DEPRECATED_TO_GRAPHQL — use the resolver method name, not the deprecated REST operationId. The actual GraphQL query document is dynamic and does not need to be pre-defined; only the resolver name is contractually anchored."
                 },
                 "behavior_ref": {
                     "type": "string",
