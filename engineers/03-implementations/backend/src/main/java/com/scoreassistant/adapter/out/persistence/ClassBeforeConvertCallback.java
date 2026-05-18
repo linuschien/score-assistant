@@ -21,6 +21,7 @@ public class ClassBeforeConvertCallback implements BeforeConvertCallback<ClassEn
                     entity.passingThreshold(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

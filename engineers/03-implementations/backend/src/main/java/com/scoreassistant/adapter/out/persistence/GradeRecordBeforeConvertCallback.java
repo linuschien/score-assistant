@@ -23,6 +23,7 @@ public class GradeRecordBeforeConvertCallback implements BeforeConvertCallback<G
                     entity.version(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

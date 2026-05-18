@@ -21,6 +21,7 @@ public class SemesterBeforeConvertCallback implements BeforeConvertCallback<Seme
                     entity.endDate(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

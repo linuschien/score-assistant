@@ -24,6 +24,7 @@ public class AttachmentBeforeConvertCallback implements BeforeConvertCallback<At
                     entity.uploadedAt(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

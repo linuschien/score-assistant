@@ -21,6 +21,7 @@ public class StudentBeforeConvertCallback implements BeforeConvertCallback<Stude
                     entity.studentName(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

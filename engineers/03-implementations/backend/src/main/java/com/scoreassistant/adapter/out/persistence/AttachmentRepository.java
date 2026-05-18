@@ -10,7 +10,4 @@ import java.util.UUID;
 
 @Repository
 public interface AttachmentRepository extends R2dbcRepository<AttachmentEntity, UUID> {
-
-    @Query("SELECT * FROM attachment WHERE grade_record_id = :gradeRecordId AND deleted_at IS NULL")
-    Flux<AttachmentEntity> findByGradeRecordId(UUID gradeRecordId);
 }

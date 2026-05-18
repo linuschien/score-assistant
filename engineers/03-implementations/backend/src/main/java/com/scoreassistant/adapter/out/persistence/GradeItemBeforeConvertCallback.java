@@ -25,6 +25,7 @@ public class GradeItemBeforeConvertCallback implements BeforeConvertCallback<Gra
                     entity.weight(),
                     entity.createdAt(),
                     entity.updatedAt(),
+                    entity.deleted(),
                     entity.deletedAt()
             ));
         }

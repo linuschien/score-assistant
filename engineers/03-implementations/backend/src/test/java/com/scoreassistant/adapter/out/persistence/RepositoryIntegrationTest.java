@@ -35,7 +35,7 @@ class RepositoryIntegrationTest {
                 "2026-Fall-Integration",
                 LocalDate.of(2026, 9, 1),
                 LocalDate.of(2027, 1, 31),
-                now, now, null
+                now, now, false, null
         );
 
         // 1. Save (INSERT)
@@ -59,7 +59,7 @@ class RepositoryIntegrationTest {
                 "2026-Fall-Class-Test",
                 LocalDate.of(2026, 9, 1),
                 LocalDate.of(2027, 1, 31),
-                now, now, null
+                now, now, false, null
         );
 
         var savedSemester = semesterRepository.save(semester).block();
@@ -70,7 +70,7 @@ class RepositoryIntegrationTest {
                 savedSemester.id(),
                 "CS-202",
                 BigDecimal.valueOf(60.0),
-                now, now, null
+                now, now, false, null
         );
 
         StepVerifier.create(classRepository.save(clazz))
@@ -91,7 +91,7 @@ class RepositoryIntegrationTest {
         var semester = new SemesterEntity(
                 null, "2026-Fall-Hierarchy-Test",
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31),
-                now, now, null
+                now, now, false, null
         );
         var savedSemester = semesterRepository.save(semester).block();
         assertNotNull(savedSemester);
@@ -99,7 +99,7 @@ class RepositoryIntegrationTest {
         // 2. Create Class
         var clazz = new ClassEntity(
                 null, savedSemester.id(), "CS-303", BigDecimal.valueOf(60.0),
-                now, now, null
+                now, now, false, null
         );
         var savedClass = classRepository.save(clazz).block();
         assertNotNull(savedClass);
@@ -107,7 +107,7 @@ class RepositoryIntegrationTest {
         // 3. Create Student
         var student = new StudentEntity(
                 null, savedClass.id(), 20260909, "Integration Bob",
-                now, now, null
+                now, now, false, null
         );
         var savedStudent = studentRepository.save(student).block();
         assertNotNull(savedStudent);
@@ -117,7 +117,7 @@ class RepositoryIntegrationTest {
                 null, savedClass.id(), "Final Project", "ASSIGNMENT",
                 LocalDate.now(), "Final project integration test",
                 BigDecimal.valueOf(100.0), BigDecimal.valueOf(0.4),
-                now, now, null
+                now, now, false, null
         );
         var savedGradeItem = gradeItemRepository.save(gradeItem).block();
         assertNotNull(savedGradeItem);
@@ -126,7 +126,7 @@ class RepositoryIntegrationTest {
         var gradeRecord = new GradeRecordEntity(
                 null, savedGradeItem.id(), savedStudent.id(),
                 BigDecimal.valueOf(95.5), now, 0,
-                now, now, null
+                now, now, false, null
         );
         var savedGradeRecord = gradeRecordRepository.save(gradeRecord).block();
         assertNotNull(savedGradeRecord);
@@ -134,7 +134,7 @@ class RepositoryIntegrationTest {
         // 6. Create Attachment
         var attachment = new AttachmentEntity(
                 null, savedGradeRecord.id(), "project_spec.pdf", "application/pdf",
-                128000, new byte[]{4, 5, 6}, now, now, now, null
+                128000, new byte[]{4, 5, 6}, now, now, now, false, null
         );
         var savedAttachment = attachmentRepository.save(attachment).block();
         assertNotNull(savedAttachment);
