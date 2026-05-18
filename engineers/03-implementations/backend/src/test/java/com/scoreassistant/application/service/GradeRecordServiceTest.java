@@ -1,6 +1,8 @@
 package com.scoreassistant.application.service;
 
 import com.scoreassistant.adapter.in.web.dto.GradeRecordDto.*;
+import com.scoreassistant.adapter.out.persistence.GradeItemRepository;
+import com.scoreassistant.adapter.out.persistence.StudentRepository;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.GradeRecordEntity;
@@ -28,6 +30,8 @@ import static org.mockito.Mockito.when;
 class GradeRecordServiceTest {
 
     @Mock GradeRecordRepository gradeRecordRepository;
+    @Mock GradeItemRepository gradeItemRepository;
+    @Mock StudentRepository studentRepository;
     @InjectMocks GradeRecordService gradeRecordService;
 
     private UUID recordId;
@@ -50,6 +54,8 @@ class GradeRecordServiceTest {
     @Test
     @DisplayName("create() should save GradeRecord with version=1")
     void create_shouldSaveWithVersionOne() {
+        when(gradeItemRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(gradeRecordRepository.save(any())).thenReturn(Mono.just(testRecord));
 
         var req = new GradeRecordRequest(gradeItemId, studentId, BigDecimal.valueOf(85.5));

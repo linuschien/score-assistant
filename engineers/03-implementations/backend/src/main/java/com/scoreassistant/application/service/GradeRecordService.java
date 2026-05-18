@@ -1,10 +1,14 @@
 package com.scoreassistant.application.service;
 
 import com.scoreassistant.adapter.in.web.dto.GradeRecordDto.*;
+import com.scoreassistant.adapter.out.persistence.GradeItemRepository;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
+import com.scoreassistant.adapter.out.persistence.StudentRepository;
 import com.scoreassistant.domain.exception.OptimisticLockingException;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
+import com.scoreassistant.domain.model.GradeItemEntity;
 import com.scoreassistant.domain.model.GradeRecordEntity;
+import com.scoreassistant.domain.model.StudentEntity;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -20,21 +24,46 @@ import java.util.UUID;
 public class GradeRecordService {
 
     private final GradeRecordRepository gradeRecordRepository;
+    private final GradeItemRepository gradeItemRepository;
+    private final StudentRepository studentRepository;
 
-    public GradeRecordService(GradeRecordRepository gradeRecordRepository) {
+    public GradeRecordService(GradeRecordRepository gradeRecordRepository,
+                              GradeItemRepository gradeItemRepository,
+                              StudentRepository studentRepository) {
         this.gradeRecordRepository = gradeRecordRepository;
+        this.gradeItemRepository = gradeItemRepository;
+        this.studentRepository = studentRepository;
+    }
+
+    private Mono<Void> validateParentExistence(UUID gradeItemId, UUID studentId) {
+        var itemProbe = new GradeItemEntity(gradeItemId, null, null, null, null, null, null, null, null, null, false, null);
+        var studentProbe = new StudentEntity(studentId, null, 0, null, null, null, false, null);
+        var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        return Mono.zip(
+                gradeItemRepository.exists(Example.of(itemProbe))
+                        .filter(exists -> exists)
+                        .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", gradeItemId))),
+                studentRepository.exists(Example.of(studentProbe, studentMatcher))
+                        .filter(exists -> exists)
+                        .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", studentId)))
+        ).then();
     }
 
     @Transactional
     public Mono<GradeRecordResponse> create(GradeRecordRequest req) {
-        var now = LocalDateTime.now();
-        var entity = new GradeRecordEntity(
-                null,
-                req.gradeItemId(), req.studentId(),
-                req.score(), now, 0,
-                now, now, false, null
-        );
-        return gradeRecordRepository.save(entity).map(this::toResponse);
+        return validateParentExistence(req.gradeItemId(), req.studentId())
+                .then(Mono.defer(() -> {
+                    var now = LocalDateTime.now();
+                    var entity = new GradeRecordEntity(
+                            null,
+                            req.gradeItemId(), req.studentId(),
+                            req.score(), now, 0,
+                            now, now, false, null
+                    );
+                    return gradeRecordRepository.save(entity);
+                }))
+                .map(this::toResponse);
     }
 
     public Mono<GradeRecordResponse> findById(UUID id) {
@@ -49,9 +78,10 @@ public class GradeRecordService {
         return gradeRecordRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", id)))
-                .flatMap(e -> gradeRecordRepository.save(new GradeRecordEntity(
-                        e.id(), req.gradeItemId(), req.studentId(), req.score(),
-                        LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), false, null)))
+                .flatMap(e -> validateParentExistence(req.gradeItemId(), req.studentId())
+                        .then(Mono.defer(() -> gradeRecordRepository.save(new GradeRecordEntity(
+                                e.id(), req.gradeItemId(), req.studentId(), req.score(),
+                                LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), false, null)))))
                 .onErrorMap(OptimisticLockingFailureException.class,
                         ex -> new OptimisticLockingException(0))
                 .map(this::toResponse);
