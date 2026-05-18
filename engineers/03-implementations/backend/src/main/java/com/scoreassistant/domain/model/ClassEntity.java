@@ -16,5 +16,6 @@ public record ClassEntity(
         @Column("passing_threshold") BigDecimal passingThreshold,
         @Column("created_at")        LocalDateTime createdAt,
         @Column("updated_at")        LocalDateTime updatedAt,
+        @Column("deleted")           boolean deleted,
         @Column("deleted_at")        LocalDateTime deletedAt
 ) {}

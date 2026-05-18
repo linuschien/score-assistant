@@ -17,5 +17,6 @@ public record SemesterEntity(
         @Column("end_date")      LocalDate endDate,
         @Column("created_at")   LocalDateTime createdAt,
         @Column("updated_at")   LocalDateTime updatedAt,
+        @Column("deleted")      boolean deleted,
         @Column("deleted_at")   LocalDateTime deletedAt
 ) {}

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS semester (
     end_date      DATE        NOT NULL,
     created_at    TIMESTAMP,
     updated_at    TIMESTAMP,
+    deleted       BOOLEAN     DEFAULT FALSE NOT NULL,
     deleted_at    TIMESTAMP
 );
 
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS class (
     passing_threshold DECIMAL(10,2) DEFAULT 60.0,
     created_at        TIMESTAMP,
     updated_at        TIMESTAMP,
+    deleted           BOOLEAN       DEFAULT FALSE NOT NULL,
     deleted_at        TIMESTAMP,
     CONSTRAINT uq_class_semester_name UNIQUE (semester_id, class_name),
     FOREIGN KEY (semester_id) REFERENCES semester(id) ON DELETE CASCADE
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS student (
     student_name   VARCHAR(255) NOT NULL,
     created_at     TIMESTAMP,
     updated_at     TIMESTAMP,
+    deleted        BOOLEAN      DEFAULT FALSE NOT NULL,
     deleted_at     TIMESTAMP,
     CONSTRAINT uq_student_class_number UNIQUE (class_id, student_number),
     FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE
@@ -51,6 +54,7 @@ CREATE TABLE IF NOT EXISTS grade_item (
     weight           DECIMAL(5,4)  DEFAULT 0.0   NOT NULL,
     created_at       TIMESTAMP,
     updated_at       TIMESTAMP,
+    deleted          BOOLEAN       DEFAULT FALSE NOT NULL,
     deleted_at       TIMESTAMP,
     FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE
 );
@@ -64,6 +68,7 @@ CREATE TABLE IF NOT EXISTS grade_record (
     version          INT           DEFAULT 1 NOT NULL,
     created_at       TIMESTAMP,
     updated_at       TIMESTAMP,
+    deleted          BOOLEAN       DEFAULT FALSE NOT NULL,
     deleted_at       TIMESTAMP,
     CONSTRAINT uq_grade_record_item_student UNIQUE (grade_item_id, student_id),
     FOREIGN KEY (grade_item_id) REFERENCES grade_item(id) ON DELETE CASCADE,
@@ -80,6 +85,7 @@ CREATE TABLE IF NOT EXISTS attachment (
     uploaded_at     TIMESTAMP,
     created_at      TIMESTAMP,
     updated_at      TIMESTAMP,
+    deleted         BOOLEAN      DEFAULT FALSE NOT NULL,
     deleted_at      TIMESTAMP,
     FOREIGN KEY (grade_record_id) REFERENCES grade_record(id) ON DELETE CASCADE
 );

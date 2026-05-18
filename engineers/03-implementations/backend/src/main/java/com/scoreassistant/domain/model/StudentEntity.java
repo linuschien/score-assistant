@@ -15,5 +15,6 @@ public record StudentEntity(
         @Column("student_name")   String studentName,
         @Column("created_at")     LocalDateTime createdAt,
         @Column("updated_at")     LocalDateTime updatedAt,
+        @Column("deleted")        boolean deleted,
         @Column("deleted_at")     LocalDateTime deletedAt
 ) {}
