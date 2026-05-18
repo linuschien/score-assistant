@@ -212,7 +212,7 @@ public class GradeItemService {
 
     private GradeItemResponse toResponse(GradeItemEntity e) {
         return new GradeItemResponse(
-                e.id().toString(), e.itemName(), e.itemType(),
+                e.id().toString(), e.classId().toString(), e.itemName(), e.itemType(),
                 e.itemDate(), e.itemDescription(), e.maxScore(), e.weight()
         );
     }

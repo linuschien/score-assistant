@@ -2,11 +2,13 @@ package com.scoreassistant.adapter.in.web.graphql;
 
 import com.scoreassistant.adapter.in.web.dto.GradeItemDto.GradeItemResponse;
 import com.scoreassistant.application.service.GradeItemService;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Controller
@@ -23,6 +25,41 @@ public class GradeItemGraphQLResolver {
         UUID classId  = filter != null && filter.classId()  != null ? UUID.fromString(filter.classId())  : null;
         String type   = filter != null ? filter.itemType() : null;
         return gradeItemService.listAll(classId, type);
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "classId")
+    public String classId(GradeItemResponse item) {
+        return item.class_id();
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "itemName")
+    public String itemName(GradeItemResponse item) {
+        return item.item_name();
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "itemType")
+    public String itemType(GradeItemResponse item) {
+        return item.item_type();
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "itemDate")
+    public String itemDate(GradeItemResponse item) {
+        return item.item_date() != null ? item.item_date().toString() : null;
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "itemDescription")
+    public String itemDescription(GradeItemResponse item) {
+        return item.item_description();
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "maxScore")
+    public BigDecimal maxScore(GradeItemResponse item) {
+        return item.max_score();
+    }
+
+    @SchemaMapping(typeName = "GradeItem", field = "weight")
+    public BigDecimal weight(GradeItemResponse item) {
+        return item.weight();
     }
 
     public record GradeItemFilterInput(String classId, String itemType) {}

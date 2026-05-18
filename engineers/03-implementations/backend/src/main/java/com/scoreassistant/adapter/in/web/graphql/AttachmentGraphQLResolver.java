@@ -2,6 +2,7 @@ package com.scoreassistant.adapter.in.web.graphql;
 
 import com.scoreassistant.adapter.in.web.dto.AttachmentDto.AttachmentResponse;
 import com.scoreassistant.application.service.AttachmentService;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
@@ -23,6 +24,31 @@ public class AttachmentGraphQLResolver {
         UUID gradeRecordId = filter != null && filter.gradeRecordId() != null
                 ? UUID.fromString(filter.gradeRecordId()) : null;
         return attachmentService.listAll(gradeRecordId);
+    }
+
+    @SchemaMapping(typeName = "Attachment", field = "gradeRecordId")
+    public String gradeRecordId(AttachmentResponse att) {
+        return att.grade_record_id();
+    }
+
+    @SchemaMapping(typeName = "Attachment", field = "fileName")
+    public String fileName(AttachmentResponse att) {
+        return att.file_name();
+    }
+
+    @SchemaMapping(typeName = "Attachment", field = "mimeType")
+    public String mimeType(AttachmentResponse att) {
+        return att.mime_type();
+    }
+
+    @SchemaMapping(typeName = "Attachment", field = "fileSize")
+    public int fileSize(AttachmentResponse att) {
+        return att.file_size();
+    }
+
+    @SchemaMapping(typeName = "Attachment", field = "uploadedAt")
+    public String uploadedAt(AttachmentResponse att) {
+        return att.uploaded_at().toString();
     }
 
     public record AttachmentFilterInput(String gradeRecordId) {}

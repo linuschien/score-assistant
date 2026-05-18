@@ -31,6 +31,7 @@ public sealed interface GradeItemDto permits
 
     record GradeItemResponse(
             String id,
+            String class_id,
             String item_name,
             String item_type,
             LocalDate item_date,

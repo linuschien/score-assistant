@@ -20,6 +20,7 @@ public sealed interface StudentDto permits
 
     record StudentResponse(
             String id,
+            String class_id,
             int student_number,
             String student_name
     ) implements StudentDto {}

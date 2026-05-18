@@ -24,6 +24,7 @@ public sealed interface AttachmentDto permits
 
     record AttachmentResponse(
             String id,
+            String grade_record_id,
             String file_name,
             String mime_type,
             int file_size,

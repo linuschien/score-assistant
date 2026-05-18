@@ -103,6 +103,6 @@ public class ClassService {
     }
 
     private ClassResponse toResponse(ClassEntity e) {
-        return new ClassResponse(e.id().toString(), e.className(), e.passingThreshold());
+        return new ClassResponse(e.id().toString(), e.semesterId().toString(), e.className(), e.passingThreshold());
     }
 }

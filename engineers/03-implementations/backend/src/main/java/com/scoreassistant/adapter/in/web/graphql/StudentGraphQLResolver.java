@@ -2,6 +2,7 @@ package com.scoreassistant.adapter.in.web.graphql;
 
 import com.scoreassistant.adapter.in.web.dto.StudentDto.StudentResponse;
 import com.scoreassistant.application.service.StudentService;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
@@ -22,6 +23,21 @@ public class StudentGraphQLResolver {
     public Flux<StudentResponse> listStudents(@Argument StudentFilterInput filter) {
         UUID classId = filter != null && filter.classId() != null ? UUID.fromString(filter.classId()) : null;
         return studentService.listAll(classId);
+    }
+
+    @SchemaMapping(typeName = "Student", field = "classId")
+    public String classId(StudentResponse student) {
+        return student.class_id();
+    }
+
+    @SchemaMapping(typeName = "Student", field = "studentNumber")
+    public int studentNumber(StudentResponse student) {
+        return student.student_number();
+    }
+
+    @SchemaMapping(typeName = "Student", field = "studentName")
+    public String studentName(StudentResponse student) {
+        return student.student_name();
     }
 
     public record StudentFilterInput(String classId) {}

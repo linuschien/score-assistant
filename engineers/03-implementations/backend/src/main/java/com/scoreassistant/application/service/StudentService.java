@@ -135,6 +135,6 @@ public class StudentService {
      }
 
     private StudentResponse toResponse(StudentEntity e) {
-        return new StudentResponse(e.id().toString(), e.studentNumber(), e.studentName());
+        return new StudentResponse(e.id().toString(), e.classId().toString(), e.studentNumber(), e.studentName());
     }
 }

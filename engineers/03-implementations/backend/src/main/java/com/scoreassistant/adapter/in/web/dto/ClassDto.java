@@ -21,6 +21,7 @@ public sealed interface ClassDto permits
 
     record ClassResponse(
             String id,
+            String semester_id,
             String class_name,
             BigDecimal passing_threshold
     ) implements ClassDto {}

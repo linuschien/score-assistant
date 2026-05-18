@@ -106,7 +106,7 @@ public class AttachmentService {
 
     private AttachmentResponse toResponse(AttachmentEntity e) {
         return new AttachmentResponse(
-                e.id().toString(), e.fileName(), e.mimeType(),
+                e.id().toString(), e.gradeRecordId().toString(), e.fileName(), e.mimeType(),
                 e.fileSize(), e.fileData(), e.uploadedAt()
         );
     }
