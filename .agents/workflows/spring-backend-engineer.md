@@ -42,6 +42,8 @@ When implementing or refactoring a backend feature, execute the following pipeli
 ### Phase 2: Persistence Layer (Spring Data)
 - Create Spring Data Reactive Repositories (e.g., `R2dbcRepository`).
 - Write custom non-blocking queries (using `@Query` or fluent API) for complex aggregations or joins required by either REST or GraphQL.
+- **Query-By-Example (QBE)**: Prefer standard Spring Data methods like `findAll(Example)` and `exists(Example)` over custom derived query methods (e.g., `existsByClassId`) to optimize memory and maintain dynamic querying.
+- **UUID Generation**: Mandate the use of Spring Data R2DBC's `BeforeConvertCallback<T>` to generate UUIDs cleanly before inserts. Check if `entity.id() == null`, then return a mutated copy.
 - Ensure all DB interactions return `Mono` or `Flux`.
 
 ### Phase 3: Service Layer (Business Logic)
@@ -55,6 +57,7 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - **GraphQL**: For every `<<GraphQLResolver>>` interface defined in `docs/02-design-specs/uml/*_contract.puml`, implement a corresponding Spring `@Controller` class:
   - Each resolver method maps 1:1 to a `@QueryMapping` (for query fields) or `@MutationMapping` (for mutations).
   - Use `@SchemaMapping` for field-level resolvers on nested types (e.g., resolving `student` or `gradeItem` within a `GradeRecord` type).
+  - **Schema Mapping Gotcha**: Pay extreme attention to property naming. If reusing REST DTOs (snake_case) for GraphQL responses (camelCase), you MUST explicitly define `@SchemaMapping` methods for every mismatched field to prevent runtime 500 mapping errors. Do NOT rely on auto-resolution for mixed-casing.
   - Accept `@Argument`-annotated filter/input objects matching the SDL input types derived in Phase 1.
   - Return `Flux<T>` for list queries; return `Mono<T>` for single-item or mutation responses.
 - Transform Service Layer `Mono`/`Flux` outputs into appropriate HTTP Status Codes or GraphQL responses.
@@ -62,8 +65,9 @@ When implementing or refactoring a backend feature, execute the following pipeli
 ### Phase 5: Resilience, Build & Testing
 - Implement unit tests utilizing **JUnit** and **Mockito**, ensuring line coverage reaches **70+%** (e.g., configured via the JaCoCo Maven plugin).
 - Utilize `StepVerifier` to assert the behavior, signals, and errors of reactive streams in unit tests.
+- **Repository Integration Tests**: Use an in-memory R2DBC H2 driver to perform lightning-fast, real database repository queries and callbacks testing instead of pure mock tests.
+- **GraphQL Unit Tests**: Test GraphQL Resolvers by directly instantiating the controller classes (e.g., `new ClassGraphQLResolver(service)`) and explicitly asserting schema mapping methods with standard JUnit instead of using heavy `@GraphQlTest` slices, ensuring 100% mapping coverage with 0 classpath overhead.
 - Use `WebTestClient` for reactive integration testing of WebFlux REST endpoints.
-- Use `GraphQlTester` to test GraphQL queries and mutations.
 - Ensure the project builds and tests pass successfully using Maven within the backend directory (`mvn clean test -f engineers/03-implementations/backend/pom.xml`).
 - Ensure Maven configuration includes the appropriate plugin setup (e.g., `spring-boot-maven-plugin`) so the Spring Boot application can be successfully started via Maven (`mvn spring-boot:run`) to facilitate subsequent QA Mode 2 automated testing.
 
@@ -77,3 +81,8 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - **Separation of Concerns**: Never leak database Entities into the Web or GraphQL layer. Always map Entities to DTOs in the Service layer.
 - **Java Standards**: Leverage modern Java features (Records, Pattern Matching, Switch Expressions) wherever applicable.
 - **Static Resources**: When serving frontend assets, configure the application to look at the frontend's build directory (defaulting to `../frontend/dist`) using the `spring.web.resources.static-locations` startup parameter or configuration.
+
+## 💡 Important Gotchas & Architectural Learnings
+- **QBE Version Field Trap**: When using Query-By-Example with entities containing a primitive `@Version int version` field, QBE defaults the primitive to `0`. You MUST configure an `ExampleMatcher` with `.withIgnorePaths("version")` to prevent DB queries from filtering out valid records.
+- **DTO Parent Keys**: Always embed parent IDs (e.g., `semester_id`, `class_id`) into child Response DTOs. This allows GraphQL Resolvers to dynamically map parent references directly from memory without triggering catastrophic N+1 database queries.
+- **REST vs GraphQL 500 Errors**: If a `GET` request yields a `500 Internal Server Error`, remember that Collection GET endpoints are strictly banned in REST. Verify whether the client incorrectly hit the REST API instead of the GraphQL gateway, or if a database constraint violation (e.g., `UNIQUE` constraint) lacked an explicit exception handler.
