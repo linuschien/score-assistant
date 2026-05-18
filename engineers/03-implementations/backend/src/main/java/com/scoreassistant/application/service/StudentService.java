@@ -6,6 +6,9 @@ import com.scoreassistant.adapter.out.persistence.ClassRepository;
 import com.scoreassistant.adapter.out.persistence.StudentRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.StudentEntity;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -28,14 +31,14 @@ public class StudentService {
     @Transactional
     public Mono<StudentResponse> create(UUID classId, StudentRequest req) {
         return classRepository.findById(classId)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(cls -> {
                     var now = LocalDateTime.now();
                     var entity = new StudentEntity(
                             null, classId,
                             req.student_number(), req.student_name(),
-                            now, now, null
+                            now, now, false, null
                     );
                     return studentRepository.save(entity);
                 })
@@ -44,7 +47,7 @@ public class StudentService {
 
     public Mono<StudentResponse> findById(UUID id) {
         return studentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .map(this::toResponse);
     }
@@ -52,48 +55,49 @@ public class StudentService {
     @Transactional
     public Mono<StudentResponse> update(UUID id, StudentRequest req) {
         return studentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(),
                         req.student_number(), req.student_name(),
-                        e.createdAt(), LocalDateTime.now(), null)))
+                        e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<StudentResponse> patch(UUID id, StudentPatchRequest req) {
         return studentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(),
                         req.student_number() != null ? req.student_number() : e.studentNumber(),
                         req.student_name() != null ? req.student_name() : e.studentName(),
-                        e.createdAt(), LocalDateTime.now(), null)))
+                        e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<Void> delete(UUID id) {
         return studentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(), e.studentNumber(), e.studentName(),
-                        e.createdAt(), LocalDateTime.now(), LocalDateTime.now())))
+                        e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
 
-    public Flux<StudentResponse> listByClass(UUID classId) {
-        return studentRepository.findByClassIdOrdered(classId).map(this::toResponse);
-    }
-
     public Flux<StudentResponse> listAll(UUID classId) {
-        if (classId != null) return listByClass(classId);
-        return studentRepository.findAll()
-                .filter(e -> e.deletedAt() == null)
-                .map(this::toResponse);
+        var probe = new StudentEntity(
+                null,
+                classId,
+                0, null, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching()
+                .withIgnorePaths("studentNumber")
+                .withIgnoreNullValues();
+        return studentRepository.findAll(Example.of(probe, matcher), Sort.by("studentNumber")).map(this::toResponse);
     }
 
     /**
@@ -103,7 +107,7 @@ public class StudentService {
     @Transactional
     public Mono<OperationStatusDto> importStudents(UUID classId, byte[] csvBytes) {
         return classRepository.findById(classId)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMapMany(cls -> {
                     var lines = new String(csvBytes).lines()
@@ -118,7 +122,7 @@ public class StudentService {
                                         null, classId,
                                         Integer.parseInt(parts[0].trim()),
                                         parts[1].trim(),
-                                        now, now, null
+                                        now, now, false, null
                                 );
                                 return studentRepository.save(entity);
                             });

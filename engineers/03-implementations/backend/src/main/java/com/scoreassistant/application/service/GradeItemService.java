@@ -7,6 +7,9 @@ import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -42,7 +45,7 @@ public class GradeItemService {
     @Transactional
     public Mono<GradeItemResponse> create(UUID classId, GradeItemRequest req) {
         return classRepository.findById(classId)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(cls -> {
                     var now = LocalDateTime.now();
@@ -51,7 +54,7 @@ public class GradeItemService {
                             req.item_name(), req.item_type(),
                             req.item_date(), req.item_description(),
                             req.max_score(), req.weight(),
-                            now, now, null
+                            now, now, false, null
                     );
                     return gradeItemRepository.save(entity);
                 })
@@ -60,7 +63,7 @@ public class GradeItemService {
 
     public Mono<GradeItemResponse> findById(UUID id) {
         return gradeItemRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .map(this::toResponse);
     }
@@ -68,21 +71,21 @@ public class GradeItemService {
     @Transactional
     public Mono<GradeItemResponse> update(UUID id, GradeItemRequest req) {
         return gradeItemRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .flatMap(e -> gradeItemRepository.save(new GradeItemEntity(
                         e.id(), e.classId(),
                         req.item_name(), req.item_type(),
                         req.item_date(), req.item_description(),
                         req.max_score(), req.weight(),
-                        e.createdAt(), LocalDateTime.now(), null)))
+                        e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<GradeItemResponse> patch(UUID id, GradeItemPatchRequest req) {
         return gradeItemRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .flatMap(e -> gradeItemRepository.save(new GradeItemEntity(
                         e.id(), e.classId(),
@@ -92,40 +95,44 @@ public class GradeItemService {
                         req.item_description() != null ? req.item_description() : e.itemDescription(),
                         req.max_score() != null ? req.max_score() : e.maxScore(),
                         req.weight() != null ? req.weight() : e.weight(),
-                        e.createdAt(), LocalDateTime.now(), null)))
+                        e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<Void> delete(UUID id) {
         return gradeItemRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .flatMap(e -> gradeItemRepository.save(new GradeItemEntity(
                         e.id(), e.classId(), e.itemName(), e.itemType(),
                         e.itemDate(), e.itemDescription(), e.maxScore(), e.weight(),
-                        e.createdAt(), LocalDateTime.now(), LocalDateTime.now())))
+                        e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
 
     public Flux<GradeItemResponse> listAll(UUID classId, String itemType) {
-        if (classId != null && itemType != null) {
-            return gradeItemRepository.findByClassIdAndItemType(classId, itemType).map(this::toResponse);
-        }
-        if (classId != null) {
-            return gradeItemRepository.findByClassId(classId).map(this::toResponse);
-        }
-        return gradeItemRepository.findAll()
-                .filter(e -> e.deletedAt() == null)
-                .map(this::toResponse);
+        var probe = new GradeItemEntity(
+                null,
+                classId,
+                null,
+                (itemType != null && !itemType.isBlank()) ? itemType : null,
+                null, null, null, null, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching().withIgnoreNullValues();
+        return gradeItemRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
     // ── Custom Actions ────────────────────────────────────────────
 
     public Mono<OperationStatusDto> exportGrades(UUID classId, ExportGradesRequestDto req) {
-        return gradeItemRepository.findByClassId(classId)
+        var itemProbe = new GradeItemEntity(null, classId, null, null, null, null, null, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
                 .collectList()
-                .flatMap(items -> studentRepository.findByClassIdOrdered(classId).collectList()
+                .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher), Sort.by("studentNumber")).collectList()
                         .flatMap(students -> gradeRecordRepository.findByClassId(classId).collectList()
                                 .flatMap(records -> Mono.fromCallable(() -> {
                                     try (var wb = new XSSFWorkbook()) {
@@ -161,17 +168,25 @@ public class GradeItemService {
     }
 
     public Mono<OperationStatusDto> exportAttendance(UUID classId, ExportAttendanceRequestDto req) {
-        return gradeItemRepository.findByClassIdAndItemType(classId, "ATTENDANCE")
+        var itemProbe = new GradeItemEntity(null, classId, null, "ATTENDANCE", null, null, null, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
                 .collectList()
-                .flatMap(items -> studentRepository.findByClassIdOrdered(classId).collectList()
+                .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher)).collectList()
                         .map(students -> new OperationStatusDto(true, "Attendance export completed", students.size()))
                 );
     }
 
     public Mono<OperationStatusDto> calculateWeightedScores(UUID classId, CalculateWeightedScoresRequestDto req) {
-        return gradeItemRepository.findByClassId(classId)
+        var itemProbe = new GradeItemEntity(null, classId, null, null, null, null, null, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
                 .collectList()
-                .flatMap(items -> studentRepository.findByClassIdOrdered(classId).collectList()
+                .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher)).collectList()
                         .flatMap(students -> gradeRecordRepository.findByClassId(classId).collectList()
                                 .map(records -> {
                                     var count = new AtomicInteger(0);

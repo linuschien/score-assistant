@@ -5,6 +5,8 @@ import com.scoreassistant.adapter.out.persistence.AttachmentRepository;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.AttachmentEntity;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -28,14 +30,14 @@ public class AttachmentService {
     @Transactional
     public Mono<AttachmentResponse> create(UUID gradeRecordId, AttachmentRequest req) {
         return gradeRecordRepository.findById(gradeRecordId)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", gradeRecordId)))
                 .flatMap(gr -> {
                     var now = LocalDateTime.now();
                     var entity = new AttachmentEntity(
                             null, gradeRecordId,
                             req.file_name(), req.mime_type(), req.file_size(), req.file_data(),
-                            req.uploaded_at(), now, now, null
+                            req.uploaded_at(), now, now, false, null
                     );
                     return attachmentRepository.save(entity);
                 })
@@ -44,7 +46,7 @@ public class AttachmentService {
 
     public Mono<AttachmentResponse> findById(UUID id) {
         return attachmentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .map(this::toResponse);
     }
@@ -52,48 +54,49 @@ public class AttachmentService {
     @Transactional
     public Mono<AttachmentResponse> update(UUID id, AttachmentRequest req) {
         return attachmentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .flatMap(e -> attachmentRepository.save(new AttachmentEntity(
                         e.id(), e.gradeRecordId(),
                         req.file_name(), req.mime_type(), req.file_size(), req.file_data(),
-                        req.uploaded_at(), e.createdAt(), LocalDateTime.now(), null)))
+                        req.uploaded_at(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<AttachmentResponse> patch(UUID id, AttachmentPatchRequest req) {
         return attachmentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .flatMap(e -> attachmentRepository.save(new AttachmentEntity(
                         e.id(), e.gradeRecordId(),
                         req.file_name() != null ? req.file_name() : e.fileName(),
                         e.mimeType(), e.fileSize(), e.fileData(),
-                        e.uploadedAt(), e.createdAt(), LocalDateTime.now(), null)))
+                        e.uploadedAt(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<Void> delete(UUID id) {
         return attachmentRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .flatMap(e -> attachmentRepository.save(new AttachmentEntity(
                         e.id(), e.gradeRecordId(), e.fileName(), e.mimeType(), e.fileSize(), e.fileData(),
-                        e.uploadedAt(), e.createdAt(), LocalDateTime.now(), LocalDateTime.now())))
+                        e.uploadedAt(), e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
 
-    public Flux<AttachmentResponse> listByGradeRecord(UUID gradeRecordId) {
-        return attachmentRepository.findByGradeRecordId(gradeRecordId).map(this::toResponse);
-    }
-
     public Flux<AttachmentResponse> listAll(UUID gradeRecordId) {
-        if (gradeRecordId != null) return listByGradeRecord(gradeRecordId);
-        return attachmentRepository.findAll()
-                .filter(e -> e.deletedAt() == null)
-                .map(this::toResponse);
+        var probe = new AttachmentEntity(
+                null,
+                gradeRecordId,
+                null, null, 0, null, null, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching()
+                .withIgnorePaths("fileSize")
+                .withIgnoreNullValues();
+        return attachmentRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
     private AttachmentResponse toResponse(AttachmentEntity e) {

@@ -5,6 +5,8 @@ import com.scoreassistant.adapter.out.persistence.ClassRepository;
 import com.scoreassistant.adapter.out.persistence.SemesterRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.ClassEntity;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -28,14 +30,14 @@ public class ClassService {
     @Transactional
     public Mono<ClassResponse> create(UUID semesterId, ClassRequest req) {
         return semesterRepository.findById(semesterId)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", semesterId)))
                 .flatMap(sem -> {
                     var now = LocalDateTime.now();
                     var entity = new ClassEntity(
                             null, semesterId,
                             req.class_name(), req.passing_threshold() != null ? req.passing_threshold() : BigDecimal.valueOf(60.0),
-                            now, now, null
+                            now, now, false, null
                     );
                     return classRepository.save(entity);
                 })
@@ -44,7 +46,7 @@ public class ClassService {
 
     public Mono<ClassResponse> findById(UUID id) {
         return classRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .map(this::toResponse);
     }
@@ -52,51 +54,50 @@ public class ClassService {
     @Transactional
     public Mono<ClassResponse> update(UUID id, ClassRequest req) {
         return classRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
                         req.class_name(), req.passing_threshold() != null ? req.passing_threshold() : existing.passingThreshold(),
-                        existing.createdAt(), LocalDateTime.now(), null)))
+                        existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<ClassResponse> patch(UUID id, ClassPatchRequest req) {
         return classRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
                         req.class_name() != null ? req.class_name() : existing.className(),
                         req.passing_threshold() != null ? req.passing_threshold() : existing.passingThreshold(),
-                        existing.createdAt(), LocalDateTime.now(), null)))
+                        existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
     @Transactional
     public Mono<Void> delete(UUID id) {
         return classRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(e -> classRepository.save(new ClassEntity(
                         e.id(), e.semesterId(), e.className(), e.passingThreshold(),
-                        e.createdAt(), LocalDateTime.now(), LocalDateTime.now())))
+                        e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
 
-    public Flux<ClassResponse> listBySemester(UUID semesterId, String className) {
-        if (className != null && !className.isBlank()) {
-            return classRepository.findBySemesterIdAndNameContaining(semesterId, className).map(this::toResponse);
-        }
-        return classRepository.findBySemesterId(semesterId).map(this::toResponse);
-    }
-
     public Flux<ClassResponse> listAll(UUID semesterId, String className) {
-        if (semesterId != null) {
-            return listBySemester(semesterId, className);
-        }
-        return classRepository.findAllActive().map(this::toResponse);
+        var probe = new ClassEntity(
+                null,
+                semesterId,
+                (className != null && !className.isBlank()) ? className : null,
+                null, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching()
+                .withMatcher("className", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+                .withIgnoreNullValues();
+        return classRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
     private ClassResponse toResponse(ClassEntity e) {

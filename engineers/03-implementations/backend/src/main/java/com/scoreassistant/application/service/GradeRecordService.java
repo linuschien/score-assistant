@@ -6,6 +6,8 @@ import com.scoreassistant.domain.exception.OptimisticLockingException;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.GradeRecordEntity;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -30,14 +32,14 @@ public class GradeRecordService {
                 null,
                 req.gradeItemId(), req.studentId(),
                 req.score(), now, 0,
-                now, now, null
+                now, now, false, null
         );
         return gradeRecordRepository.save(entity).map(this::toResponse);
     }
 
     public Mono<GradeRecordResponse> findById(UUID id) {
         return gradeRecordRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", id)))
                 .map(this::toResponse);
     }
@@ -45,11 +47,11 @@ public class GradeRecordService {
     @Transactional
     public Mono<GradeRecordResponse> update(UUID id, GradeRecordRequest req) {
         return gradeRecordRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", id)))
                 .flatMap(e -> gradeRecordRepository.save(new GradeRecordEntity(
                         e.id(), req.gradeItemId(), req.studentId(), req.score(),
-                        LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), null)))
+                        LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .onErrorMap(OptimisticLockingFailureException.class,
                         ex -> new OptimisticLockingException(0))
                 .map(this::toResponse);
@@ -58,12 +60,12 @@ public class GradeRecordService {
     @Transactional
     public Mono<GradeRecordResponse> patch(UUID id, GradeRecordPatchRequest req) {
         return gradeRecordRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", id)))
                 .flatMap(e -> gradeRecordRepository.save(new GradeRecordEntity(
                         e.id(), e.gradeItemId(), e.studentId(),
                         req.score() != null ? req.score() : e.score(),
-                        LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), null)))
+                        LocalDateTime.now(), e.version(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .onErrorMap(OptimisticLockingFailureException.class,
                         ex -> new OptimisticLockingException(0))
                 .map(this::toResponse);
@@ -72,20 +74,25 @@ public class GradeRecordService {
     @Transactional
     public Mono<Void> delete(UUID id) {
         return gradeRecordRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", id)))
                 .flatMap(e -> gradeRecordRepository.save(new GradeRecordEntity(
                         e.id(), e.gradeItemId(), e.studentId(), e.score(),
-                        e.lastModifiedAt(), e.version(), e.createdAt(), LocalDateTime.now(), LocalDateTime.now())))
+                        e.lastModifiedAt(), e.version(), e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
 
     public Flux<GradeRecordResponse> listAll(UUID gradeItemId, UUID studentId) {
-        if (gradeItemId != null) return gradeRecordRepository.findByGradeItemId(gradeItemId).map(this::toResponse);
-        if (studentId != null) return gradeRecordRepository.findByStudentId(studentId).map(this::toResponse);
-        return gradeRecordRepository.findAll()
-                .filter(e -> e.deletedAt() == null)
-                .map(this::toResponse);
+        var probe = new GradeRecordEntity(
+                null,
+                gradeItemId,
+                studentId,
+                null, null, 0, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching()
+                .withIgnorePaths("version")
+                .withIgnoreNullValues();
+        return gradeRecordRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
     private GradeRecordResponse toResponse(GradeRecordEntity e) {

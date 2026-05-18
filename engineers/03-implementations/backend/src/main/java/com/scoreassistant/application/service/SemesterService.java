@@ -4,6 +4,8 @@ import com.scoreassistant.adapter.in.web.dto.SemesterDto.*;
 import com.scoreassistant.adapter.out.persistence.SemesterRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.SemesterEntity;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -29,14 +31,14 @@ public class SemesterService {
                 req.semester_name(),
                 req.start_date(),
                 req.end_date(),
-                now, now, null
+                now, now, false, null
         );
         return semesterRepository.save(entity).map(this::toResponse);
     }
 
     public Mono<SemesterResponse> findById(UUID id) {
         return semesterRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", id)))
                 .map(this::toResponse);
     }
@@ -44,7 +46,7 @@ public class SemesterService {
     @Transactional
     public Mono<SemesterResponse> update(UUID id, SemesterRequest req) {
         return semesterRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", id)))
                 .flatMap(existing -> {
                     var updated = new SemesterEntity(
@@ -54,6 +56,7 @@ public class SemesterService {
                             req.end_date(),
                             existing.createdAt(),
                             LocalDateTime.now(),
+                            false,
                             null
                     );
                     return semesterRepository.save(updated);
@@ -64,7 +67,7 @@ public class SemesterService {
     @Transactional
     public Mono<SemesterResponse> patch(UUID id, SemesterPatchRequest req) {
         return semesterRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", id)))
                 .flatMap(existing -> {
                     var updated = new SemesterEntity(
@@ -74,6 +77,7 @@ public class SemesterService {
                             req.end_date() != null ? req.end_date() : existing.endDate(),
                             existing.createdAt(),
                             LocalDateTime.now(),
+                            false,
                             null
                     );
                     return semesterRepository.save(updated);
@@ -84,7 +88,7 @@ public class SemesterService {
     @Transactional
     public Mono<Void> delete(UUID id) {
         return semesterRepository.findById(id)
-                .filter(e -> e.deletedAt() == null)
+                .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", id)))
                 .flatMap(existing -> {
                     var soft = new SemesterEntity(
@@ -94,6 +98,7 @@ public class SemesterService {
                             existing.endDate(),
                             existing.createdAt(),
                             LocalDateTime.now(),
+                            true,
                             LocalDateTime.now()
                     );
                     return semesterRepository.save(soft);
@@ -102,10 +107,15 @@ public class SemesterService {
     }
 
     public Flux<SemesterResponse> listAll(String semesterName) {
-        if (semesterName != null && !semesterName.isBlank()) {
-            return semesterRepository.findByNameContaining(semesterName).map(this::toResponse);
-        }
-        return semesterRepository.findAllActive().map(this::toResponse);
+        var probe = new SemesterEntity(
+                null,
+                (semesterName != null && !semesterName.isBlank()) ? semesterName : null,
+                null, null, null, null, false, null
+        );
+        var matcher = ExampleMatcher.matching()
+                .withMatcher("semesterName", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase())
+                .withIgnoreNullValues();
+        return semesterRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
     private SemesterResponse toResponse(SemesterEntity e) {

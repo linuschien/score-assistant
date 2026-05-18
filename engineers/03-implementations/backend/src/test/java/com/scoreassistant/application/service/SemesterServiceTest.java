@@ -4,6 +4,7 @@ import com.scoreassistant.adapter.in.web.dto.SemesterDto.*;
 import com.scoreassistant.adapter.out.persistence.SemesterRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.SemesterEntity;
+import org.springframework.data.domain.Example;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class SemesterServiceTest {
         testEntity = new SemesterEntity(
                 testId, "2026-Fall",
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31),
-                LocalDateTime.now(), LocalDateTime.now(), null
+                LocalDateTime.now(), LocalDateTime.now(), false, null
         );
     }
 
@@ -80,7 +81,7 @@ class SemesterServiceTest {
     void findById_shouldThrowWhenSoftDeleted() {
         var deleted = new SemesterEntity(testId, "2026-Fall",
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31),
-                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now());
+                LocalDateTime.now(), LocalDateTime.now(), true, LocalDateTime.now());
         when(semesterRepository.findById(testId)).thenReturn(Mono.just(deleted));
 
         StepVerifier.create(semesterService.findById(testId))
@@ -115,7 +116,7 @@ class SemesterServiceTest {
     @Test
     @DisplayName("listAll() without filter should return all active semesters")
     void listAll_shouldReturnActiveList() {
-        when(semesterRepository.findAllActive()).thenReturn(Flux.just(testEntity));
+        when(semesterRepository.findAll(any(Example.class))).thenReturn(Flux.just(testEntity));
 
         StepVerifier.create(semesterService.listAll(null))
                 .expectNextCount(1)
@@ -125,7 +126,7 @@ class SemesterServiceTest {
     @Test
     @DisplayName("listAll() with name filter should use name-based query")
     void listAll_withFilter_shouldUseNameQuery() {
-        when(semesterRepository.findByNameContaining("Fall")).thenReturn(Flux.just(testEntity));
+        when(semesterRepository.findAll(any(Example.class))).thenReturn(Flux.just(testEntity));
 
         StepVerifier.create(semesterService.listAll("Fall"))
                 .expectNextCount(1)

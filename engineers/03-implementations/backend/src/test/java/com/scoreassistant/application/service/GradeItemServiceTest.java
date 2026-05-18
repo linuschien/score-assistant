@@ -7,6 +7,8 @@ import com.scoreassistant.adapter.in.web.dto.CalculateWeightedScoresRequestDto;
 import com.scoreassistant.adapter.out.persistence.*;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.*;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,10 +48,10 @@ class GradeItemServiceTest {
         classId = UUID.randomUUID();
         itemId = UUID.randomUUID();
         classEntity = new ClassEntity(classId, UUID.randomUUID(), "CS-101",
-                BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), false, null);
         gradeItemEntity = new GradeItemEntity(itemId, classId, "Midterm Exam", "ASSIGNMENT",
                 LocalDate.now(), "Midterm exam", BigDecimal.valueOf(100.0), BigDecimal.valueOf(0.3),
-                LocalDateTime.now(), LocalDateTime.now(), null);
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
     @Test
@@ -89,7 +91,7 @@ class GradeItemServiceTest {
     @Test
     @DisplayName("listAll() should return grade items")
     void listAll_shouldReturnItems() {
-        when(gradeItemRepository.findByClassId(classId)).thenReturn(Flux.just(gradeItemEntity));
+        when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.just(gradeItemEntity));
 
         StepVerifier.create(gradeItemService.listAll(classId, null))
                 .expectNextCount(1)
@@ -101,12 +103,12 @@ class GradeItemServiceTest {
     void exportGrades_shouldBuildSpreadsheet() {
         var studentId = UUID.randomUUID();
         var student = new StudentEntity(studentId, classId, 2026001, "Alice",
-                LocalDateTime.now(), LocalDateTime.now(), null);
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
-                BigDecimal.valueOf(95.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(95.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
 
-        when(gradeItemRepository.findByClassId(classId)).thenReturn(Flux.just(gradeItemEntity));
-        when(studentRepository.findByClassIdOrdered(classId)).thenReturn(Flux.just(student));
+        when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.just(gradeItemEntity));
+        when(studentRepository.findAll(any(Example.class), any(Sort.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.just(record));
 
         StepVerifier.create(gradeItemService.exportGrades(classId, new ExportGradesRequestDto("xlsx")))
@@ -118,9 +120,9 @@ class GradeItemServiceTest {
     @DisplayName("exportAttendance() should succeed")
     void exportAttendance_shouldSucceed() {
         var student = new StudentEntity(UUID.randomUUID(), classId, 2026001, "Alice",
-                LocalDateTime.now(), LocalDateTime.now(), null);
-        when(gradeItemRepository.findByClassIdAndItemType(classId, "ATTENDANCE")).thenReturn(Flux.empty());
-        when(studentRepository.findByClassIdOrdered(classId)).thenReturn(Flux.just(student));
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
+        when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.empty());
+        when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
 
         StepVerifier.create(gradeItemService.exportAttendance(classId, new ExportAttendanceRequestDto("xlsx")))
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 1)
@@ -132,12 +134,12 @@ class GradeItemServiceTest {
     void calculateWeightedScores_shouldCalculate() {
         var studentId = UUID.randomUUID();
         var student = new StudentEntity(studentId, classId, 2026001, "Alice",
-                LocalDateTime.now(), LocalDateTime.now(), null);
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
-                BigDecimal.valueOf(90.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(90.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
 
-        when(gradeItemRepository.findByClassId(classId)).thenReturn(Flux.just(gradeItemEntity));
-        when(studentRepository.findByClassIdOrdered(classId)).thenReturn(Flux.just(student));
+        when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.just(gradeItemEntity));
+        when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.just(record));
 
         StepVerifier.create(gradeItemService.calculateWeightedScores(classId, new CalculateWeightedScoresRequestDto(classId)))

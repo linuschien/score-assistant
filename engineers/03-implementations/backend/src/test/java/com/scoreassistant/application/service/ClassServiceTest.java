@@ -6,6 +6,7 @@ import com.scoreassistant.adapter.out.persistence.SemesterRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.ClassEntity;
 import com.scoreassistant.domain.model.SemesterEntity;
+import org.springframework.data.domain.Example;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,9 +45,9 @@ class ClassServiceTest {
         classId    = UUID.randomUUID();
         semesterEntity = new SemesterEntity(semesterId, "2026-Fall",
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31),
-                LocalDateTime.now(), LocalDateTime.now(), null);
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
         classEntity = new ClassEntity(classId, semesterId, "CS-101",
-                BigDecimal.valueOf(60.0), LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(60.0), LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
     @Test
@@ -95,11 +96,11 @@ class ClassServiceTest {
     }
 
     @Test
-    @DisplayName("listBySemester() should return classes for semester")
-    void listBySemester_shouldReturnClasses() {
-        when(classRepository.findBySemesterId(semesterId)).thenReturn(Flux.just(classEntity));
+    @DisplayName("listAll() should return classes for semester")
+    void listAll_shouldReturnClasses() {
+        when(classRepository.findAll(any(Example.class))).thenReturn(Flux.just(classEntity));
 
-        StepVerifier.create(classService.listBySemester(semesterId, null))
+        StepVerifier.create(classService.listAll(semesterId, null))
                 .expectNextCount(1)
                 .verifyComplete();
     }

@@ -6,6 +6,7 @@ import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.AttachmentEntity;
 import com.scoreassistant.domain.model.GradeRecordEntity;
+import org.springframework.data.domain.Example;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,9 +43,9 @@ class AttachmentServiceTest {
         gradeRecordId = UUID.randomUUID();
         attachmentId = UUID.randomUUID();
         gradeRecordEntity = new GradeRecordEntity(gradeRecordId, UUID.randomUUID(), UUID.randomUUID(),
-                BigDecimal.valueOf(80), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(80), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
         attachmentEntity = new AttachmentEntity(attachmentId, gradeRecordId, "homework.pdf", "application/pdf",
-                1024, new byte[]{1, 2, 3}, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), null);
+                1024, new byte[]{1, 2, 3}, LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
     @Test
@@ -97,7 +98,7 @@ class AttachmentServiceTest {
     @Test
     @DisplayName("listAll() should return attachments")
     void listAll_shouldReturnAttachments() {
-        when(attachmentRepository.findByGradeRecordId(gradeRecordId)).thenReturn(Flux.just(attachmentEntity));
+        when(attachmentRepository.findAll(any(Example.class))).thenReturn(Flux.just(attachmentEntity));
 
         StepVerifier.create(attachmentService.listAll(gradeRecordId))
                 .expectNextCount(1)

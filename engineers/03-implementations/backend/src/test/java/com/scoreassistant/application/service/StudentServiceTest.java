@@ -6,6 +6,8 @@ import com.scoreassistant.adapter.out.persistence.StudentRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.ClassEntity;
 import com.scoreassistant.domain.model.StudentEntity;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,9 +44,9 @@ class StudentServiceTest {
         classId   = UUID.randomUUID();
         studentId = UUID.randomUUID();
         classEntity   = new ClassEntity(classId, UUID.randomUUID(), "CS-101",
-                BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), null);
+                BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), false, null);
         studentEntity = new StudentEntity(studentId, classId, 2026001, "Alice",
-                LocalDateTime.now(), LocalDateTime.now(), null);
+                LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
     @Test
@@ -101,11 +103,11 @@ class StudentServiceTest {
     }
 
     @Test
-    @DisplayName("listByClass() should return ordered students")
-    void listByClass_shouldReturnStudents() {
-        when(studentRepository.findByClassIdOrdered(classId)).thenReturn(Flux.just(studentEntity));
+    @DisplayName("listAll() should return ordered students")
+    void listAll_shouldReturnStudents() {
+        when(studentRepository.findAll(any(Example.class), any(Sort.class))).thenReturn(Flux.just(studentEntity));
 
-        StepVerifier.create(studentService.listByClass(classId))
+        StepVerifier.create(studentService.listAll(classId))
                 .expectNextCount(1)
                 .verifyComplete();
     }

@@ -4,6 +4,7 @@ import com.scoreassistant.adapter.in.web.dto.GradeRecordDto.*;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.GradeRecordEntity;
+import org.springframework.data.domain.Example;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class GradeRecordServiceTest {
         testRecord  = new GradeRecordEntity(
                 recordId, gradeItemId, studentId,
                 BigDecimal.valueOf(85.5), LocalDateTime.now(),
-                1, LocalDateTime.now(), LocalDateTime.now(), null
+                1, LocalDateTime.now(), LocalDateTime.now(), false, null
         );
     }
 
@@ -84,7 +85,7 @@ class GradeRecordServiceTest {
         var updated = new GradeRecordEntity(
                 recordId, gradeItemId, studentId,
                 BigDecimal.valueOf(90.0), LocalDateTime.now(),
-                1, LocalDateTime.now(), LocalDateTime.now(), null
+                1, LocalDateTime.now(), LocalDateTime.now(), false, null
         );
         when(gradeRecordRepository.findById(recordId)).thenReturn(Mono.just(testRecord));
         when(gradeRecordRepository.save(any())).thenReturn(Mono.just(updated));
@@ -107,9 +108,9 @@ class GradeRecordServiceTest {
     }
 
     @Test
-    @DisplayName("listAll() by gradeItemId should delegate to findByGradeItemId")
+    @DisplayName("listAll() by gradeItemId should delegate to findAll")
     void listAll_byGradeItemId_shouldReturnRecords() {
-        when(gradeRecordRepository.findByGradeItemId(gradeItemId)).thenReturn(Flux.just(testRecord));
+        when(gradeRecordRepository.findAll(any(Example.class))).thenReturn(Flux.just(testRecord));
 
         StepVerifier.create(gradeRecordService.listAll(gradeItemId, null))
                 .expectNextCount(1)
