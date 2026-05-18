@@ -37,6 +37,18 @@
    - **意義**：作為**防腐層 (Anticorruption Layer)**，將廠商雜亂的暫存器 (如 Modbus `0x4001`) 轉換為系統內部的清潔模型 (如 `Grid_Voltage`)。
    - **`hexagonal-service-manifest-schema.yaml`**：標準化的六角架構微服務清單 (Hexagonal Microservice Manifest) Schema 定義。它強制執行 Ports 與 Adapters 的嚴格驗證，確保所有的介面與外部實作均遵守架構規範。
 
+## 📁 工程實作與驗證目錄結構 (engineers/)
+
+### 03-implementations/ (產出：具體實作)
+**職責**：將 02 的設計契約嚴格轉化為可執行的系統程式碼。
+- **backend/**：Spring Boot 響應式後端微服務實作（嚴守六角架構）。
+- **frontend/**：React 前端實作（負責處理 UI Manifest 與 JSON-render 轉譯）。
+
+### 04-tests/ (驗證：自動化稽核)
+**職責**：依據行為契約與 API 契約，對系統進行端到端 (E2E) 的自動化測試。
+- **cases/**：由 QA Agent 自規格自動生成的確定性 E2E 測試案例。
+- **reports/**：透過自動化測試執行所產出的標準化測試稽核報告。
+
 ## 🤖 Agent Workflows (.agents/workflows/)
 
 Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格。從最初的需求解析到最終的端到端驗證，十項核心工作流程在開發管線中展開為 11 個依序執行的生命週期節點：
