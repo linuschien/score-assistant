@@ -5,6 +5,7 @@ import com.scoreassistant.adapter.out.persistence.AttachmentRepository;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.AttachmentEntity;
+import com.scoreassistant.domain.model.GradeRecordEntity;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,14 @@ public class AttachmentService {
 
     @Transactional
     public Mono<AttachmentResponse> create(UUID gradeRecordId, AttachmentRequest req) {
-        return gradeRecordRepository.findById(gradeRecordId)
-                .filter(e -> !e.deleted())
+        var recordProbe = new GradeRecordEntity(gradeRecordId, null, null, null, null, 0, null, null, false, null);
+        var matcher = ExampleMatcher.matching()
+                .withIgnorePaths("version")
+                .withIgnoreNullValues();
+        return gradeRecordRepository.exists(Example.of(recordProbe, matcher))
+                .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", gradeRecordId)))
-                .flatMap(gr -> {
+                .flatMap(exists -> {
                     var now = LocalDateTime.now();
                     var entity = new AttachmentEntity(
                             null, gradeRecordId,

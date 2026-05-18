@@ -52,7 +52,7 @@ class StudentServiceTest {
     @Test
     @DisplayName("create() should create student under valid class")
     void create_shouldSaveUnderValidClass() {
-        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
 
         var req = new StudentRequest(2026001, "Alice");
@@ -65,7 +65,7 @@ class StudentServiceTest {
     @Test
     @DisplayName("create() should throw when class not found")
     void create_shouldThrowWhenClassMissing() {
-        when(classRepository.findById(classId)).thenReturn(Mono.empty());
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
 
         StepVerifier.create(studentService.create(classId, new StudentRequest(1, "Bob")))
                 .expectError(ResourceNotFoundException.class)
@@ -115,7 +115,7 @@ class StudentServiceTest {
     @Test
     @DisplayName("importStudents() should parse CSV and save students")
     void importStudents_shouldParseCsvAndSave() {
-        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
 
         var csv = "student_number,student_name\n2026001,Alice\n2026002,Bob\n".getBytes();

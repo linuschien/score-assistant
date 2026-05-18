@@ -57,7 +57,7 @@ class GradeItemServiceTest {
     @Test
     @DisplayName("create() should save GradeItem")
     void create_shouldSaveGradeItem() {
-        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(gradeItemRepository.save(any())).thenReturn(Mono.just(gradeItemEntity));
 
         var req = new GradeItemRequest("Midterm Exam", "ASSIGNMENT", LocalDate.now(),

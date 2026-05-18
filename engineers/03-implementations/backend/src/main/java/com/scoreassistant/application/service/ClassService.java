@@ -5,6 +5,7 @@ import com.scoreassistant.adapter.out.persistence.ClassRepository;
 import com.scoreassistant.adapter.out.persistence.SemesterRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
 import com.scoreassistant.domain.model.ClassEntity;
+import com.scoreassistant.domain.model.SemesterEntity;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,11 @@ public class ClassService {
 
     @Transactional
     public Mono<ClassResponse> create(UUID semesterId, ClassRequest req) {
-        return semesterRepository.findById(semesterId)
-                .filter(e -> !e.deleted())
+        var semesterProbe = new SemesterEntity(semesterId, null, null, null, null, null, false, null);
+        return semesterRepository.exists(Example.of(semesterProbe))
+                .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Semester", semesterId)))
-                .flatMap(sem -> {
+                .flatMap(exists -> {
                     var now = LocalDateTime.now();
                     var entity = new ClassEntity(
                             null, semesterId,

@@ -51,7 +51,7 @@ class AttachmentServiceTest {
     @Test
     @DisplayName("create() should save attachment under valid GradeRecord")
     void create_shouldSaveUnderValidRecord() {
-        when(gradeRecordRepository.findById(gradeRecordId)).thenReturn(Mono.just(gradeRecordEntity));
+        when(gradeRecordRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(attachmentRepository.save(any())).thenReturn(Mono.just(attachmentEntity));
 
         var req = new AttachmentRequest("homework.pdf", "application/pdf", 1024,
@@ -65,7 +65,7 @@ class AttachmentServiceTest {
     @Test
     @DisplayName("create() should throw when GradeRecord is missing")
     void create_shouldThrowWhenRecordMissing() {
-        when(gradeRecordRepository.findById(gradeRecordId)).thenReturn(Mono.empty());
+        when(gradeRecordRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
 
         var req = new AttachmentRequest("homework.pdf", "application/pdf", 1024,
                 new byte[]{1, 2, 3}, LocalDateTime.now());

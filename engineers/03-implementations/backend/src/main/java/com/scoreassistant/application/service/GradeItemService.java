@@ -44,10 +44,11 @@ public class GradeItemService {
 
     @Transactional
     public Mono<GradeItemResponse> create(UUID classId, GradeItemRequest req) {
-        return classRepository.findById(classId)
-                .filter(e -> !e.deleted())
+        var classProbe = new ClassEntity(classId, null, null, null, null, null, false, null);
+        return classRepository.exists(Example.of(classProbe))
+                .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
-                .flatMap(cls -> {
+                .flatMap(exists -> {
                     var now = LocalDateTime.now();
                     var entity = new GradeItemEntity(
                             null, classId,

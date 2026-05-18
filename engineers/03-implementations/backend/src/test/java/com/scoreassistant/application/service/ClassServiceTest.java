@@ -53,7 +53,7 @@ class ClassServiceTest {
     @Test
     @DisplayName("create() should validate semester exists and save class")
     void create_shouldSaveClassUnderValidSemester() {
-        when(semesterRepository.findById(semesterId)).thenReturn(Mono.just(semesterEntity));
+        when(semesterRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(classRepository.save(any())).thenReturn(Mono.just(classEntity));
 
         var req = new ClassRequest("CS-101", BigDecimal.valueOf(60.0));
@@ -66,7 +66,7 @@ class ClassServiceTest {
     @Test
     @DisplayName("create() should fail when semester not found")
     void create_shouldFailWhenSemesterMissing() {
-        when(semesterRepository.findById(semesterId)).thenReturn(Mono.empty());
+        when(semesterRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
 
         var req = new ClassRequest("CS-101", null);
 
