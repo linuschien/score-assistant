@@ -30,6 +30,8 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 | **Component Registry** | `engineers/03-implementations/frontend/src/json-render/component-registry.ts` | Extends `@json-render/shadcn` preset with custom components |
 | **API Hook Stubs** | `engineers/03-implementations/frontend/src/hooks/use-{operationId}.ts` | Typed TanStack Query hooks |
 | **Page Entry Point** | `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx` | Natively renders `<Renderer spec={spec} registry={registry} />` |
+| **MSW Mocks** | `engineers/03-implementations/frontend/src/mocks/handlers.ts` | MSW endpoint mocks for intercepted `data_ref`s |
+| **Component Flow Tests** | `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx` | Vitest + MSW unit tests verifying end-to-end component flows |
 
 ---
 
@@ -73,8 +75,15 @@ export default function {PageName}Page() {
 }
 ```
 
-### Phase 7 — Report
-Emit a Markdown Generation Report covering: output files written, component resolution mapping summary (highlighting preset vs custom usage), and any warnings.
+### Phase 7 — Component Flow Unit Testing (Vitest + MSW)
+Generate automated unit tests at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx` to verify component connections:
+1. Setup **MSW (Mock Service Worker)** handlers to intercept the REST `operationId`s or GraphQL resolver methods extracted from the manifest's `data_ref`s.
+2. Render the page component using `@testing-library/react` wrapped in the necessary providers (e.g., `QueryClientProvider`).
+3. Simulate user interactions defined in the manifest (e.g., `on_click` triggering a `behavior_ref`) using `@testing-library/user-event`.
+4. Assert that the correct mocked API endpoints are called and that the UI state updates correctly to ensure the full component flow is robustly connected.
+
+### Phase 8 — Report
+Emit a Markdown Generation Report covering: output files written, component resolution mapping summary (highlighting preset vs custom usage), test coverage summary, and any warnings.
 
 ---
 
@@ -87,4 +96,5 @@ Emit a Markdown Generation Report covering: output files written, component reso
 - **Tech Stack**:
     - **Language**: Strictly use **TypeScript** for all implementations.
     - **Build Tool**: Use **Vite** for project bundling and development.
+    - **Testing**: Use **Vitest**, **MSW**, and **React Testing Library** for component flow validation.
     - **Build Output**: Use Vite's default **`dist`** directory. The `spring-backend-engineer` should be notified of this path so they can configure the Spring Boot `spring.web.resources.static-locations` startup parameter to serve these static resources.
