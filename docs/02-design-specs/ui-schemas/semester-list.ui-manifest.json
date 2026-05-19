@@ -11,7 +11,7 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "nielsen:control" },
           { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" }
         ]
       },

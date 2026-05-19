@@ -15,7 +15,7 @@
             "id": "home-link",
             "abstract_type": "Trigger",
             "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
+            "behavior_ref": "nielsen:control"
           },
           {
             "id": "semester-list-link",

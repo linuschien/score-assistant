@@ -11,7 +11,7 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "nielsen:control" },
           { "id": "semester-list-link", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" },
           { "id": "class-list-link", "abstract_type": "Trigger", "label": "班級管理", "behavior_ref": "List all Classes in a Semester via GraphQL" },
           { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "成績登記總表", "behavior_ref": "Record a numeric score for a Student" }
