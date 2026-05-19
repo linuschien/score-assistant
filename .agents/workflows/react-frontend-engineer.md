@@ -43,6 +43,8 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
    - All `abstract_type` values are within the 14-value enum.
    - All `interaction.target_id` values resolve to existing `id`s in the same manifest.
    - No unresolved `FIXME_DATA_REF` or `FIXME_BEHAVIOR_REF` placeholders.
+   - Triggers performing mutations (create, update, delete) MUST have `feedback` configured.
+   - Triggers performing deletions MUST have `confirm_delete` configured.
 3. **Halt** on any violation. Report exact failure before continuing.
 
 ### Phase 2 — Component Mapping (Prioritizing @json-render/shadcn)
