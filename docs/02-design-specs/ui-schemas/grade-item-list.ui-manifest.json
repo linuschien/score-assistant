@@ -11,29 +11,10 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          {
-            "id": "home-link",
-            "abstract_type": "Trigger",
-            "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "semester-list-link",
-            "abstract_type": "Trigger",
-            "label": "學期列表",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "class-list-link",
-            "abstract_type": "Trigger",
-            "label": "班級管理",
-            "behavior_ref": "List all Classes in a Semester via GraphQL"
-          },
-          {
-            "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "成績項目"
-          }
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "semester-list-link", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "class-list-link", "abstract_type": "Trigger", "label": "班級管理", "behavior_ref": "List all Classes in a Semester via GraphQL" },
+          { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "成績項目", "behavior_ref": "List all GradeItems in a Class via GraphQL" }
         ]
       },
       {
@@ -41,27 +22,13 @@
         "abstract_type": "Section",
         "semantic_variant": "summary-section",
         "children": [
-          {
-            "id": "page-title",
-            "abstract_type": "Heading",
-            "label": "成績項目管理"
-          },
+          { "id": "page-title", "abstract_type": "Heading", "label": "成績項目管理" },
           {
             "id": "current-context",
             "abstract_type": "Stack",
             "children": [
-              {
-                "id": "semester-name",
-                "abstract_type": "Text",
-                "label": "學期：",
-                "data_ref": "getSemesterById"
-              },
-              {
-                "id": "class-name",
-                "abstract_type": "Text",
-                "label": "班級：",
-                "data_ref": "getClassById"
-              }
+              { "id": "semester-name", "abstract_type": "Text", "label": "學期：", "data_ref": "getSemesterById" },
+              { "id": "class-name", "abstract_type": "Text", "label": "班級：", "data_ref": "getClassById" }
             ]
           },
           {
@@ -69,36 +36,26 @@
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "建立成績項目",
-            "behavior_ref": "Create a new GradeItem"
+            "behavior_ref": "Create a new GradeItem",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.gradeItem.created" },
+              "on_error": { "type": "dialog", "message_key": "error.gradeItem.createFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_click", "target_id": "grade-item-form-modal", "behavior_ref": "Create a new GradeItem" }
+            ]
           },
-          {
-            "id": "manage-weights-trigger",
-            "abstract_type": "Trigger",
-            "semantic_variant": "secondary",
-            "label": "管理權重",
-            "behavior_ref": "View weight distribution summary via GraphQL"
-          }
+          { "id": "manage-weights-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "管理權重", "behavior_ref": "View weight distribution summary via GraphQL" }
         ]
       },
       {
-        "id": "filter-section",
-        "abstract_type": "Section",
+        "id": "filter-bar",
+        "abstract_type": "Stack",
         "semantic_variant": "filter-bar",
         "children": [
-          {
-            "id": "item-type-filter",
-            "abstract_type": "Selection",
-            "semantic_variant": "dropdown",
-            "label": "篩選類型",
-            "behavior_ref": "List all GradeItems in a Class via GraphQL"
-          },
-          {
-            "id": "item-date-filter",
-            "abstract_type": "Field",
-            "semantic_variant": "date",
-            "label": "篩選日期",
-            "behavior_ref": "List all GradeItems in a Class via GraphQL"
-          }
+          { "id": "item-type-filter", "abstract_type": "Selection", "semantic_variant": "dropdown", "label": "篩選類型", "behavior_ref": "List all GradeItems in a Class via GraphQL", "ux_hints": { "max_visible_options": 6 } },
+          { "id": "item-date-filter", "abstract_type": "Field", "semantic_variant": "date-picker", "label": "篩選日期", "behavior_ref": "List all GradeItems in a Class via GraphQL" }
         ]
       },
       {
@@ -112,33 +69,26 @@
             "semantic_variant": "data-table",
             "label": "成績項目資料表",
             "data_ref": "listGradeItems",
+            "columns": [
+              { "field": "name", "label": "項目名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "type", "label": "類型", "sortable": true },
+              { "field": "examDate", "label": "日期", "sortable": true },
+              { "field": "weight", "label": "權重 (%)", "sortable": true }
+            ],
             "children": [
-              {
-                "id": "item-name-column",
-                "abstract_type": "Text",
-                "label": "項目名稱"
-              },
-              {
-                "id": "item-type-column",
-                "abstract_type": "Text",
-                "label": "類型"
-              },
-              {
-                "id": "item-date-column",
-                "abstract_type": "Text",
-                "label": "日期"
-              },
-              {
-                "id": "item-weight-column",
-                "abstract_type": "Text",
-                "label": "權重 (%)"
-              },
               {
                 "id": "edit-grade-item-trigger",
                 "abstract_type": "Trigger",
                 "semantic_variant": "secondary",
                 "label": "編輯",
-                "behavior_ref": "Update GradeItem information"
+                "behavior_ref": "Update GradeItem information",
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.gradeItem.updated" },
+                  "on_error": { "type": "dialog", "message_key": "error.gradeItem.updateFailed" }
+                },
+                "interactions": [
+                  { "on_event": "on_click", "target_id": "grade-item-form-modal", "behavior_ref": "Update GradeItem information" }
+                ]
               },
               {
                 "id": "delete-grade-item-trigger",
@@ -146,14 +96,42 @@
                 "semantic_variant": "destructive",
                 "label": "刪除",
                 "behavior_ref": "Delete a GradeItem",
+                "confirm_delete": { "keyword_label": "請輸入項目名稱以確認刪除", "keyword_value": "{{gradeItem.name}}" },
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.gradeItem.deleted" },
+                  "on_error": { "type": "dialog", "message_key": "error.gradeItem.deleteFailed" }
+                },
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "delete-grade-item-confirm-dialog",
-                    "behavior_ref": "Delete a GradeItem"
-                  }
+                  { "on_event": "on_click", "target_id": "delete-grade-item-confirm-dialog", "behavior_ref": "Delete a GradeItem" }
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "grade-item-form-modal",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "建立 / 編輯成績項目",
+        "children": [
+          { "id": "modal-item-name-field", "abstract_type": "Field", "semantic_variant": "text", "label": "項目名稱", "behavior_ref": "Create a new GradeItem" },
+          { "id": "modal-item-type-selection", "abstract_type": "Selection", "semantic_variant": "dropdown", "label": "項目類型", "behavior_ref": "Create a new GradeItem", "ux_hints": { "max_visible_options": 6 } },
+          { "id": "modal-item-date-field", "abstract_type": "Field", "semantic_variant": "date-picker", "label": "日期", "behavior_ref": "Create a new GradeItem" },
+          { "id": "modal-item-description-field", "abstract_type": "Field", "semantic_variant": "textarea", "label": "說明", "behavior_ref": "Create a new GradeItem" },
+          { "id": "modal-max-score-field", "abstract_type": "Field", "semantic_variant": "number", "label": "滿分", "behavior_ref": "Create a new GradeItem", "ux_hints": { "gestalt_group": "score-config" } },
+          { "id": "modal-weight-field", "abstract_type": "Field", "semantic_variant": "number", "label": "權重 (%)", "behavior_ref": "Create a new GradeItem", "ux_hints": { "gestalt_group": "score-config" } },
+          {
+            "id": "modal-submit-grade-item-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.gradeItem.saved" },
+              "on_error": { "type": "inline", "message_key": "error.gradeItem.saveFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_submit", "target_id": "grade-item-form-modal", "behavior_ref": "Create a new GradeItem" }
             ]
           }
         ]
@@ -164,24 +142,20 @@
         "semantic_variant": "confirm-dialog",
         "label": "確認刪除成績項目",
         "children": [
-          {
-            "id": "delete-grade-item-warning-text",
-            "abstract_type": "Text",
-            "label": "此項目底下所有學生的成績資料將一並永久刪除，此操作無法復原。"
-          },
+          { "id": "delete-grade-item-warning-text", "abstract_type": "Text", "label": "此項目底下所有學生的成績資料將一並永久刪除，此操作無法復原。" },
+          { "id": "delete-grade-item-keyword-input", "abstract_type": "Field", "semantic_variant": "text", "label": "請輸入項目名稱以確認刪除", "behavior_ref": "nielsen:error-prevention" },
           {
             "id": "confirm-delete-grade-item-trigger",
             "abstract_type": "Trigger",
             "semantic_variant": "destructive",
             "label": "確認刪除",
-            "behavior_ref": "Delete a GradeItem"
+            "behavior_ref": "Delete a GradeItem",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.gradeItem.deleted" },
+              "on_error": { "type": "dialog", "message_key": "error.gradeItem.deleteFailed" }
+            }
           },
-          {
-            "id": "cancel-delete-grade-item-trigger",
-            "abstract_type": "Trigger",
-            "semantic_variant": "secondary",
-            "label": "取消"
-          }
+          { "id": "cancel-delete-grade-item-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "取消" }
         ]
       }
     ]

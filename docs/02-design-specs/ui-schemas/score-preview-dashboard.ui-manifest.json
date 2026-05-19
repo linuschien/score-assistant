@@ -37,8 +37,9 @@
           },
           {
             "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "成績預覽與匯出"
+            "abstract_type": "Trigger",
+            "label": "成績預覽與匯出",
+            "behavior_ref": "Preview class Grade Summary matrix via GraphQL"
           }
         ]
       },
@@ -57,14 +58,19 @@
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "匯出 Excel (.xlsx)",
-            "behavior_ref": "Export grades to a file"
+            "behavior_ref": "Export grades to a file",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.grades.exported" },
+              "on_error": { "type": "dialog", "message_key": "error.grades.exportFailed" }
+            }
           }
         ]
       },
       {
         "id": "weight-warning-banner",
         "abstract_type": "Section",
-        "semantic_variant": "warning-banner",
+        "semantic_variant": "summary-section",
         "label": "⚠ 注意：目前總權重未達 100%，加權總分計算結果可能不正確。",
         "behavior_ref": "Grade Summary preview shows weight warning when total weight is not 100%"
       },
@@ -79,22 +85,10 @@
             "semantic_variant": "summary-table",
             "label": "成績總表",
             "data_ref": "listGradeRecords",
-            "children": [
-              {
-                "id": "student-number-column",
-                "abstract_type": "Text",
-                "label": "座號"
-              },
-              {
-                "id": "student-name-column",
-                "abstract_type": "Text",
-                "label": "姓名"
-              },
-              {
-                "id": "weighted-total-column",
-                "abstract_type": "Metric",
-                "label": "加權總分"
-              }
+            "columns": [
+              { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
+              { "field": "name", "label": "姓名", "sortable": true },
+              { "field": "weightedTotal", "label": "加權總分", "sortable": true }
             ]
           }
         ]

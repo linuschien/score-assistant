@@ -11,29 +11,10 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          {
-            "id": "home-link",
-            "abstract_type": "Trigger",
-            "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "semester-list-link",
-            "abstract_type": "Trigger",
-            "label": "學期列表",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "class-list-link",
-            "abstract_type": "Trigger",
-            "label": "班級管理",
-            "behavior_ref": "List all Classes in a Semester via GraphQL"
-          },
-          {
-            "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "成績登記總表"
-          }
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "semester-list-link", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "class-list-link", "abstract_type": "Trigger", "label": "班級管理", "behavior_ref": "List all Classes in a Semester via GraphQL" },
+          { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "成績登記總表", "behavior_ref": "Record a numeric score for a Student" }
         ]
       },
       {
@@ -41,36 +22,16 @@
         "abstract_type": "Section",
         "semantic_variant": "summary-section",
         "children": [
-          {
-            "id": "page-title",
-            "abstract_type": "Heading",
-            "label": "成績登記總表"
-          },
+          { "id": "page-title", "abstract_type": "Heading", "label": "成績登記總表" },
           {
             "id": "current-context",
             "abstract_type": "Stack",
             "children": [
-              {
-                "id": "semester-name",
-                "abstract_type": "Text",
-                "label": "學期：",
-                "data_ref": "getSemesterById"
-              },
-              {
-                "id": "class-name",
-                "abstract_type": "Text",
-                "label": "班級：",
-                "data_ref": "getClassById"
-              }
+              { "id": "semester-name", "abstract_type": "Text", "label": "學期：", "data_ref": "getSemesterById" },
+              { "id": "class-name", "abstract_type": "Text", "label": "班級：", "data_ref": "getClassById" }
             ]
           },
-          {
-            "id": "preview-grades-trigger",
-            "abstract_type": "Trigger",
-            "semantic_variant": "secondary",
-            "label": "預覽成績",
-            "behavior_ref": "Preview class Grade Summary matrix via GraphQL"
-          }
+          { "id": "preview-grades-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "預覽成績", "behavior_ref": "Preview class Grade Summary matrix via GraphQL" }
         ]
       },
       {
@@ -84,17 +45,11 @@
             "semantic_variant": "data-table",
             "label": "成績登記矩陣",
             "data_ref": "listGradeRecords",
+            "columns": [
+              { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
+              { "field": "name", "label": "姓名", "sortable": true }
+            ],
             "children": [
-              {
-                "id": "student-number-column",
-                "abstract_type": "Text",
-                "label": "座號"
-              },
-              {
-                "id": "student-name-column",
-                "abstract_type": "Text",
-                "label": "姓名"
-              },
               {
                 "id": "dynamic-grade-column",
                 "abstract_type": "Container",
@@ -103,10 +58,19 @@
                   {
                     "id": "score-cell-stack",
                     "abstract_type": "Stack",
+                    "behavior_ref": "Upload an Attachment for a GradeRecord",
+                    "interactions": [
+                      {
+                        "on_event": "on_hover",
+                        "target_id": "attachment-overlay",
+                        "behavior_ref": "Upload an Attachment for a GradeRecord"
+                      }
+                    ],
                     "children": [
                       {
                         "id": "score-input",
                         "abstract_type": "Field",
+                        "semantic_variant": "number",
                         "label": "分數",
                         "behavior_ref": "Update an existing GradeRecord"
                       },
@@ -116,25 +80,9 @@
                         "semantic_variant": "dropdown",
                         "label": "狀態",
                         "behavior_ref": "Record Attendance with automatic status-to-score mapping",
+                        "ux_hints": { "max_visible_options": 5 },
                         "interactions": [
-                          {
-                            "on_event": "on_change",
-                            "target_id": "score-input",
-                            "behavior_ref": "Record Attendance with automatic status-to-score mapping"
-                          }
-                        ]
-                      },
-                      {
-                        "id": "attachment-trigger",
-                        "abstract_type": "Trigger",
-                        "semantic_variant": "icon",
-                        "label": "附件",
-                        "interactions": [
-                          {
-                            "on_event": "on_click",
-                            "target_id": "attachment-overlay",
-                            "behavior_ref": "Upload an Attachment for a GradeRecord"
-                          }
+                          { "on_event": "on_change", "target_id": "score-input", "behavior_ref": "Record Attendance with automatic status-to-score mapping" }
                         ]
                       }
                     ]
@@ -155,14 +103,22 @@
             "id": "attachment-list",
             "abstract_type": "Table",
             "semantic_variant": "data-table",
-            "data_ref": "listAttachments"
+            "data_ref": "listAttachments",
+            "columns": [
+              { "field": "fileName", "label": "檔案名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "uploadedAt", "label": "上傳時間", "sortable": true }
+            ]
           },
           {
             "id": "upload-attachment-trigger",
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "上傳附件",
-            "behavior_ref": "Upload an Attachment for a GradeRecord"
+            "behavior_ref": "Upload an Attachment for a GradeRecord",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.attachment.uploaded" },
+              "on_error": { "type": "dialog", "message_key": "error.attachment.uploadFailed" }
+            }
           }
         ]
       }

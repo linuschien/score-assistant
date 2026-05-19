@@ -11,47 +11,32 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          {
-            "id": "home-link",
-            "abstract_type": "Trigger",
-            "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "semester-list-link",
-            "abstract_type": "Trigger",
-            "label": "學期列表",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "班級管理"
-          }
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "semester-list-link", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "班級管理", "behavior_ref": "List all Classes in a Semester via GraphQL" }
         ]
       },
       {
         "id": "header-section",
         "abstract_type": "Section",
-        "semantic_variant": "action-bar",
+        "semantic_variant": "summary-section",
         "children": [
-          {
-            "id": "page-title",
-            "abstract_type": "Heading",
-            "label": "班級管理"
-          },
-          {
-            "id": "current-semester-context",
-            "abstract_type": "Text",
-            "label": "當前學期：",
-            "data_ref": "getSemesterById"
-          },
+          { "id": "page-title", "abstract_type": "Heading", "label": "班級管理" },
+          { "id": "current-semester-context", "abstract_type": "Text", "label": "當前學期：", "data_ref": "getSemesterById" },
           {
             "id": "create-class-button",
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "建立班級",
-            "behavior_ref": "Create a new Class in a Semester"
+            "behavior_ref": "Create a new Class in a Semester",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.class.created" },
+              "on_error": { "type": "dialog", "message_key": "error.class.createFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_click", "target_id": "class-form-modal", "behavior_ref": "Create a new Class in a Semester" }
+            ]
           }
         ]
       },
@@ -66,17 +51,11 @@
             "semantic_variant": "data-table",
             "label": "班級資料表",
             "data_ref": "listClasses",
+            "columns": [
+              { "field": "name", "label": "班級名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "studentCount", "label": "學生人數" }
+            ],
             "children": [
-              {
-                "id": "class-name-column",
-                "abstract_type": "Text",
-                "label": "班級名稱"
-              },
-              {
-                "id": "student-count-column",
-                "abstract_type": "Text",
-                "label": "學生人數"
-              },
               {
                 "id": "record-grade-matrix-trigger",
                 "abstract_type": "Trigger",
@@ -84,11 +63,7 @@
                 "label": "登記成績",
                 "behavior_ref": "Record a numeric score for a Student",
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "class-list-page",
-                    "behavior_ref": "Record a numeric score for a Student"
-                  }
+                  { "on_event": "on_click", "target_id": "class-list-page", "behavior_ref": "Record a numeric score for a Student" }
                 ]
               },
               {
@@ -98,11 +73,7 @@
                 "label": "查看學生",
                 "behavior_ref": "List all Students in a Class via GraphQL",
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "class-list-page",
-                    "behavior_ref": "List all Students in a Class via GraphQL"
-                  }
+                  { "on_event": "on_click", "target_id": "class-list-page", "behavior_ref": "List all Students in a Class via GraphQL" }
                 ]
               },
               {
@@ -112,11 +83,7 @@
                 "label": "管理成績項目",
                 "behavior_ref": "List all GradeItems in a Class via GraphQL",
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "class-list-page",
-                    "behavior_ref": "List all GradeItems in a Class via GraphQL"
-                  }
+                  { "on_event": "on_click", "target_id": "class-list-page", "behavior_ref": "List all GradeItems in a Class via GraphQL" }
                 ]
               },
               {
@@ -124,7 +91,14 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "secondary",
                 "label": "編輯",
-                "behavior_ref": "Update Class information"
+                "behavior_ref": "Update Class information",
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.class.updated" },
+                  "on_error": { "type": "dialog", "message_key": "error.class.updateFailed" }
+                },
+                "interactions": [
+                  { "on_event": "on_click", "target_id": "class-form-modal", "behavior_ref": "Update Class information" }
+                ]
               },
               {
                 "id": "delete-class-trigger",
@@ -132,14 +106,46 @@
                 "semantic_variant": "destructive",
                 "label": "刪除",
                 "behavior_ref": "Delete a Class",
+                "confirm_delete": {
+                  "keyword_label": "請輸入班級名稱以確認刪除",
+                  "keyword_value": "{{class.name}}"
+                },
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.class.deleted" },
+                  "on_error": { "type": "dialog", "message_key": "error.class.deleteFailed" }
+                },
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "delete-class-confirm-dialog",
-                    "behavior_ref": "Delete a Class"
-                  }
+                  { "on_event": "on_click", "target_id": "delete-class-confirm-dialog", "behavior_ref": "Delete a Class" }
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "class-form-modal",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "建立 / 編輯班級",
+        "children": [
+          {
+            "id": "modal-class-name-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "班級名稱",
+            "behavior_ref": "Create a new Class in a Semester"
+          },
+          {
+            "id": "modal-submit-class-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.class.saved" },
+              "on_error": { "type": "inline", "message_key": "error.class.saveFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_submit", "target_id": "class-form-modal", "behavior_ref": "Create a new Class in a Semester" }
             ]
           }
         ]
@@ -156,18 +162,24 @@
             "label": "此班級底下的學生名單與所有成績資料將一並永久刪除，此操作無法復原。"
           },
           {
+            "id": "delete-class-keyword-input",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "請輸入班級名稱以確認刪除",
+            "behavior_ref": "nielsen:error-prevention"
+          },
+          {
             "id": "confirm-delete-class-trigger",
             "abstract_type": "Trigger",
             "semantic_variant": "destructive",
             "label": "確認刪除",
-            "behavior_ref": "Delete a Class"
+            "behavior_ref": "Delete a Class",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.class.deleted" },
+              "on_error": { "type": "dialog", "message_key": "error.class.deleteFailed" }
+            }
           },
-          {
-            "id": "cancel-delete-class-trigger",
-            "abstract_type": "Trigger",
-            "semantic_variant": "secondary",
-            "label": "取消"
-          }
+          { "id": "cancel-delete-class-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "取消" }
         ]
       }
     ]

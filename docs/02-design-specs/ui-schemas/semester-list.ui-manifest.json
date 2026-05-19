@@ -11,17 +11,8 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          {
-            "id": "home-link",
-            "abstract_type": "Trigger",
-            "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "學期列表"
-          }
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" }
         ]
       },
       {
@@ -29,17 +20,21 @@
         "abstract_type": "Section",
         "semantic_variant": "summary-section",
         "children": [
-          {
-            "id": "page-title",
-            "abstract_type": "Heading",
-            "label": "學期列表"
-          },
+          { "id": "page-title", "abstract_type": "Heading", "label": "學期列表" },
           {
             "id": "create-semester-button",
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "建立學期",
-            "behavior_ref": "Create a new Semester"
+            "behavior_ref": "Create a new Semester",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.semester.created" },
+              "on_error": { "type": "dialog", "message_key": "error.semester.createFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_click", "target_id": "semester-form-modal", "behavior_ref": "Create a new Semester" }
+            ]
           }
         ]
       },
@@ -54,27 +49,13 @@
             "semantic_variant": "data-table",
             "label": "學期資料表",
             "data_ref": "listSemesters",
+            "columns": [
+              { "field": "name", "label": "學期名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "startDate", "label": "起始日期", "sortable": true },
+              { "field": "endDate", "label": "結束日期", "sortable": true },
+              { "field": "classCount", "label": "班級數量" }
+            ],
             "children": [
-              {
-                "id": "semester-name-column",
-                "abstract_type": "Text",
-                "label": "學期名稱"
-              },
-              {
-                "id": "start-date-column",
-                "abstract_type": "Text",
-                "label": "起始日期"
-              },
-              {
-                "id": "end-date-column",
-                "abstract_type": "Text",
-                "label": "結束日期"
-              },
-              {
-                "id": "class-count-column",
-                "abstract_type": "Text",
-                "label": "班級數量"
-              },
               {
                 "id": "view-classes-trigger",
                 "abstract_type": "Trigger",
@@ -82,11 +63,7 @@
                 "label": "查看班級",
                 "behavior_ref": "List all Classes in a Semester via GraphQL",
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "semester-list-page",
-                    "behavior_ref": "List all Classes in a Semester via GraphQL"
-                  }
+                  { "on_event": "on_click", "target_id": "semester-list-page", "behavior_ref": "List all Classes in a Semester via GraphQL" }
                 ]
               },
               {
@@ -94,7 +71,14 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "secondary",
                 "label": "編輯",
-                "behavior_ref": "Update Semester information"
+                "behavior_ref": "Update Semester information",
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.semester.updated" },
+                  "on_error": { "type": "dialog", "message_key": "error.semester.updateFailed" }
+                },
+                "interactions": [
+                  { "on_event": "on_click", "target_id": "semester-form-modal", "behavior_ref": "Update Semester information" }
+                ]
               },
               {
                 "id": "delete-semester-trigger",
@@ -102,14 +86,62 @@
                 "semantic_variant": "destructive",
                 "label": "刪除",
                 "behavior_ref": "Delete a Semester",
+                "confirm_delete": {
+                  "keyword_label": "請輸入學期名稱以確認刪除",
+                  "keyword_value": "{{semester.name}}"
+                },
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.semester.deleted" },
+                  "on_error": { "type": "dialog", "message_key": "error.semester.deleteFailed" }
+                },
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "delete-semester-confirm-dialog",
-                    "behavior_ref": "Delete a Semester"
-                  }
+                  { "on_event": "on_click", "target_id": "delete-semester-confirm-dialog", "behavior_ref": "Delete a Semester" }
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "semester-form-modal",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "建立 / 編輯學期",
+        "children": [
+          {
+            "id": "modal-semester-name-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "學期名稱",
+            "behavior_ref": "Create a new Semester"
+          },
+          {
+            "id": "modal-start-date-field",
+            "abstract_type": "Field",
+            "semantic_variant": "date-picker",
+            "label": "起始日期",
+            "behavior_ref": "Create a new Semester",
+            "ux_hints": { "gestalt_group": "date-range" }
+          },
+          {
+            "id": "modal-end-date-field",
+            "abstract_type": "Field",
+            "semantic_variant": "date-picker",
+            "label": "結束日期",
+            "behavior_ref": "Create a new Semester",
+            "ux_hints": { "gestalt_group": "date-range" }
+          },
+          {
+            "id": "modal-submit-semester-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.semester.saved" },
+              "on_error": { "type": "inline", "message_key": "error.semester.saveFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_submit", "target_id": "semester-form-modal", "behavior_ref": "Create a new Semester" }
             ]
           }
         ]
@@ -126,11 +158,22 @@
             "label": "此學期底下的所有班級、學生與成績資料將一並永久刪除，此操作無法復原。"
           },
           {
+            "id": "delete-semester-keyword-input",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "請輸入學期名稱以確認刪除",
+            "behavior_ref": "nielsen:error-prevention"
+          },
+          {
             "id": "confirm-delete-semester-trigger",
             "abstract_type": "Trigger",
             "semantic_variant": "destructive",
             "label": "確認刪除",
-            "behavior_ref": "Delete a Semester"
+            "behavior_ref": "Delete a Semester",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.semester.deleted" },
+              "on_error": { "type": "dialog", "message_key": "error.semester.deleteFailed" }
+            }
           },
           {
             "id": "cancel-delete-semester-trigger",

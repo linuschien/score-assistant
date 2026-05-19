@@ -37,8 +37,9 @@
           },
           {
             "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "成績權重管理"
+            "abstract_type": "Trigger",
+            "label": "成績權重管理",
+            "behavior_ref": "View weight distribution summary via GraphQL"
           }
         ]
       },
@@ -64,7 +65,12 @@
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "儲存權重設定",
-            "behavior_ref": "Allow saving weight when total is not 100% with a warning"
+            "behavior_ref": "Allow saving weight when total is not 100% with a warning",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "dialog", "message_key": "success.weights.saved" },
+              "on_error": { "type": "dialog", "message_key": "error.weights.saveFailed" }
+            }
           }
         ]
       },
@@ -91,26 +97,16 @@
           {
             "id": "weight-editor-table",
             "abstract_type": "Table",
-            "semantic_variant": "editable-table",
+            "semantic_variant": "data-table",
             "label": "成績項目權重設定",
             "data_ref": "listGradeItems",
             "behavior_ref": "Update weight for a single GradeItem",
+            "columns": [
+              { "field": "type", "label": "類型" },
+              { "field": "name", "label": "項目名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "maxScore", "label": "滿分" }
+            ],
             "children": [
-              {
-                "id": "weight-item-type-column",
-                "abstract_type": "Text",
-                "label": "類型"
-              },
-              {
-                "id": "weight-item-name-column",
-                "abstract_type": "Text",
-                "label": "項目名稱"
-              },
-              {
-                "id": "weight-item-max-score-column",
-                "abstract_type": "Text",
-                "label": "滿分"
-              },
               {
                 "id": "weight-input",
                 "abstract_type": "Field",

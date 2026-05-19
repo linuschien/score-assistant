@@ -11,29 +11,10 @@
         "abstract_type": "Stack",
         "semantic_variant": "breadcrumb",
         "children": [
-          {
-            "id": "home-link",
-            "abstract_type": "Trigger",
-            "label": "首頁",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "semester-list-link",
-            "abstract_type": "Trigger",
-            "label": "學期列表",
-            "behavior_ref": "List all Semesters via GraphQL"
-          },
-          {
-            "id": "class-list-link",
-            "abstract_type": "Trigger",
-            "label": "班級管理",
-            "behavior_ref": "List all Classes in a Semester via GraphQL"
-          },
-          {
-            "id": "current-page-crumb",
-            "abstract_type": "Text",
-            "label": "學生名單"
-          }
+          { "id": "home-link", "abstract_type": "Trigger", "label": "首頁", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "semester-list-link", "abstract_type": "Trigger", "label": "學期列表", "behavior_ref": "List all Semesters via GraphQL" },
+          { "id": "class-list-link", "abstract_type": "Trigger", "label": "班級管理", "behavior_ref": "List all Classes in a Semester via GraphQL" },
+          { "id": "current-page-crumb", "abstract_type": "Trigger", "label": "學生名單", "behavior_ref": "List all Students in a Class via GraphQL" }
         ]
       },
       {
@@ -41,27 +22,13 @@
         "abstract_type": "Section",
         "semantic_variant": "summary-section",
         "children": [
-          {
-            "id": "page-title",
-            "abstract_type": "Heading",
-            "label": "學生管理"
-          },
+          { "id": "page-title", "abstract_type": "Heading", "label": "學生管理" },
           {
             "id": "current-context",
             "abstract_type": "Stack",
             "children": [
-              {
-                "id": "semester-name",
-                "abstract_type": "Text",
-                "label": "學期：",
-                "data_ref": "getSemesterById"
-              },
-              {
-                "id": "class-name",
-                "abstract_type": "Text",
-                "label": "班級：",
-                "data_ref": "getClassById"
-              }
+              { "id": "semester-name", "abstract_type": "Text", "label": "學期：", "data_ref": "getSemesterById" },
+              { "id": "class-name", "abstract_type": "Text", "label": "班級：", "data_ref": "getClassById" }
             ]
           },
           {
@@ -69,7 +36,15 @@
             "abstract_type": "Trigger",
             "semantic_variant": "primary",
             "label": "新增學生",
-            "behavior_ref": "Add a Student to a Class"
+            "behavior_ref": "Add a Student to a Class",
+            "ux_hints": { "primary_action_placement": "top-right" },
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.student.added" },
+              "on_error": { "type": "dialog", "message_key": "error.student.addFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_click", "target_id": "student-form-modal", "behavior_ref": "Add a Student to a Class" }
+            ]
           },
           {
             "id": "import-students-button",
@@ -77,13 +52,17 @@
             "semantic_variant": "secondary",
             "label": "批次匯入 CSV",
             "data_ref": "importStudents",
-            "behavior_ref": "Import Students from CSV (happy path)"
+            "behavior_ref": "Import Students from CSV (happy path)",
+            "feedback": {
+              "on_success": { "type": "dialog", "message_key": "success.students.imported" },
+              "on_error": { "type": "dialog", "message_key": "error.students.importFailed" }
+            }
           }
         ]
       },
       {
-        "id": "filter-section",
-        "abstract_type": "Section",
+        "id": "filter-bar",
+        "abstract_type": "Stack",
         "semantic_variant": "filter-bar",
         "children": [
           {
@@ -106,23 +85,24 @@
             "semantic_variant": "data-table",
             "label": "學生資料表",
             "data_ref": "listStudents",
+            "columns": [
+              { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
+              { "field": "name", "label": "姓名", "sortable": true }
+            ],
             "children": [
-              {
-                "id": "student-number-column",
-                "abstract_type": "Text",
-                "label": "座號"
-              },
-              {
-                "id": "student-name-column",
-                "abstract_type": "Text",
-                "label": "姓名"
-              },
               {
                 "id": "edit-student-trigger",
                 "abstract_type": "Trigger",
                 "semantic_variant": "secondary",
                 "label": "編輯",
-                "behavior_ref": "Update Student information"
+                "behavior_ref": "Update Student information",
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.student.updated" },
+                  "on_error": { "type": "dialog", "message_key": "error.student.updateFailed" }
+                },
+                "interactions": [
+                  { "on_event": "on_click", "target_id": "student-form-modal", "behavior_ref": "Update Student information" }
+                ]
               },
               {
                 "id": "delete-student-trigger",
@@ -130,14 +110,41 @@
                 "semantic_variant": "destructive",
                 "label": "刪除",
                 "behavior_ref": "Delete a Student",
+                "confirm_delete": {
+                  "keyword_label": "請輸入學生姓名以確認移除",
+                  "keyword_value": "{{student.name}}"
+                },
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.student.deleted" },
+                  "on_error": { "type": "dialog", "message_key": "error.student.deleteFailed" }
+                },
                 "interactions": [
-                  {
-                    "on_event": "on_click",
-                    "target_id": "delete-student-confirm-dialog",
-                    "behavior_ref": "Delete a Student"
-                  }
+                  { "on_event": "on_click", "target_id": "delete-student-confirm-dialog", "behavior_ref": "Delete a Student" }
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "student-form-modal",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "新增 / 編輯學生",
+        "children": [
+          { "id": "modal-student-number-field", "abstract_type": "Field", "semantic_variant": "text", "label": "座號", "behavior_ref": "Add a Student to a Class" },
+          { "id": "modal-student-name-field", "abstract_type": "Field", "semantic_variant": "text", "label": "姓名", "behavior_ref": "Add a Student to a Class" },
+          {
+            "id": "modal-submit-student-trigger",
+            "abstract_type": "Trigger",
+            "semantic_variant": "primary",
+            "label": "儲存",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.student.saved" },
+              "on_error": { "type": "inline", "message_key": "error.student.saveFailed" }
+            },
+            "interactions": [
+              { "on_event": "on_submit", "target_id": "student-form-modal", "behavior_ref": "Add a Student to a Class" }
             ]
           }
         ]
@@ -148,24 +155,26 @@
         "semantic_variant": "confirm-dialog",
         "label": "確認移除學生",
         "children": [
+          { "id": "delete-student-warning-text", "abstract_type": "Text", "label": "此學生的所有成績資料將一並永久刪除，此操作無法復原。" },
           {
-            "id": "delete-student-warning-text",
-            "abstract_type": "Text",
-            "label": "此學生的所有成績資料將一並永久刪除，此操作無法復原。"
+            "id": "delete-student-keyword-input",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "請輸入學生姓名以確認移除",
+            "behavior_ref": "nielsen:error-prevention"
           },
           {
             "id": "confirm-delete-student-trigger",
             "abstract_type": "Trigger",
             "semantic_variant": "destructive",
             "label": "確認移除",
-            "behavior_ref": "Delete a Student"
+            "behavior_ref": "Delete a Student",
+            "feedback": {
+              "on_success": { "type": "toast", "message_key": "success.student.deleted" },
+              "on_error": { "type": "dialog", "message_key": "error.student.deleteFailed" }
+            }
           },
-          {
-            "id": "cancel-delete-student-trigger",
-            "abstract_type": "Trigger",
-            "semantic_variant": "secondary",
-            "label": "取消"
-          }
+          { "id": "cancel-delete-student-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "取消" }
         ]
       }
     ]

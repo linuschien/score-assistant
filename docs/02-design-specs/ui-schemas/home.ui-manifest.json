@@ -57,7 +57,7 @@
       {
         "id": "workflow-guide",
         "abstract_type": "Section",
-        "semantic_variant": "workflow-guide",
+        "semantic_variant": "summary-section",
         "children": [
           {
             "id": "workflow-guide-title",
@@ -67,7 +67,6 @@
           {
             "id": "setup-workflow",
             "abstract_type": "Stack",
-            "semantic_variant": "workflow-step",
             "children": [
               {
                 "id": "setup-workflow-label",
@@ -84,7 +83,6 @@
           {
             "id": "grade-workflow",
             "abstract_type": "Stack",
-            "semantic_variant": "workflow-step",
             "children": [
               {
                 "id": "grade-workflow-label",
@@ -101,7 +99,6 @@
           {
             "id": "preview-workflow",
             "abstract_type": "Stack",
-            "semantic_variant": "workflow-step",
             "children": [
               {
                 "id": "preview-workflow-label",
