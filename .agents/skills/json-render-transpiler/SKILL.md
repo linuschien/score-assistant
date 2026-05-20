@@ -71,7 +71,16 @@ Transform the UI Manifest's `root_element` tree directly into a flat elements sp
         "label": "Semester List",
         "variant": "default"
       },
-      "children": ["submit-btn"]
+      "children": ["semester-input", "submit-btn"]
+    },
+    "semester-input": {
+      "type": "Input",
+      "props": {
+        "id": "semester-input",
+        "placeholder": "Enter Semester Name",
+        "value": { "$bindState": "/form/semesterName" }
+      },
+      "children": []
     },
     "submit-btn": {
       "type": "Button",
@@ -80,6 +89,11 @@ Transform the UI Manifest's `root_element` tree directly into a flat elements sp
         "label": "Submit",
         "variant": "default"
       },
+      "on": {
+        "press": [
+          { "action": "setState", "params": { "path": "/activeTab", "value": "classes" } }
+        ]
+      },
       "children": []
     }
   }
@@ -87,7 +101,7 @@ Transform the UI Manifest's `root_element` tree directly into a flat elements sp
 ```
 
 ### Transpilation Rules
-- **Flat Elements Tree**: Do NOT output recursive layouts. Instead, flatten the hierarchy into an `elements` dictionary mapping each element's unique `id` to its representation: `{ type: string, props: Record<string, any>, children: string[], visible?: any }`. The `root` key must point to the unique `id` of the root element.
+- **Flat Elements Tree**: Do NOT output recursive layouts. Instead, flatten the hierarchy into an `elements` dictionary mapping each element's unique `id` to its representation: `{ type: string, props: Record<string, any>, children: string[], visible?: any, on?: Record<string, any[]> }`. The `root` key must point to the unique `id` of the root element.
 - **Component Types**: Resolve `abstract_type` keys using the Canonical Mapping Table directly to the string component name (e.g., `"Button"`, `"Card"`, `"Select"`).
 - **Children Array**: Instead of nesting child objects, the `children` key in each element must be a flat array of string IDs referencing child nodes in the `elements` dictionary. If a node has no children, provide an empty array `[]` or omit it.
 - **Tailwind Scoping Integration**: Since `@json-render/shadcn` is styling-agnostic and relies on host Tailwind CSS compiling styles, the host application's `index.css` must configure scanning using the `@source` directive:
@@ -96,8 +110,10 @@ Transform the UI Manifest's `root_element` tree directly into a flat elements sp
   @source "../node_modules/@json-render/shadcn/dist/**/*.js";
   ```
   No other custom CSS compilation or class injections are needed.
+- **Two-Way Binding with `useBoundProp`**: State-bound fields utilize standard `{ "$bindState": "/path" }` or `{ "$bindItem": "field" }` expressions. Implementations of standard input components consume these bindings using `@json-render/react`'s native hook: `const [value, setValue] = useBoundProp<string>(props.value, bindings?.value)`. Do not re-implement or wrap inputs with manual state hooks.
 - **Declarative Values & Dynamic State**: Standard components (like `DataTable`, `Select`, `Input`) are strictly declarative presenter components. They handle state, selections, and validation natively and declaratively using UI Schema bindings (e.g., matching a field component's `props.name` or `props.value` to state paths). Do NOT write custom code-based API-hook integrations or custom state handlers inside standard component wrappers in `component-registry.ts`.
 - **Built-in Actions**: Standard interaction behaviors (e.g., resetting form, triggering a state update) utilize the built-in actions (`setState`, `pushState`, `removeState`, `validateForm`) natively handled by `@json-render/react`'s state/action provider context, declared directly in the UI Schema.
+- **Component Signatures & Adaptation**: The `<Renderer />` calls the components in the registry with a standard `ComponentRenderProps` signature: `{ element, children, emit, on, bindings, loading }` (where the actual properties are under `element.props`). Presenter components from `@json-render/shadcn` expect the standard implementation signature `BaseComponentProps` (`{ props, children, emit, on, bindings, loading }`). Thus, standard presenters in the registry must either be passed through `@json-render/react`'s official `defineRegistry` or adapted (e.g., matching `props = element.props`) to ensure runtime property access is successful.
 - **Strip Schema Validation Properties**: Strip out schema validation properties (`ui_id`, `domain_module`) from the element node payload.
 
 ---
