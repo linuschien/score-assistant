@@ -6,7 +6,7 @@ description: Deterministic transpiler that converts ui-manifest.json component t
 # Skill: JSON-Render Transpiler
 
 ## ℹ️ Objective
-Converts a validated UI Manifest directly into the recursive spec tree consumed by `<Renderer />`, strictly prioritizing the **36 pre-built components from `@json-render/shadcn`** out of the box. Custom registry keys are generated only to merge custom business components or composite visualizations (e.g., tailored metrics, advanced composite charts) that extend beyond the standard presets.
+Converts a validated UI Manifest directly into the flat spec tree consumed by `<Renderer spec={spec} />`, strictly prioritizing the **36 pre-built components from `@json-render/shadcn`** out of the box. Custom registry keys are generated only to merge custom business components or composite visualizations (e.g., tailored metrics, advanced composite charts) that extend beyond the standard presets.
 
 ---
 
@@ -57,42 +57,48 @@ Whenever an `abstract_type` maps to a standard component, resolve its component 
 
 ## 🛠️ JSON-Render Spec Format
 
-Transform the UI Manifest's `root_element` tree directly into a native JSON-render spec tree matching the structure consumed by `<Renderer spec={spec} />`.
+Transform the UI Manifest's `root_element` tree directly into a flat elements spec tree matching the structure consumed by `<Renderer spec={spec} />` as defined by `@json-render/react`'s official schema.
 
-### Recursive Node Structure
+### Flat Tree Structure
 ```jsonc
 {
-  "component": "Card", // Leverages @json-render/shadcn preset key directly
-  "props": {
-    "id": "<element.id>",
-    "label": "<label>",          // Include only if present in manifest
-    "dataRef": "<operationId>",  // Include only if data_ref is present
-    "behaviorRef": "<scenario>", // Include only if behavior_ref is present
-    "variant": "<semantic_variant>" // Maps semantic_variant to native variant props
-  },
-  // Pass declarative event interactions via props
-  "interactions": [
-    {
-      "on": "<on_event>",
-      "targetId": "<target_id>",
-      "behaviorRef": "<behavior_ref>"
+  "root": "semester-list-page",
+  "elements": {
+    "semester-list-page": {
+      "type": "Card", // Leverages @json-render/shadcn preset key directly
+      "props": {
+        "id": "semester-list-page",
+        "label": "Semester List",
+        "variant": "default"
+      },
+      "children": ["submit-btn"]
+    },
+    "submit-btn": {
+      "type": "Button",
+      "props": {
+        "id": "submit-btn",
+        "label": "Submit",
+        "variant": "default"
+      },
+      "children": []
     }
-  ],
-  // Retain recursive component layouts directly
-  "children": [
-    {
-      "component": "Button",
-      "props": { "id": "submit-btn", "label": "Submit", "variant": "default" }
-    }
-  ]
+  }
 }
 ```
 
 ### Transpilation Rules
-- Keep the exact recursive layout defined in the UI Manifest. Do not flatten.
-- Component keys map directly to the simple string names exported by `@json-render/shadcn` (e.g., `"Button"`, `"Input"`, `"Select"`, `"Card"`, `"Dialog"`).
-- Strip out schema validation properties (`ui_id`, `domain_module`) from the node payload.
-- Omit `children` or `interactions` keys entirely if their arrays are empty.
+- **Flat Elements Tree**: Do NOT output recursive layouts. Instead, flatten the hierarchy into an `elements` dictionary mapping each element's unique `id` to its representation: `{ type: string, props: Record<string, any>, children: string[], visible?: any }`. The `root` key must point to the unique `id` of the root element.
+- **Component Types**: Resolve `abstract_type` keys using the Canonical Mapping Table directly to the string component name (e.g., `"Button"`, `"Card"`, `"Select"`).
+- **Children Array**: Instead of nesting child objects, the `children` key in each element must be a flat array of string IDs referencing child nodes in the `elements` dictionary. If a node has no children, provide an empty array `[]` or omit it.
+- **Tailwind Scoping Integration**: Since `@json-render/shadcn` is styling-agnostic and relies on host Tailwind CSS compiling styles, the host application's `index.css` must configure scanning using the `@source` directive:
+  ```css
+  @import "tailwindcss";
+  @source "../node_modules/@json-render/shadcn/dist/**/*.js";
+  ```
+  No other custom CSS compilation or class injections are needed.
+- **Declarative Values & Dynamic State**: Standard components (like `DataTable`, `Select`, `Input`) are strictly declarative presenter components. They handle state, selections, and validation natively and declaratively using UI Schema bindings (e.g., matching a field component's `props.name` or `props.value` to state paths). Do NOT write custom code-based API-hook integrations or custom state handlers inside standard component wrappers in `component-registry.ts`.
+- **Built-in Actions**: Standard interaction behaviors (e.g., resetting form, triggering a state update) utilize the built-in actions (`setState`, `pushState`, `removeState`, `validateForm`) natively handled by `@json-render/react`'s state/action provider context, declared directly in the UI Schema.
+- **Strip Schema Validation Properties**: Strip out schema validation properties (`ui_id`, `domain_module`) from the element node payload.
 
 ---
 
@@ -104,7 +110,7 @@ Provide a unified mapping dictionary that directly imports the base presets from
 
 ```typescript
 // AUTO-GENERATED by Frontend Engineer workflow — DO NOT EDIT MANUALLY
-import { presetComponents } from '@json-render/shadcn';
+import { shadcnComponents } from '@json-render/shadcn';
 import type { ComponentType } from 'react';
 
 // Import custom composite components for complex visualizations/metrics
@@ -118,7 +124,7 @@ export type ComponentEntry = ComponentType<any>;
 
 export const componentRegistry: Record<RegistryKey, ComponentEntry> = {
   // ── 1. Inherit all 36 pre-built components natively ────────────────────────
-  ...presetComponents,
+  ...shadcnComponents,
 
   // ── 2. Extend with custom layouts and composite wrappers ──────────────────
   'Container:page': ({ children }) => <div className="container mx-auto py-6">{children}</div>,

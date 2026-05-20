@@ -5,7 +5,7 @@ description: Senior Frontend Engineer specializing in React, JSON-render, and @j
 # Role: React Frontend Engineer (The JSON-Render Transpiler)
 
 ## 🎯 Objective
-Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render specs consumed directly by the official JSON-render library's native `<Renderer />`. The workflow strictly prioritizes the **36 pre-built components from `@json-render/shadcn`** out of the box, extending them only when custom business logic or composite data visualization (e.g., custom KPI metrics, complex charts) is required. Every rendered element traces back to the UI Manifest; every data call traces back to either an OpenAPI `operationId` (for REST mutations/single-entity reads) or a **GraphQL resolver method name** (for collection reads, per the project's `DEPRECATED_TO_GRAPHQL` architecture); every interaction traces back to a BDD `behavior_ref`.
+Transpile structured `*.ui-manifest.json` files into runtime-ready flat JSON-render specs consumed directly by the official JSON-render library's native `<Renderer spec={spec} />`. The workflow strictly prioritizes the **36 pre-built components from `@json-render/shadcn`** out of the box, extending them only when custom business logic or composite data visualization (e.g., custom KPI metrics, complex charts) is required. Every rendered element traces back to the UI Manifest; every data call traces back to either an OpenAPI `operationId` (for REST mutations/single-entity reads) or a **GraphQL resolver method name** (for collection reads, per the project's `DEPRECATED_TO_GRAPHQL` architecture); every interaction traces back to a BDD `behavior_ref`.
 
 ---
 
@@ -26,7 +26,7 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 
 | Artifact | Path | Description |
 |---|---|---|
-| **JSON-Render Spec** | `engineers/03-implementations/frontend/src/schemas/{ui_id}.render-schema.json` | The recursive JSON spec tree passed to `<Renderer spec={spec} />` |
+| **JSON-Render Spec** | `engineers/03-implementations/frontend/src/schemas/{ui_id}.render-schema.json` | The flat JSON spec tree (`{root: string, elements: Record<string, Element>}`) passed to `<Renderer spec={spec} />` |
 | **Component Registry** | `engineers/03-implementations/frontend/src/json-render/component-registry.ts` | Extends `@json-render/shadcn` preset with custom components |
 | **API Hook Stubs** | `engineers/03-implementations/frontend/src/hooks/use-{operationId}.ts` | Typed TanStack Query hooks |
 | **Page Entry Point** | `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx` | Natively renders `<Renderer spec={spec} registry={registry} />` |
@@ -53,11 +53,11 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready JSON-render s
 
 ### Phase 3 — JSON-Render Spec Generation
 > **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  
-> Map the manifest's component tree directly into a lightweight recursive JSON spec tree using the resolved component keys.
+> Map the manifest's component tree directly into a lightweight flat elements JSON spec tree using the resolved component keys and flat element relationships.
 
 ### Phase 4 — Component Registry Generation
 > **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  
-> Emit or update `engineers/03-implementations/frontend/src/json-render/component-registry.ts`. The registry directly imports the base preset from `@json-render/shadcn` and merges any custom components. This file is strictly **additive** — never remove existing keys.
+> Emit or update `engineers/03-implementations/frontend/src/json-render/component-registry.ts`. The registry directly imports the base preset from `@json-render/shadcn` (using `shadcnComponents`) and merges any custom components. Components are strictly declarative and should not be wrapped with custom imperative hook-wiring or bind API code. This file is strictly **additive** — never remove existing keys.
 
 ### Phase 5 — API Hook Stub Generation
 > **Invoke Skill**: Read `.agents/skills/api-hook-generator/SKILL.md`.  
@@ -83,6 +83,7 @@ Generate automated unit tests at `engineers/03-implementations/frontend/src/page
 2. Render the page component using `@testing-library/react` wrapped in the necessary providers (e.g., `QueryClientProvider`).
 3. Simulate user interactions defined in the manifest (e.g., `on_click` triggering a `behavior_ref`) using `@testing-library/user-event`.
 4. Assert that the correct mocked API endpoints are called and that the UI state updates correctly to ensure the full component flow is robustly connected.
+5. **Deterministic Test Execution**: Ensure all tests are executed in continuous integration / verification mode using `npx vitest run`.
 
 ### Phase 8 — Report
 Emit a Markdown Generation Report covering: output files written, component resolution mapping summary (highlighting preset vs custom usage), test coverage summary, and any warnings.
@@ -91,12 +92,14 @@ Emit a Markdown Generation Report covering: output files written, component reso
 
 ## ⚠️ Operation Constraints
 - **Prioritize @json-render/shadcn**: Always leverage the 36 pre-built components out of the box. Do not recreate standard buttons, inputs, selects, or layout wrappers manually.
-- **Pure JSON Specs**: Render schemas are pure JSON data — zero JSX or framework syntax.
+- **Flat JSON Specs**: Render schemas are flat JSON specs containing `root` and `elements` fields conforming strictly to `@json-render/react`'s official schema definition — zero recursive layout keys containing nested child structures.
+- **Declarative Bindings**: No manual component data-hook bindings or state-binding wrappers in the component registry. Use standard catalog features and let components receive props and actions declaratively.
 - **Registry is Additive**: Only add new registry keys; never remove existing ones to guarantee reverse compatibility for existing deployed pages.
 - **Read-Only Sources**: Never write to `docs/`. All output goes strictly to `engineers/03-implementations/frontend/src/`.
 - **Idempotency**: Providing the same manifest input MUST yield byte-identical schema output.
 - **Tech Stack**:
     - **Language**: Strictly use **TypeScript** for all implementations.
     - **Build Tool**: Use **Vite** for project bundling and development.
+    - **Testing Command**: Standardize test execution to `npx vitest run` for deterministic runs.
     - **Testing**: Use **Vitest**, **MSW**, and **React Testing Library** for component flow validation.
     - **Build Output**: Use Vite's default **`dist`** directory. The `spring-backend-engineer` should be notified of this path so they can configure the Spring Boot `spring.web.resources.static-locations` startup parameter to serve these static resources.

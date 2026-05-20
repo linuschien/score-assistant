@@ -153,4 +153,5 @@ export function use{HookName}() {
 - **Format**: TypeScript `.ts` files — no JSX.
 - **Stubs**: Type bodies intentionally minimal (`[key: string]: unknown`). Downstream developers expand them.
 - **No Invention**: Do not fabricate type fields not derivable from the OpenAPI `200` response schema.
+- **No Registry Coupling**: Do NOT wire or import these hooks directly into standard presenter components in `component-registry.ts`. Presenter components must remain purely declarative. The generated hooks are intended to be consumed at the page entry/layout layer, custom data containers, or dynamic custom actions inside the UI spec context.
 - **Dependencies Assumed**: `@tanstack/react-query` and `@/lib/api-client` must already be installed. If not present, emit an installation note in the workflow report.
