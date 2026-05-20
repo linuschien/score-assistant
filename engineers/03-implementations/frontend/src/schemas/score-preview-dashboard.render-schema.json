@@ -1,0 +1,234 @@
+{
+  "root": "score-preview-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "class-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "class-list-link",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "grade-entry-link": {
+      "type": "Button",
+      "props": {
+        "id": "grade-entry-link",
+        "label": "成績登記",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-entry-board-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "成績預覽與匯出",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "score-preview-dashboard-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "class-list-link",
+        "grade-entry-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "成績總表預覽",
+        "text": "成績總表預覽",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "export-xlsx-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "export-xlsx-trigger",
+        "label": "匯出 Excel (.xlsx)",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Export grades to a file",
+              "id": "export-xlsx-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "export-xlsx-trigger"
+      ]
+    },
+    "weight-warning-banner": {
+      "type": "div",
+      "props": {
+        "id": "weight-warning-banner",
+        "label": "⚠ 注意：目前總權重未達 100%，加權總分計算結果可能不正確。",
+        "variant": "summary-section"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Grade Summary preview shows weight warning when total weight is not 100%",
+              "id": "weight-warning-banner"
+            }
+          }
+        ]
+      }
+    },
+    "score-summary-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "score-summary-table",
+        "label": "成績總表",
+        "dataRef": "listGradeRecords",
+        "columns": [
+          {
+            "field": "studentNumber",
+            "label": "座號",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "name",
+            "label": "姓名",
+            "sortable": true
+          },
+          {
+            "field": "weightedTotal",
+            "label": "加權總分",
+            "sortable": true
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listGradeRecords"
+        }
+      },
+      "children": []
+    },
+    "preview-table-section": {
+      "type": "div",
+      "props": {
+        "id": "preview-table-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "score-summary-table"
+      ]
+    },
+    "score-preview-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "score-preview-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "weight-warning-banner",
+        "preview-table-section"
+      ]
+    }
+  }
+}

@@ -1,0 +1,369 @@
+{
+  "root": "grade-entry-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "class-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "class-list-link",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "成績登記總表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-entry-board-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "class-list-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "成績登記總表",
+        "text": "成績登記總表",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "semester-name": {
+      "type": "Text",
+      "props": {
+        "id": "semester-name",
+        "label": "學期：",
+        "text": "學期：{{state.data.getSemesterById?.name || state.data.getSemesterById?.label || ''}}",
+        "dataRef": "getSemesterById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "class-name": {
+      "type": "Text",
+      "props": {
+        "id": "class-name",
+        "label": "班級：",
+        "text": "班級：{{state.data.getClassById?.name || state.data.getClassById?.label || ''}}",
+        "dataRef": "getClassById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "current-context": {
+      "type": "div",
+      "props": {
+        "id": "current-context"
+      },
+      "children": [
+        "semester-name",
+        "class-name"
+      ]
+    },
+    "preview-grades-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "preview-grades-trigger",
+        "label": "預覽成績",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "score-preview-dashboard-page"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "current-context",
+        "preview-grades-trigger"
+      ]
+    },
+    "score-input": {
+      "type": "Input",
+      "props": {
+        "id": "score-input",
+        "label": "分數",
+        "name": "score-input",
+        "type": "number",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/score-input"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Update an existing GradeRecord",
+              "id": "score-input"
+            }
+          }
+        ]
+      }
+    },
+    "attendance-selector": {
+      "type": "Select",
+      "props": {
+        "id": "attendance-selector",
+        "label": "狀態",
+        "name": "attendance-selector",
+        "options": ["出席", "缺席", "遲到", "請假"],
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/attendance-selector"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Record Attendance with automatic status-to-score mapping",
+              "id": "attendance-selector"
+            }
+          }
+        ]
+      }
+    },
+    "score-cell-stack": {
+      "type": "div",
+      "props": {
+        "id": "score-cell-stack"
+      },
+      "children": [
+        "score-input",
+        "attendance-selector"
+      ],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Upload an Attachment for a GradeRecord",
+              "id": "score-cell-stack"
+            }
+          }
+        ]
+      }
+    },
+    "dynamic-grade-column": {
+      "type": "div",
+      "props": {
+        "id": "dynamic-grade-column",
+        "label": "評量項目 (動態)"
+      },
+      "children": [
+        "score-cell-stack"
+      ]
+    },
+    "grade-matrix-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "grade-matrix-table",
+        "label": "成績登記矩陣",
+        "dataRef": "listGradeRecords",
+        "columns": [
+          {
+            "field": "studentNumber",
+            "label": "座號",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "name",
+            "label": "姓名",
+            "sortable": true
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listGradeRecords"
+        }
+      },
+      "children": [
+        "dynamic-grade-column"
+      ]
+    },
+    "grade-matrix-section": {
+      "type": "div",
+      "props": {
+        "id": "grade-matrix-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "grade-matrix-table"
+      ]
+    },
+    "attachment-list": {
+      "type": "DataTable",
+      "props": {
+        "id": "attachment-list",
+        "label": "附件列表",
+        "dataRef": "listAttachments",
+        "columns": [
+          {
+            "field": "fileName",
+            "label": "檔案名稱",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "uploadedAt",
+            "label": "上傳時間",
+            "sortable": true
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listAttachments"
+        }
+      },
+      "children": []
+    },
+    "upload-attachment-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "upload-attachment-trigger",
+        "label": "上傳附件",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Upload an Attachment for a GradeRecord",
+              "id": "upload-attachment-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "attachment-overlay": {
+      "type": "Dialog",
+      "props": {
+        "id": "attachment-overlay",
+        "title": "附件管理",
+        "description": null,
+        "openPath": "/modals/attachment-overlay"
+      },
+      "children": [
+        "attachment-list",
+        "upload-attachment-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/attachment-overlay"
+      }
+    },
+    "grade-entry-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "grade-entry-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "grade-matrix-section",
+        "attachment-overlay"
+      ]
+    }
+  }
+}

@@ -1,0 +1,423 @@
+{
+  "root": "class-list-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "班級管理",
+        "text": "班級管理",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "current-semester-context": {
+      "type": "Text",
+      "props": {
+        "id": "current-semester-context",
+        "label": "當前學期：",
+        "text": "當前學期：{{state.data.getSemesterById?.name || state.data.getSemesterById?.label || ''}}",
+        "dataRef": "getSemesterById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "create-class-button": {
+      "type": "Button",
+      "props": {
+        "id": "create-class-button",
+        "label": "建立班級",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "class-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "current-semester-context",
+        "create-class-button"
+      ]
+    },
+    "record-grade-matrix-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "record-grade-matrix-trigger",
+        "label": "登記成績",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "view-students-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "view-students-trigger",
+        "label": "查看學生",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "view-grade-items-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "view-grade-items-trigger",
+        "label": "管理成績項目",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "edit-class-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "edit-class-trigger",
+        "label": "編輯",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "class-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "delete-class-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "delete-class-trigger",
+        "label": "刪除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "delete-class-confirm-dialog"
+            }
+          }
+        ]
+      }
+    },
+    "class-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "class-table",
+        "label": "班級資料表",
+        "dataRef": "listClasses",
+        "columns": [
+          {
+            "field": "name",
+            "label": "班級名稱",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "studentCount",
+            "label": "學生人數"
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listClasses"
+        }
+      },
+      "children": [
+        "record-grade-matrix-trigger",
+        "view-students-trigger",
+        "view-grade-items-trigger",
+        "edit-class-trigger",
+        "delete-class-trigger"
+      ]
+    },
+    "list-section": {
+      "type": "div",
+      "props": {
+        "id": "list-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "class-table"
+      ]
+    },
+    "modal-class-name-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-class-name-field",
+        "label": "班級名稱",
+        "name": "modal-class-name-field",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-class-name-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new Class in a Semester",
+              "id": "modal-class-name-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-submit-class-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "modal-submit-class-trigger",
+        "label": "儲存",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "class-form-modal": {
+      "type": "Dialog",
+      "props": {
+        "id": "class-form-modal",
+        "title": "建立 / 編輯班級",
+        "description": null,
+        "openPath": "/modals/class-form-modal"
+      },
+      "children": [
+        "modal-class-name-field",
+        "modal-submit-class-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/class-form-modal"
+      }
+    },
+    "delete-class-warning-text": {
+      "type": "Text",
+      "props": {
+        "id": "delete-class-warning-text",
+        "label": "此班級底下的學生名單與所有成績資料將一並永久刪除，此操作無法復原。",
+        "text": "此班級底下的學生名單與所有成績資料將一並永久刪除，此操作無法復原。",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "delete-class-keyword-input": {
+      "type": "Input",
+      "props": {
+        "id": "delete-class-keyword-input",
+        "label": "請輸入班級名稱以確認刪除",
+        "name": "delete-class-keyword-input",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/delete-class-keyword-input"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "nielsen:error-prevention",
+              "id": "delete-class-keyword-input"
+            }
+          }
+        ]
+      }
+    },
+    "confirm-delete-class-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "confirm-delete-class-trigger",
+        "label": "確認刪除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Delete a Class",
+              "id": "confirm-delete-class-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "cancel-delete-class-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "cancel-delete-class-trigger",
+        "label": "取消",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "delete-class-confirm-dialog": {
+      "type": "AlertDialog",
+      "props": {
+        "id": "delete-class-confirm-dialog",
+        "label": "確認刪除班級",
+        "text": "確認刪除班級",
+        "variant": "confirm-dialog"
+      },
+      "children": [
+        "delete-class-warning-text",
+        "delete-class-keyword-input",
+        "confirm-delete-class-trigger",
+        "cancel-delete-class-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/delete-class-confirm-dialog"
+      }
+    },
+    "class-list-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "class-list-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "list-section",
+        "class-form-modal",
+        "delete-class-confirm-dialog"
+      ]
+    }
+  }
+}

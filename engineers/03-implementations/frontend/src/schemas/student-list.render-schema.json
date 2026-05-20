@@ -1,0 +1,488 @@
+{
+  "root": "student-list-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "class-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "class-list-link",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "學生名單",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "student-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "class-list-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "學生管理",
+        "text": "學生管理",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "semester-name": {
+      "type": "Text",
+      "props": {
+        "id": "semester-name",
+        "label": "學期：",
+        "text": "學期：{{state.data.getSemesterById?.name || state.data.getSemesterById?.label || ''}}",
+        "dataRef": "getSemesterById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "class-name": {
+      "type": "Text",
+      "props": {
+        "id": "class-name",
+        "label": "班級：",
+        "text": "班級：{{state.data.getClassById?.name || state.data.getClassById?.label || ''}}",
+        "dataRef": "getClassById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "current-context": {
+      "type": "div",
+      "props": {
+        "id": "current-context"
+      },
+      "children": [
+        "semester-name",
+        "class-name"
+      ]
+    },
+    "add-student-button": {
+      "type": "Button",
+      "props": {
+        "id": "add-student-button",
+        "label": "新增學生",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "student-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "import-students-button": {
+      "type": "Button",
+      "props": {
+        "id": "import-students-button",
+        "label": "批次匯入 CSV",
+        "dataRef": "importStudents",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "student-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "current-context",
+        "add-student-button",
+        "import-students-button"
+      ]
+    },
+    "student-search-field": {
+      "type": "Input",
+      "props": {
+        "id": "student-search-field",
+        "label": "搜尋座號或姓名",
+        "name": "student-search-field",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/student-search-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "student-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "filter-bar": {
+      "type": "div",
+      "props": {
+        "id": "filter-bar",
+        "variant": "filter-bar"
+      },
+      "children": [
+        "student-search-field"
+      ]
+    },
+    "edit-student-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "edit-student-trigger",
+        "label": "編輯",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "student-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "delete-student-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "delete-student-trigger",
+        "label": "刪除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "delete-student-confirm-dialog"
+            }
+          }
+        ]
+      }
+    },
+    "student-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "student-table",
+        "label": "學生資料表",
+        "dataRef": "listStudents",
+        "columns": [
+          {
+            "field": "studentNumber",
+            "label": "座號",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "name",
+            "label": "姓名",
+            "sortable": true
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listStudents"
+        }
+      },
+      "children": [
+        "edit-student-trigger",
+        "delete-student-trigger"
+      ]
+    },
+    "list-section": {
+      "type": "div",
+      "props": {
+        "id": "list-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "student-table"
+      ]
+    },
+    "modal-student-number-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-student-number-field",
+        "label": "座號",
+        "name": "modal-student-number-field",
+        "type": "number",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-student-number-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Add a Student to a Class",
+              "id": "modal-student-number-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-student-name-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-student-name-field",
+        "label": "姓名",
+        "name": "modal-student-name-field",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-student-name-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Add a Student to a Class",
+              "id": "modal-student-name-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-submit-student-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "modal-submit-student-trigger",
+        "label": "儲存",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "student-form-modal": {
+      "type": "Dialog",
+      "props": {
+        "id": "student-form-modal",
+        "title": "新增 / 編輯學生",
+        "description": null,
+        "openPath": "/modals/student-form-modal"
+      },
+      "children": [
+        "modal-student-number-field",
+        "modal-student-name-field"
+      ],
+      "visible": {
+        "$state": "/modals/student-form-modal"
+      }
+    },
+    "delete-student-warning-text": {
+      "type": "Text",
+      "props": {
+        "id": "delete-student-warning-text",
+        "label": "此學生的所有成績資料將一並永久刪除，此操作無法復原。",
+        "text": "此學生的所有成績資料將一並永久刪除，此操作無法復原。",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "delete-student-keyword-input": {
+      "type": "Input",
+      "props": {
+        "id": "delete-student-keyword-input",
+        "label": "請輸入學生姓名以確認移除",
+        "name": "delete-student-keyword-input",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/delete-student-keyword-input"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "nielsen:error-prevention",
+              "id": "delete-student-keyword-input"
+            }
+          }
+        ]
+      }
+    },
+    "confirm-delete-student-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "confirm-delete-student-trigger",
+        "label": "確認移除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Delete a Student",
+              "id": "confirm-delete-student-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "cancel-delete-student-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "cancel-delete-student-trigger",
+        "label": "取消",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "delete-student-confirm-dialog": {
+      "type": "AlertDialog",
+      "props": {
+        "id": "delete-student-confirm-dialog",
+        "label": "確認移除學生",
+        "text": "確認移除學生",
+        "variant": "confirm-dialog"
+      },
+      "children": [
+        "delete-student-warning-text",
+        "delete-student-keyword-input",
+        "confirm-delete-student-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/delete-student-confirm-dialog"
+      }
+    },
+    "student-list-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "student-list-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "filter-bar",
+        "list-section",
+        "student-form-modal",
+        "delete-student-confirm-dialog"
+      ]
+    }
+  }
+}

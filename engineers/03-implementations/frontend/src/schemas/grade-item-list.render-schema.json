@@ -1,0 +1,638 @@
+{
+  "root": "grade-item-list-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "class-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "class-list-link",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "成績項目管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-item-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "class-list-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "成績項目管理",
+        "text": "成績項目管理",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "semester-name": {
+      "type": "Text",
+      "props": {
+        "id": "semester-name",
+        "label": "學期：",
+        "text": "學期：{{state.data.getSemesterById?.name || state.data.getSemesterById?.label || ''}}",
+        "dataRef": "getSemesterById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "class-name": {
+      "type": "Text",
+      "props": {
+        "id": "class-name",
+        "label": "班級：",
+        "text": "班級：{{state.data.getClassById?.name || state.data.getClassById?.label || ''}}",
+        "dataRef": "getClassById",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "current-context": {
+      "type": "div",
+      "props": {
+        "id": "current-context"
+      },
+      "children": [
+        "semester-name",
+        "class-name"
+      ]
+    },
+    "create-grade-item-button": {
+      "type": "Button",
+      "props": {
+        "id": "create-grade-item-button",
+        "label": "建立成績項目",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "grade-item-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "manage-weights-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "manage-weights-trigger",
+        "label": "管理權重",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-weight-dashboard-page"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "current-context",
+        "create-grade-item-button",
+        "manage-weights-trigger"
+      ]
+    },
+    "item-type-filter": {
+      "type": "Select",
+      "props": {
+        "id": "item-type-filter",
+        "label": "篩選類型",
+        "name": "item-type-filter",
+        "options": ["考試", "作業", "報告", "出席", "其他"],
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/item-type-filter"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-item-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "item-date-filter": {
+      "type": "Input",
+      "props": {
+        "id": "item-date-filter",
+        "label": "篩選日期",
+        "name": "item-date-filter",
+        "type": null,
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/item-date-filter"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-item-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "filter-bar": {
+      "type": "div",
+      "props": {
+        "id": "filter-bar",
+        "variant": "filter-bar"
+      },
+      "children": [
+        "item-type-filter",
+        "item-date-filter"
+      ]
+    },
+    "edit-grade-item-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "edit-grade-item-trigger",
+        "label": "編輯",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "grade-item-form-modal"
+            }
+          }
+        ]
+      }
+    },
+    "delete-grade-item-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "delete-grade-item-trigger",
+        "label": "刪除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "delete-grade-item-confirm-dialog"
+            }
+          }
+        ]
+      }
+    },
+    "grade-item-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "grade-item-table",
+        "label": "成績項目資料表",
+        "dataRef": "listGradeItems",
+        "columns": [
+          {
+            "field": "name",
+            "label": "項目名稱",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "type",
+            "label": "類型",
+            "sortable": true
+          },
+          {
+            "field": "examDate",
+            "label": "日期",
+            "sortable": true
+          },
+          {
+            "field": "weight",
+            "label": "權重 (%)",
+            "sortable": true
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listGradeItems"
+        }
+      },
+      "children": [
+        "edit-grade-item-trigger",
+        "delete-grade-item-trigger"
+      ]
+    },
+    "list-section": {
+      "type": "div",
+      "props": {
+        "id": "list-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "grade-item-table"
+      ]
+    },
+    "modal-item-name-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-item-name-field",
+        "label": "項目名稱",
+        "name": "modal-item-name-field",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-item-name-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-item-name-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-item-type-selection": {
+      "type": "Select",
+      "props": {
+        "id": "modal-item-type-selection",
+        "label": "項目類型",
+        "name": "modal-item-type-selection",
+        "options": ["考試", "作業", "報告", "出席", "其他"],
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-item-type-selection"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-item-type-selection"
+            }
+          }
+        ]
+      }
+    },
+    "modal-item-date-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-item-date-field",
+        "label": "日期",
+        "name": "modal-item-date-field",
+        "type": null,
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-item-date-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-item-date-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-item-description-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-item-description-field",
+        "label": "說明",
+        "name": "modal-item-description-field",
+        "type": null,
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-item-description-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-item-description-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-max-score-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-max-score-field",
+        "label": "滿分",
+        "name": "modal-max-score-field",
+        "type": "number",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-max-score-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-max-score-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-weight-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-weight-field",
+        "label": "權重 (%)",
+        "name": "modal-weight-field",
+        "type": "number",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/modal-weight-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem",
+              "id": "modal-weight-field"
+            }
+          }
+        ]
+      }
+    },
+    "modal-submit-grade-item-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "modal-submit-grade-item-trigger",
+        "label": "儲存",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "grade-item-form-modal": {
+      "type": "Dialog",
+      "props": {
+        "id": "grade-item-form-modal",
+        "title": "建立 / 編輯成績項目",
+        "description": null,
+        "openPath": "/modals/grade-item-form-modal"
+      },
+      "children": [
+        "modal-item-name-field",
+        "modal-item-type-selection",
+        "modal-item-date-field",
+        "modal-item-description-field",
+        "modal-max-score-field",
+        "modal-weight-field",
+        "modal-submit-grade-item-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/grade-item-form-modal"
+      }
+    },
+    "delete-grade-item-warning-text": {
+      "type": "Text",
+      "props": {
+        "id": "delete-grade-item-warning-text",
+        "label": "此項目底下所有學生的成績資料將一並永久刪除，此操作無法復原。",
+        "text": "此項目底下所有學生的成績資料將一並永久刪除，此操作無法復原。",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "delete-grade-item-keyword-input": {
+      "type": "Input",
+      "props": {
+        "id": "delete-grade-item-keyword-input",
+        "label": "請輸入項目名稱以確認刪除",
+        "name": "delete-grade-item-keyword-input",
+        "type": "text",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/delete-grade-item-keyword-input"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "nielsen:error-prevention",
+              "id": "delete-grade-item-keyword-input"
+            }
+          }
+        ]
+      }
+    },
+    "confirm-delete-grade-item-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "confirm-delete-grade-item-trigger",
+        "label": "確認刪除",
+        "variant": "danger",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Delete a GradeItem",
+              "id": "confirm-delete-grade-item-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "cancel-delete-grade-item-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "cancel-delete-grade-item-trigger",
+        "label": "取消",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": []
+    },
+    "delete-grade-item-confirm-dialog": {
+      "type": "AlertDialog",
+      "props": {
+        "id": "delete-grade-item-confirm-dialog",
+        "label": "確認刪除成績項目",
+        "text": "確認刪除成績項目",
+        "variant": "confirm-dialog"
+      },
+      "children": [
+        "delete-grade-item-warning-text",
+        "delete-grade-item-keyword-input",
+        "confirm-delete-grade-item-trigger",
+        "cancel-delete-grade-item-trigger"
+      ],
+      "visible": {
+        "$state": "/modals/delete-grade-item-confirm-dialog"
+      }
+    },
+    "grade-item-list-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "grade-item-list-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "filter-bar",
+        "list-section",
+        "grade-item-form-modal",
+        "delete-grade-item-confirm-dialog"
+      ]
+    }
+  }
+}

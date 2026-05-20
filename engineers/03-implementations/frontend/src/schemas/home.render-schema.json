@@ -1,0 +1,228 @@
+{
+  "root": "home-page",
+  "elements": {
+    "welcome-title": {
+      "type": "Heading",
+      "props": {
+        "id": "welcome-title",
+        "label": "歡迎使用 Score Assistant",
+        "text": "歡迎使用 Score Assistant",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "welcome-text": {
+      "type": "Text",
+      "props": {
+        "id": "welcome-text",
+        "label": "請選擇一個學期開始管理成績，或建立新的學期。",
+        "text": "請選擇一個學期開始管理成績，或建立新的學期。",
+        "variant": "body"
+      },
+      "children": []
+    },
+    "welcome-section": {
+      "type": "div",
+      "props": {
+        "id": "welcome-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "welcome-title",
+        "welcome-text"
+      ]
+    },
+    "semester-card-title": {
+      "type": "Heading",
+      "props": {
+        "id": "semester-card-title",
+        "label": "學期管理",
+        "text": "學期管理",
+        "level": "h2"
+      },
+      "children": []
+    },
+    "semester-card-desc": {
+      "type": "Text",
+      "props": {
+        "id": "semester-card-desc",
+        "label": "建立或管理學期、班級與學生名單",
+        "text": "建立或管理學期、班級與學生名單",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "go-to-semesters-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "go-to-semesters-trigger",
+        "label": "進入列表",
+        "text": "進入列表",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "manage-semesters-card": {
+      "type": "Card",
+      "props": {
+        "id": "manage-semesters-card",
+        "title": null,
+        "description": null,
+        "maxWidth": null,
+        "centered": null,
+        "className": null
+      },
+      "children": [
+        "semester-card-title",
+        "semester-card-desc",
+        "go-to-semesters-trigger"
+      ]
+    },
+    "quick-access-grid": {
+      "type": "div",
+      "props": {
+        "id": "quick-access-grid",
+        "variant": "card-grid"
+      },
+      "children": [
+        "manage-semesters-card"
+      ]
+    },
+    "workflow-guide-title": {
+      "type": "Heading",
+      "props": {
+        "id": "workflow-guide-title",
+        "label": "操作流程導覽",
+        "text": "操作流程導覽",
+        "level": "h2"
+      },
+      "children": []
+    },
+    "setup-workflow-label": {
+      "type": "Text",
+      "props": {
+        "id": "setup-workflow-label",
+        "label": "① 系統設定",
+        "text": "① 系統設定",
+        "variant": "lead"
+      },
+      "children": []
+    },
+    "setup-workflow-steps": {
+      "type": "Text",
+      "props": {
+        "id": "setup-workflow-steps",
+        "label": "建立學期 → 建立班級 → 管理學生名單",
+        "text": "建立學期 → 建立班級 → 管理學生名單",
+        "variant": "body"
+      },
+      "children": []
+    },
+    "setup-workflow": {
+      "type": "div",
+      "props": {
+        "id": "setup-workflow"
+      },
+      "children": [
+        "setup-workflow-label",
+        "setup-workflow-steps"
+      ]
+    },
+    "grade-workflow-label": {
+      "type": "Text",
+      "props": {
+        "id": "grade-workflow-label",
+        "label": "② 成績管理",
+        "text": "② 成績管理",
+        "variant": "lead"
+      },
+      "children": []
+    },
+    "grade-workflow-steps": {
+      "type": "Text",
+      "props": {
+        "id": "grade-workflow-steps",
+        "label": "建立成績項目 → 設定權重 → 登記學生分數",
+        "text": "建立成績項目 → 設定權重 → 登記學生分數",
+        "variant": "body"
+      },
+      "children": []
+    },
+    "grade-workflow": {
+      "type": "div",
+      "props": {
+        "id": "grade-workflow"
+      },
+      "children": [
+        "grade-workflow-label",
+        "grade-workflow-steps"
+      ]
+    },
+    "preview-workflow-label": {
+      "type": "Text",
+      "props": {
+        "id": "preview-workflow-label",
+        "label": "③ 成績輸出",
+        "text": "③ 成績輸出",
+        "variant": "lead"
+      },
+      "children": []
+    },
+    "preview-workflow-steps": {
+      "type": "Text",
+      "props": {
+        "id": "preview-workflow-steps",
+        "label": "預覽加權總分 → 匯出 Excel / CSV 報表",
+        "text": "預覽加權總分 → 匯出 Excel / CSV 報表",
+        "variant": "body"
+      },
+      "children": []
+    },
+    "preview-workflow": {
+      "type": "div",
+      "props": {
+        "id": "preview-workflow"
+      },
+      "children": [
+        "preview-workflow-label",
+        "preview-workflow-steps"
+      ]
+    },
+    "workflow-guide": {
+      "type": "div",
+      "props": {
+        "id": "workflow-guide",
+        "variant": "summary-section"
+      },
+      "children": [
+        "workflow-guide-title",
+        "setup-workflow",
+        "grade-workflow",
+        "preview-workflow"
+      ]
+    },
+    "home-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "home-page",
+        "variant": "page"
+      },
+      "children": [
+        "welcome-section",
+        "quick-access-grid",
+        "workflow-guide"
+      ]
+    }
+  }
+}

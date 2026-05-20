@@ -1,0 +1,116 @@
+import { useState, useEffect } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { JSONUIProvider, createStateStore } from '@json-render/react';
+import { componentRegistry } from '@/json-render/component-registry';
+import { Activity } from 'lucide-react';
+
+// Import all generated pages
+import StudentListPage from '@/pages/student-list.page';
+import HomePage from '@/pages/home.page';
+import ScorePreviewDashboardPage from '@/pages/score-preview-dashboard.page';
+import SemesterListPage from '@/pages/semester-list.page';
+import GradeItemListPage from '@/pages/grade-item-list.page';
+import GradeEntryBoardPage from '@/pages/grade-entry-board.page';
+import GradeWeightDashboardPage from '@/pages/grade-weight-dashboard.page';
+import ClassListPage from '@/pages/class-list.page';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ? false : 1,
+    },
+  },
+});
+
+const globalStore = createStateStore({ modals: {} });
+
+type PageKey = 'student-list' | 'home' | 'score-preview-dashboard' | 'semester-list' | 'grade-item-list' | 'grade-entry-board' | 'grade-weight-dashboard' | 'class-list';
+
+interface AppProps {
+  queryClient?: QueryClient;
+}
+
+export default function App({ queryClient: customQueryClient }: AppProps) {
+  const [activePage, setActivePage] = useState<PageKey>('home');
+  const localQueryClient = customQueryClient || queryClient;
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        setActivePage(hash as PageKey);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const renderActivePage = () => {
+    switch (activePage) {
+      case 'student-list': return <StudentListPage />;
+      case 'home': return <HomePage />;
+      case 'score-preview-dashboard': return <ScorePreviewDashboardPage />;
+      case 'semester-list': return <SemesterListPage />;
+      case 'grade-item-list': return <GradeItemListPage />;
+      case 'grade-entry-board': return <GradeEntryBoardPage />;
+      case 'grade-weight-dashboard': return <GradeWeightDashboardPage />;
+      case 'class-list': return <ClassListPage />;
+      default: return <HomePage />;
+    }
+  };
+
+  return (
+    <QueryClientProvider client={localQueryClient}>
+      <JSONUIProvider 
+        registry={componentRegistry}
+        store={globalStore}
+        handlers={{
+          navigate: (params: any) => { if (params?.to) window.location.hash = '#' + params.to.replace('-page', ''); },
+          openModal: (params: any) => { if (params?.id) globalStore.set(`/modals/${params.id}`, true); },
+          executeBehavior: (params: any) => { console.log('Executing behavior:', params?.ref); }
+        } as any}
+      >
+        <div className="flex flex-col h-screen bg-[#080b11] text-slate-100 font-sans overflow-hidden">
+          <header className="sticky top-0 z-40 bg-[#0d131f]/90 backdrop-blur-md border-b border-slate-800/60 px-6 sm:px-8 py-3 sm:py-4 flex justify-between items-center shrink-0">
+            <div 
+              className="flex items-center space-x-3 cursor-pointer group"
+              onClick={() => { window.location.hash = '#home'; }}
+            >
+              <div className="bg-gradient-to-tr from-indigo-500 to-purple-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex items-baseline space-x-2">
+                <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">Score Assistant</h1>
+                <p className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase hidden sm:block">Teacher Console</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-6">
+              <span className="text-xs text-slate-500 font-mono hidden md:inline-block">System Time: {new Date().toLocaleDateString('zh-TW')}</span>
+              <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-semibold text-slate-200 leading-tight">Linus Chien</p>
+                  <p className="text-[10px] text-slate-500">Superintendent Teacher</p>
+                </div>
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-md text-sm">
+                    T
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0d131f]" />
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-y-auto bg-[#07090e] relative flex flex-col">
+            <div className="flex-1">
+              {renderActivePage()}
+            </div>
+          </main>
+        </div>
+      </JSONUIProvider>
+    </QueryClientProvider>
+  );
+}

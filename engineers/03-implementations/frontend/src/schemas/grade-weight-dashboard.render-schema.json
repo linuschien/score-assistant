@@ -1,0 +1,302 @@
+{
+  "root": "grade-weight-page",
+  "elements": {
+    "home-link": {
+      "type": "Button",
+      "props": {
+        "id": "home-link",
+        "label": "首頁",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "home-page"
+            }
+          }
+        ]
+      }
+    },
+    "semester-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "semester-list-link",
+        "label": "學期列表",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "semester-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "class-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "class-list-link",
+        "label": "班級管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "class-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "grade-item-list-link": {
+      "type": "Button",
+      "props": {
+        "id": "grade-item-list-link",
+        "label": "管理成績項目",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-item-list-page"
+            }
+          }
+        ]
+      }
+    },
+    "current-page-crumb": {
+      "type": "Button",
+      "props": {
+        "id": "current-page-crumb",
+        "label": "成績權重管理",
+        "variant": null,
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-weight-dashboard-page"
+            }
+          }
+        ]
+      }
+    },
+    "page-breadcrumb": {
+      "type": "Breadcrumb",
+      "props": {
+        "id": "page-breadcrumb",
+        "variant": "breadcrumb"
+      },
+      "children": [
+        "home-link",
+        "semester-list-link",
+        "class-list-link",
+        "grade-item-list-link",
+        "current-page-crumb"
+      ]
+    },
+    "page-title": {
+      "type": "Heading",
+      "props": {
+        "id": "page-title",
+        "label": "成績項目權重管理",
+        "text": "成績項目權重管理",
+        "level": "h1"
+      },
+      "children": []
+    },
+    "total-weight-indicator": {
+      "type": "MetricCard",
+      "props": {
+        "id": "total-weight-indicator",
+        "label": "目前總權重",
+        "dataRef": "listGradeItems"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Warn when total weight is not 100% during calculation",
+              "id": "total-weight-indicator"
+            }
+          }
+        ]
+      }
+    },
+    "save-weights-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "save-weights-trigger",
+        "label": "儲存權重設定",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Allow saving weight when total is not 100% with a warning",
+              "id": "save-weights-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "header-section": {
+      "type": "div",
+      "props": {
+        "id": "header-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "page-title",
+        "total-weight-indicator",
+        "save-weights-trigger"
+      ]
+    },
+    "weight-distribution-chart": {
+      "type": "Chart:pie",
+      "props": {
+        "id": "weight-distribution-chart",
+        "label": "權重分布圖",
+        "dataRef": "listGradeItems"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "navigate",
+            "params": {
+              "to": "grade-weight-dashboard-page"
+            }
+          }
+        ]
+      }
+    },
+    "weight-summary-section": {
+      "type": "div",
+      "props": {
+        "id": "weight-summary-section",
+        "variant": "summary-section"
+      },
+      "children": [
+        "weight-distribution-chart"
+      ]
+    },
+    "weight-input": {
+      "type": "Input",
+      "props": {
+        "id": "weight-input",
+        "label": "權重 (%)",
+        "name": "weight-input",
+        "type": "number",
+        "placeholder": null,
+        "value": {
+          "$bindState": "/form/weight-input"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Update weight for a single GradeItem",
+              "id": "weight-input"
+            }
+          }
+        ]
+      }
+    },
+    "weight-editor-table": {
+      "type": "DataTable",
+      "props": {
+        "id": "weight-editor-table",
+        "label": "成績項目權重設定",
+        "dataRef": "listGradeItems",
+        "columns": [
+          {
+            "field": "type",
+            "label": "類型"
+          },
+          {
+            "field": "name",
+            "label": "項目名稱",
+            "sortable": true,
+            "default_sort": "asc"
+          },
+          {
+            "field": "maxScore",
+            "label": "滿分"
+          }
+        ],
+        "data": {
+          "$bindState": "/data/listGradeItems"
+        }
+      },
+      "children": [
+        "weight-input"
+      ],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Update weight for a single GradeItem",
+              "id": "weight-editor-table"
+            }
+          }
+        ]
+      }
+    },
+    "weight-editor-section": {
+      "type": "div",
+      "props": {
+        "id": "weight-editor-section",
+        "variant": "list-section"
+      },
+      "children": [
+        "weight-editor-table"
+      ]
+    },
+    "grade-weight-page": {
+      "type": "Container:page",
+      "props": {
+        "id": "grade-weight-page",
+        "variant": "page"
+      },
+      "children": [
+        "page-breadcrumb",
+        "header-section",
+        "weight-summary-section",
+        "weight-editor-section"
+      ]
+    }
+  }
+}
