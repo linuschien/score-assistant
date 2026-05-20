@@ -109,17 +109,9 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "destructive",
                 "label": "刪除",
-                "behavior_ref": "Delete a Student",
-                "confirm_delete": {
-                  "keyword_label": "請輸入學生姓名以確認移除",
-                  "keyword_value": "{{student.name}}"
-                },
-                "feedback": {
-                  "on_success": { "type": "toast", "message_key": "success.student.deleted" },
-                  "on_error": { "type": "dialog", "message_key": "error.student.deleteFailed" }
-                },
+                "behavior_ref": "nielsen:control",
                 "interactions": [
-                  { "on_event": "on_click", "target_id": "delete-student-confirm-dialog", "behavior_ref": "Delete a Student" }
+                  { "on_event": "on_click", "target_id": "delete-student-confirm-dialog", "behavior_ref": "nielsen:control" }
                 ]
               }
             ]

@@ -95,14 +95,9 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "destructive",
                 "label": "刪除",
-                "behavior_ref": "Delete a GradeItem",
-                "confirm_delete": { "keyword_label": "請輸入項目名稱以確認刪除", "keyword_value": "{{gradeItem.name}}" },
-                "feedback": {
-                  "on_success": { "type": "toast", "message_key": "success.gradeItem.deleted" },
-                  "on_error": { "type": "dialog", "message_key": "error.gradeItem.deleteFailed" }
-                },
+                "behavior_ref": "nielsen:control",
                 "interactions": [
-                  { "on_event": "on_click", "target_id": "delete-grade-item-confirm-dialog", "behavior_ref": "Delete a GradeItem" }
+                  { "on_event": "on_click", "target_id": "delete-grade-item-confirm-dialog", "behavior_ref": "nielsen:control" }
                 ]
               }
             ]

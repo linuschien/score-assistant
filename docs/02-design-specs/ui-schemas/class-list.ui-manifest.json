@@ -105,17 +105,9 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "destructive",
                 "label": "刪除",
-                "behavior_ref": "Delete a Class",
-                "confirm_delete": {
-                  "keyword_label": "請輸入班級名稱以確認刪除",
-                  "keyword_value": "{{class.name}}"
-                },
-                "feedback": {
-                  "on_success": { "type": "toast", "message_key": "success.class.deleted" },
-                  "on_error": { "type": "dialog", "message_key": "error.class.deleteFailed" }
-                },
+                "behavior_ref": "nielsen:control",
                 "interactions": [
-                  { "on_event": "on_click", "target_id": "delete-class-confirm-dialog", "behavior_ref": "Delete a Class" }
+                  { "on_event": "on_click", "target_id": "delete-class-confirm-dialog", "behavior_ref": "nielsen:control" }
                 ]
               }
             ]

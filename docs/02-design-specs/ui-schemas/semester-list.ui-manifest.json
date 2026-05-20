@@ -85,17 +85,9 @@
                 "abstract_type": "Trigger",
                 "semantic_variant": "destructive",
                 "label": "刪除",
-                "behavior_ref": "Delete a Semester",
-                "confirm_delete": {
-                  "keyword_label": "請輸入學期名稱以確認刪除",
-                  "keyword_value": "{{semester.name}}"
-                },
-                "feedback": {
-                  "on_success": { "type": "toast", "message_key": "success.semester.deleted" },
-                  "on_error": { "type": "dialog", "message_key": "error.semester.deleteFailed" }
-                },
+                "behavior_ref": "nielsen:control",
                 "interactions": [
-                  { "on_event": "on_click", "target_id": "delete-semester-confirm-dialog", "behavior_ref": "Delete a Semester" }
+                  { "on_event": "on_click", "target_id": "delete-semester-confirm-dialog", "behavior_ref": "nielsen:control" }
                 ]
               }
             ]
