@@ -53,7 +53,8 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready flat JSON-ren
 
 ### Phase 3 — JSON-Render Spec Generation
 > **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  
-> Map the manifest's component tree directly into a lightweight flat elements JSON spec tree using the resolved component keys and flat element relationships.
+> Map the manifest's component tree directly into a lightweight flat elements JSON spec tree using the resolved component keys and flat element relationships. Immediately validate all elements against their Zod definitions under `@json-render/shadcn`. Ensure all missing non-optional nullable fields are auto-populated as `null` in the schema. **The generated schema MUST statically pass Zod validation; failing this step violates the Definition of Done (DoD) and aborts the flow.**
+
 
 ### Phase 4 — Component Registry Generation
 > **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  

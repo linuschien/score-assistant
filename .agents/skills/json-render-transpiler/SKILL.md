@@ -115,6 +115,7 @@ Transform the UI Manifest's `root_element` tree directly into a flat elements sp
 - **Built-in Actions**: Standard interaction behaviors (e.g., resetting form, triggering a state update) utilize the built-in actions (`setState`, `pushState`, `removeState`, `validateForm`) natively handled by `@json-render/react`'s state/action provider context, declared directly in the UI Schema.
 - **Component Signatures & Adaptation**: The `<Renderer />` calls the components in the registry with a standard `ComponentRenderProps` signature: `{ element, children, emit, on, bindings, loading }` (where the actual properties are under `element.props`). Presenter components from `@json-render/shadcn` expect the standard implementation signature `BaseComponentProps` (`{ props, children, emit, on, bindings, loading }`). Thus, standard presenters in the registry must either be passed through `@json-render/react`'s official `defineRegistry` or adapted (e.g., matching `props = element.props`) to ensure runtime property access is successful.
 - **Strip Schema Validation Properties**: Strip out schema validation properties (`ui_id`, `domain_module`) from the element node payload.
+- **Zod Verification Phase (DoD Requirement)**: Immediately after generating or modifying any `{ui_id}.render-schema.json`, you MUST validate all element structures using the corresponding Zod schemas from `@json-render/shadcn` (`shadcnComponentDefinitions`). If any non-optional `nullable` properties (such as `Dialog.description`, `Input.checks`, `Input.validateOn`) are missing (`undefined`), you MUST explicitly populate them as `null` in the output JSON. **Any Zod validation failure constitutes an official transpilation failure and violates the Definition of Done (DoD).**
 
 ---
 
@@ -161,3 +162,5 @@ export const componentRegistry: Record<RegistryKey, ComponentEntry> = {
 - **Format**: Pure JSON (render spec) and pure TypeScript (registry mapping). Zero custom layout engines.
 - **Native Alignment**: Maximize the reuse of `@json-render/shadcn` components out of the box.
 - **Idempotency**: Identical manifest structures MUST yield structurally identical JSON output trees.
+- **Zod Compliance**: All emitted JSON schema properties MUST statically pass the strict Zod validators before being submitted. Any validation errors constitute a direct failure to meet the Definition of Done (DoD).
+
