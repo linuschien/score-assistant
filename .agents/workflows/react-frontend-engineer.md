@@ -85,9 +85,20 @@ Generate automated unit tests at `engineers/03-implementations/frontend/src/page
 3. Simulate user interactions defined in the manifest (e.g., `on_click` triggering a `behavior_ref`) using `@testing-library/user-event`.
 4. Assert that the correct mocked API endpoints are called and that the UI state updates correctly to ensure the full component flow is robustly connected.
 5. **Deterministic Test Execution**: Ensure all tests are executed in continuous integration / verification mode using `npx vitest run`.
+6. **Code Coverage DoD (≥ 70%)**: Run coverage with `npx vitest run --coverage`. The coverage report must show **≥ 70% line/branch/function coverage** across all page and registry files. Failing to meet this threshold constitutes a DoD violation — add or improve tests until coverage is satisfied before proceeding.
 
-### Phase 8 — Report
-Emit a Markdown Generation Report covering: output files written, component resolution mapping summary (highlighting preset vs custom usage), test coverage summary, and any warnings.
+### Phase 8 — Production Build
+After all unit tests pass and coverage thresholds are met, execute the Vite production build:
+```bash
+npx vite build
+```
+- Output goes to the default `dist/` directory under the frontend project root.
+- Build must complete **without errors**. TypeScript type errors and missing module errors must be resolved before the build is considered passing.
+- Notify the `spring-backend-engineer` of the `dist/` path so they can configure `spring.web.resources.static-locations` to serve the built static assets.
+- **This step is a hard gate**: a failing build means the implementation is not complete, regardless of passing unit tests.
+
+### Phase 9 — Report
+Emit a Markdown Generation Report covering: output files written, component resolution mapping summary (highlighting preset vs custom usage), test coverage summary (with coverage %) , build output path, and any warnings.
 
 ---
 
@@ -102,5 +113,8 @@ Emit a Markdown Generation Report covering: output files written, component reso
     - **Language**: Strictly use **TypeScript** for all implementations.
     - **Build Tool**: Use **Vite** for project bundling and development.
     - **Testing Command**: Standardize test execution to `npx vitest run` for deterministic runs.
+    - **Coverage Command**: Standardize coverage to `npx vitest run --coverage` with **≥ 70%** line/branch/function threshold.
+    - **Build Command**: Run `npx vite build` to compile output to `dist/` after all tests pass.
     - **Testing**: Use **Vitest**, **MSW**, and **React Testing Library** for component flow validation.
     - **Build Output**: Use Vite's default **`dist`** directory. The `spring-backend-engineer` should be notified of this path so they can configure the Spring Boot `spring.web.resources.static-locations` startup parameter to serve these static resources.
+
