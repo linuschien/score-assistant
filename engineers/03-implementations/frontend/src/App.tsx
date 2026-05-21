@@ -18,7 +18,37 @@ import ClassListPage from '@/pages/class-list.page';
 import { executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
 
-const globalStore = createStateStore({ modals: {}, form: {}, data: {} });
+// Read initial selected state from sessionStorage to survive page refreshes
+const getInitialSelected = () => {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const saved = sessionStorage.getItem('score_assistant_selected');
+      return saved ? JSON.parse(saved) : {};
+    }
+  } catch (e) {
+    console.error('Failed to parse selected state:', e);
+  }
+  return {};
+};
+
+const globalStore = createStateStore({
+  modals: {},
+  form: {},
+  data: {},
+  selected: getInitialSelected(),
+});
+
+// Subscribe to store changes to persist selected state
+if (typeof sessionStorage !== 'undefined') {
+  globalStore.subscribe(() => {
+    try {
+      const selected = globalStore.get('/selected');
+      sessionStorage.setItem('score_assistant_selected', JSON.stringify(selected || {}));
+    } catch (e) {
+      console.error('Failed to save selected state to sessionStorage:', e);
+    }
+  });
+}
 
 type PageKey =
   | 'student-list'

@@ -14,6 +14,7 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
     try {
       store = useStateStore();
     } catch (e) {
+      console.error('useStateStore error in adapt:', e);
       store = null;
     }
 
@@ -30,9 +31,19 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
         ) {
           const selected = store.get('/selected') || {};
           const updatedSelected = { ...selected };
-          Object.keys(updatedSelected).forEach((k) => {
-            updatedSelected[k] = null;
-          });
+          if (label.includes('學期') || id.includes('semester')) {
+            updatedSelected.semesterId = null;
+          } else if (label.includes('班級') || id.includes('class')) {
+            updatedSelected.classId = null;
+          } else if (label.includes('學生') || id.includes('student')) {
+            updatedSelected.studentId = null;
+          } else if (label.includes('成績項目') || id.includes('grade-item') || id.includes('gradeItem')) {
+            updatedSelected.gradeItemId = null;
+          } else {
+            Object.keys(updatedSelected).forEach((k) => {
+              updatedSelected[k] = null;
+            });
+          }
           store.set('/selected', updatedSelected);
           store.set('/form', {});
         }
@@ -61,6 +72,28 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
 
     const rawProps = element?.props ?? {};
     const props = { ...rawProps };
+
+    // Dynamic curly-brace interpolation (e.g. {{state.data.getSemesterById?.name ...}})
+    if (store) {
+      const interpolate = (val: any): any => {
+        if (typeof val !== 'string') return val;
+        return val.replace(/\{\{([^}]+)\}\}/g, (_, expression) => {
+          const trimmed = expression.trim();
+          if (trimmed.includes('getSemesterById')) {
+            const semester = store.get('/data/getSemesterById');
+            return semester?.name || semester?.label || '';
+          }
+          if (trimmed.includes('getClassById')) {
+            const classVal = store.get('/data/getClassById');
+            return classVal?.name || classVal?.label || '';
+          }
+          return '';
+        });
+      };
+      if (props.text) props.text = interpolate(props.text);
+      if (props.label) props.label = interpolate(props.label);
+      if (props.placeholder) props.placeholder = interpolate(props.placeholder);
+    }
 
     if (element?.type === 'Button') {
       const v = props.variant;
