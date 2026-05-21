@@ -11,9 +11,12 @@ export interface Semesters {
 }
 
 const LISTSEMESTERS_QUERY = gql`
-  query listSemesters($filter: SemestersFilterInput) {
+  query listSemesters($filter: SemesterFilterInput) {
     listSemesters(filter: $filter) {
       id
+      semesterName
+      startDate
+      endDate
     }
   }
 `;

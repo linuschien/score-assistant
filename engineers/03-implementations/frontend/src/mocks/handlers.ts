@@ -14,7 +14,7 @@ export const handlers = [
     return HttpResponse.json({
       data: {
         listSemesters: [
-          { id: '1', name: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
+          { id: '1', semesterName: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
         ]
       }
     });

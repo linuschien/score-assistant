@@ -45,6 +45,11 @@ const API_BASE = '/api/v1';
 // Maps behavior refs to REST API actions + toast feedback
 async function dispatchBehavior(ref: string, store: ReturnType<typeof createStateStore>) {
   if (ref === 'Create a new Semester') {
+    const selectedId = store.get('/selected/semesterId');
+    if (selectedId) {
+      return dispatchBehavior('Update a Semester', store);
+    }
+
     const form = (store.get('/form') as Record<string, string>) || {};
     const res = await fetch(`${API_BASE}/semesters`, {
       method: 'POST',
@@ -58,6 +63,7 @@ async function dispatchBehavior(ref: string, store: ReturnType<typeof createStat
     if (!res.ok) throw new Error(`建立失敗：${res.status}`);
     store.set('/form', {});
     store.set('/modals/semester-form-modal', false);
+    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
     return '學期已建立';
   }
 
@@ -76,14 +82,26 @@ async function dispatchBehavior(ref: string, store: ReturnType<typeof createStat
     if (!res.ok) throw new Error(`更新失敗：${res.status}`);
     store.set('/form', {});
     store.set('/modals/semester-form-modal', false);
+    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
     return '學期已更新';
   }
 
   if (ref === 'Delete a Semester') {
     const id = store.get('/selected/semesterId') as string;
+    const form = (store.get('/form') as Record<string, string>) || {};
+    const inputKeyword = form['delete-semester-keyword-input'];
+
+    const semesters = (store.get('/data/listSemesters') as any[]) || [];
+    const semester = semesters.find((s) => s.id === id);
+    if (semester && semester.name !== inputKeyword) {
+      throw new Error('輸入的學期名稱不相符，無法刪除');
+    }
+
     const res = await fetch(`${API_BASE}/semesters/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error(`刪除失敗：${res.status}`);
+    store.set('/form', {});
     store.set('/modals/delete-semester-confirm-dialog', false);
+    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
     return '學期已刪除';
   }
 
@@ -146,7 +164,25 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
             if (params?.to) window.location.hash = '#' + params.to.replace('-page', '');
           },
           openModal: (params: any) => {
-            if (params?.id) globalStore.set(`/modals/${params.id}`, true);
+            if (params?.id) {
+              globalStore.set(`/modals/${params.id}`, true);
+              if (params.id === 'semester-form-modal') {
+                const selectedId = globalStore.get('/selected/semesterId');
+                if (selectedId) {
+                  const list = (globalStore.get('/data/listSemesters') as any[]) || [];
+                  const found = list.find((s) => s.id === selectedId);
+                  if (found) {
+                    globalStore.set('/form/modal-semester-name-field', found.name);
+                    globalStore.set('/form/modal-start-date-field', found.startDate);
+                    globalStore.set('/form/modal-end-date-field', found.endDate);
+                  }
+                } else {
+                  globalStore.set('/form/modal-semester-name-field', '');
+                  globalStore.set('/form/modal-start-date-field', '');
+                  globalStore.set('/form/modal-end-date-field', '');
+                }
+              }
+            }
           },
           executeBehavior: handleExecuteBehavior,
         } as any}

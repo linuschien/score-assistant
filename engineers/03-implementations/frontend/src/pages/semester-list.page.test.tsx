@@ -5,6 +5,12 @@ import { JSONUIProvider, createStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SemesterListPage from './semester-list.page';
+import { useListSemesters } from '@/hooks/use-list-semesters';
+
+// ── Mock Hooks ────────────────────────────────────────────────────────────────
+vi.mock('@/hooks/use-list-semesters', () => ({
+  useListSemesters: vi.fn(),
+}));
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -39,6 +45,13 @@ describe('SemesterListPage', () => {
     store.set('/form', {});
     store.set('/data', {});
     vi.clearAllMocks();
+    
+    // Set default mock implementation to return undefined to not overwrite manual store writes
+    vi.mocked(useListSemesters).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
   });
 
   // ── Query: 表格顯示資料 ────────────────────────────────────────────────────
