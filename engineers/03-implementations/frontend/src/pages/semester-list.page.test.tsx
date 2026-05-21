@@ -5,12 +5,10 @@ import { JSONUIProvider, createStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SemesterListPage from './semester-list.page';
-import { useListSemesters } from '@/hooks/use-list-semesters';
-
-// ── Mock Hooks ────────────────────────────────────────────────────────────────
-vi.mock('@/hooks/use-list-semesters', () => ({
-  useListSemesters: vi.fn(),
-}));
+import { executeRegisteredBehavior } from '@/behaviors/registry';
+import { resetMockSemesters } from '@/mocks/handlers';
+import { server } from '@/mocks/server';
+import { graphql, HttpResponse } from 'msw';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -21,10 +19,35 @@ const MOCK_SEMESTERS = [
 // ── Test Harness ──────────────────────────────────────────────────────────────
 
 const store = createStateStore({ modals: {}, form: {}, data: {} });
-const executeBehavior = vi.fn();
+
 const openModal = vi.fn((params: any) => {
-  if (params?.id) store.set(`/modals/${params.id}`, true);
+  if (params?.id) {
+    store.set(`/modals/${params.id}`, true);
+    if (params.id === 'semester-form-modal') {
+      const selectedId = store.get('/selected/semesterId');
+      if (selectedId) {
+        const list = (store.get('/data/listSemesters') as any[]) || [];
+        const found = list.find((s) => s.id === selectedId);
+        if (found) {
+          store.set('/form/modal-semester-name-field', found.name);
+          store.set('/form/modal-start-date-field', found.startDate);
+          store.set('/form/modal-end-date-field', found.endDate);
+        }
+      } else {
+        store.set('/form/modal-semester-name-field', '');
+        store.set('/form/modal-start-date-field', '');
+        store.set('/form/modal-end-date-field', '');
+      }
+    }
+  }
 });
+
+const executeBehavior = vi.fn(async (params: any) => {
+  const ref = params?.ref;
+  if (!ref) return null;
+  return executeRegisteredBehavior(ref, store);
+});
+
 const navigate = vi.fn();
 const testHandlers = { navigate, openModal, executeBehavior };
 
@@ -44,14 +67,9 @@ describe('SemesterListPage', () => {
     store.set('/modals', {});
     store.set('/form', {});
     store.set('/data', {});
+    store.set('/selected', {});
+    resetMockSemesters();
     vi.clearAllMocks();
-    
-    // Set default mock implementation to return undefined to not overwrite manual store writes
-    vi.mocked(useListSemesters).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      error: null,
-    } as any);
   });
 
   // ── Query: 表格顯示資料 ────────────────────────────────────────────────────
@@ -62,7 +80,6 @@ describe('SemesterListPage', () => {
     });
 
     it('renders semester rows from store data', async () => {
-      // DataTable reads from $bindState /data/listSemesters in the store
       store.set('/data/listSemesters', MOCK_SEMESTERS);
       renderPage();
       expect(await screen.findByText('112-1 第一學期')).toBeInTheDocument();
@@ -70,6 +87,16 @@ describe('SemesterListPage', () => {
     });
 
     it('shows empty state when no data in store', async () => {
+      server.use(
+        graphql.query('listSemesters', () => {
+          return HttpResponse.json({
+            data: {
+              listSemesters: [],
+            },
+          });
+        })
+      );
+
       renderPage();
       expect(await screen.findByText('(沒有資料)')).toBeInTheDocument();
     });
@@ -125,7 +152,6 @@ describe('SemesterListPage', () => {
   // ── Update: 編輯學期 ────────────────────────────────────────────────────
   describe('Update', () => {
     it('opens semester-form-modal when 編輯 row button is clicked', async () => {
-      // Populate store so DataTable renders the row with action buttons
       store.set('/data/listSemesters', MOCK_SEMESTERS);
       const user = userEvent.setup();
       renderPage();

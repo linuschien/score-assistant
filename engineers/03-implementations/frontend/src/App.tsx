@@ -15,14 +15,8 @@ import GradeEntryBoardPage from '@/pages/grade-entry-board.page';
 import GradeWeightDashboardPage from '@/pages/grade-weight-dashboard.page';
 import ClassListPage from '@/pages/class-list.page';
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: typeof process !== 'undefined' && process.env.NODE_ENV === 'test' ? false : 1,
-    },
-  },
-});
+import { executeRegisteredBehavior } from '@/behaviors/registry';
+import { queryClient } from '@/lib/query-client';
 
 const globalStore = createStateStore({ modals: {}, form: {}, data: {} });
 
@@ -40,70 +34,10 @@ interface AppProps {
   queryClient?: QueryClient;
 }
 
-const API_BASE = '/api/v1';
-
 // Maps behavior refs to REST API actions + toast feedback
 async function dispatchBehavior(ref: string, store: ReturnType<typeof createStateStore>) {
-  if (ref === 'Create a new Semester') {
-    const selectedId = store.get('/selected/semesterId');
-    if (selectedId) {
-      return dispatchBehavior('Update a Semester', store);
-    }
-
-    const form = (store.get('/form') as Record<string, string>) || {};
-    const res = await fetch(`${API_BASE}/semesters`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        semester_name: form['modal-semester-name-field'],
-        start_date: form['modal-start-date-field'],
-        end_date: form['modal-end-date-field'],
-      }),
-    });
-    if (!res.ok) throw new Error(`建立失敗：${res.status}`);
-    store.set('/form', {});
-    store.set('/modals/semester-form-modal', false);
-    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
-    return '學期已建立';
-  }
-
-  if (ref === 'Update a Semester') {
-    const form = (store.get('/form') as Record<string, string>) || {};
-    const id = store.get('/selected/semesterId') as string;
-    const res = await fetch(`${API_BASE}/semesters/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        semester_name: form['modal-semester-name-field'],
-        start_date: form['modal-start-date-field'],
-        end_date: form['modal-end-date-field'],
-      }),
-    });
-    if (!res.ok) throw new Error(`更新失敗：${res.status}`);
-    store.set('/form', {});
-    store.set('/modals/semester-form-modal', false);
-    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
-    return '學期已更新';
-  }
-
-  if (ref === 'Delete a Semester') {
-    const id = store.get('/selected/semesterId') as string;
-    const form = (store.get('/form') as Record<string, string>) || {};
-    const inputKeyword = form['delete-semester-keyword-input'];
-
-    const semesters = (store.get('/data/listSemesters') as any[]) || [];
-    const semester = semesters.find((s) => s.id === id);
-    if (semester && semester.name !== inputKeyword) {
-      throw new Error('輸入的學期名稱不相符，無法刪除');
-    }
-
-    const res = await fetch(`${API_BASE}/semesters/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`刪除失敗：${res.status}`);
-    store.set('/form', {});
-    store.set('/modals/delete-semester-confirm-dialog', false);
-    queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
-    return '學期已刪除';
-  }
+  const msg = await executeRegisteredBehavior(ref, store);
+  if (msg !== null) return msg;
 
   console.log('[executeBehavior] unhandled ref:', ref);
   return null;

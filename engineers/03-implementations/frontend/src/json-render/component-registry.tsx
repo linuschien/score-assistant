@@ -28,10 +28,12 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
           id.includes('create') ||
           id.includes('add')
         ) {
-          store.set('/selected/semesterId', null);
-          store.set('/selected/classId', null);
-          store.set('/selected/studentId', null);
-          store.set('/selected/gradeItemId', null);
+          const selected = store.get('/selected') || {};
+          const updatedSelected = { ...selected };
+          Object.keys(updatedSelected).forEach((k) => {
+            updatedSelected[k] = null;
+          });
+          store.set('/selected', updatedSelected);
           store.set('/form', {});
         }
 
@@ -166,14 +168,16 @@ const DataTable: ComponentType<any> = ({ element, children, bindings }: any) => 
                             if (store && row?.id) {
                               const tableId = element?.props?.id || '';
                               const dataRef = element?.props?.dataRef || '';
-                              if (tableId.includes('semester') || dataRef.includes('Semester')) {
-                                store.set('/selected/semesterId', row.id);
-                              } else if (tableId.includes('class') || dataRef.includes('Class')) {
-                                store.set('/selected/classId', row.id);
-                              } else if (tableId.includes('student') || dataRef.includes('Student')) {
-                                store.set('/selected/studentId', row.id);
-                              } else if (tableId.includes('grade-item') || dataRef.includes('GradeItem')) {
-                                store.set('/selected/gradeItemId', row.id);
+                              let entity = '';
+                              if (dataRef && dataRef.startsWith('list')) {
+                                const raw = dataRef.slice(4);
+                                const base = raw.endsWith('es') ? raw.slice(0, -2) : raw.endsWith('s') ? raw.slice(0, -1) : raw;
+                                entity = base.charAt(0).toLowerCase() + base.slice(1);
+                              } else if (tableId) {
+                                entity = tableId.replace('-table', '').replace('-list', '');
+                              }
+                              if (entity) {
+                                store.set(`/selected/${entity}Id`, row.id);
                               }
                             }
                           }}
