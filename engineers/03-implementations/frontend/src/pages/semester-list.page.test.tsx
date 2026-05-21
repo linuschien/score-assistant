@@ -110,7 +110,9 @@ describe('SemesterListPage', () => {
 
       await user.click(await screen.findByRole('button', { name: /建立學期/i }));
 
-      expect(openModal).toHaveBeenCalledWith(expect.objectContaining({ id: 'semester-form-modal' }));
+      expect(executeBehavior).toHaveBeenCalledWith(
+        expect.objectContaining({ ref: 'Open Semester Form Modal for Create' })
+      );
       expect(store.get('/modals/semester-form-modal')).toBe(true);
     });
 

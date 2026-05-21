@@ -29,23 +29,27 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
           id.includes('create') ||
           id.includes('add')
         ) {
-          const selected = store.get('/selected') || {};
-          const updatedSelected = { ...selected };
-          if (label.includes('學期') || id.includes('semester')) {
-            updatedSelected.semesterId = null;
-          } else if (label.includes('班級') || id.includes('class')) {
-            updatedSelected.classId = null;
-          } else if (label.includes('學生') || id.includes('student')) {
-            updatedSelected.studentId = null;
-          } else if (label.includes('成績項目') || id.includes('grade-item') || id.includes('gradeItem')) {
-            updatedSelected.gradeItemId = null;
+          // Skip semester and class since they are handled page-locally
+          if (
+            label.includes('學期') || id.includes('semester') ||
+            label.includes('班級') || id.includes('class')
+          ) {
+            // Handled page-locally
           } else {
-            Object.keys(updatedSelected).forEach((k) => {
-              updatedSelected[k] = null;
-            });
+            const selected = store.get('/selected') || {};
+            const updatedSelected = { ...selected };
+            if (label.includes('學生') || id.includes('student')) {
+              updatedSelected.studentId = null;
+            } else if (label.includes('成績項目') || id.includes('grade-item') || id.includes('gradeItem')) {
+              updatedSelected.gradeItemId = null;
+            } else {
+              Object.keys(updatedSelected).forEach((k) => {
+                updatedSelected[k] = null;
+              });
+            }
+            store.set('/selected', updatedSelected);
+            store.set('/form', {});
           }
-          store.set('/selected', updatedSelected);
-          store.set('/form', {});
         }
 
         if (

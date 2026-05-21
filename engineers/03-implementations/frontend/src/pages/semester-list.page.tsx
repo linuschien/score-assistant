@@ -8,6 +8,13 @@ import { queryClient } from '@/lib/query-client';
 import { api, API_BASE } from '@/lib/api-client';
 
 // Register Semester behaviors statically
+registerBehavior('Open Semester Form Modal for Create', async (_ref, store) => {
+  store.set('/selected/semesterId', null);
+  store.set('/form', {});
+  store.set('/modals/semester-form-modal', true);
+  return null;
+});
+
 registerBehavior('Create a new Semester', async (_ref, store) => {
   const selectedId = store.get('/selected/semesterId');
   if (selectedId) {
@@ -77,6 +84,33 @@ export default function SemesterListPage() {
       }
     }
   }, [data, store]);
+
+  // Decoupled Semester Form Modal Logic:
+  // Populate the semester-form-modal inputs dynamically based on selectedSemesterId
+  const semesterModalOpen = store.get('/modals/semester-form-modal');
+  const selectedSemesterId = store.get('/selected/semesterId') as string;
+
+  useEffect(() => {
+    if (semesterModalOpen) {
+      const currentName = store.get('/form/modal-semester-name-field') || '';
+      const currentStart = store.get('/form/modal-start-date-field') || '';
+      const currentEnd = store.get('/form/modal-end-date-field') || '';
+
+      if (selectedSemesterId) {
+        const semesters = (store.get('/data/listSemesters') as any[]) || [];
+        const found = semesters.find((s) => s.id === selectedSemesterId);
+        if (found) {
+          if (currentName !== found.name) store.set('/form/modal-semester-name-field', found.name);
+          if (currentStart !== found.startDate) store.set('/form/modal-start-date-field', found.startDate);
+          if (currentEnd !== found.endDate) store.set('/form/modal-end-date-field', found.endDate);
+        }
+      } else {
+        if (currentName !== '') store.set('/form/modal-semester-name-field', '');
+        if (currentStart !== '') store.set('/form/modal-start-date-field', '');
+        if (currentEnd !== '') store.set('/form/modal-end-date-field', '');
+      }
+    }
+  }, [semesterModalOpen, selectedSemesterId, store]);
 
   return <Renderer spec={spec as any} registry={componentRegistry} />;
 }

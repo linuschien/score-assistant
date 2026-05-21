@@ -106,9 +106,9 @@
       "on": {
         "press": [
           {
-            "action": "openModal",
+            "action": "executeBehavior",
             "params": {
-              "id": "class-form-modal"
+              "ref": "Open Class Form Modal for Create"
             }
           }
         ]

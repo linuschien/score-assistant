@@ -74,9 +74,9 @@
       "on": {
         "press": [
           {
-            "action": "openModal",
+            "action": "executeBehavior",
             "params": {
-              "id": "semester-form-modal"
+              "ref": "Open Semester Form Modal for Create"
             }
           }
         ]

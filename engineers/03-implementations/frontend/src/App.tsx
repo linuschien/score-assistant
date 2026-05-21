@@ -130,22 +130,6 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
           openModal: (params: any) => {
             if (params?.id) {
               globalStore.set(`/modals/${params.id}`, true);
-              if (params.id === 'semester-form-modal') {
-                const selectedId = globalStore.get('/selected/semesterId');
-                if (selectedId) {
-                  const list = (globalStore.get('/data/listSemesters') as any[]) || [];
-                  const found = list.find((s) => s.id === selectedId);
-                  if (found) {
-                    globalStore.set('/form/modal-semester-name-field', found.name);
-                    globalStore.set('/form/modal-start-date-field', found.startDate);
-                    globalStore.set('/form/modal-end-date-field', found.endDate);
-                  }
-                } else {
-                  globalStore.set('/form/modal-semester-name-field', '');
-                  globalStore.set('/form/modal-start-date-field', '');
-                  globalStore.set('/form/modal-end-date-field', '');
-                }
-              }
             }
           },
           executeBehavior: handleExecuteBehavior,
