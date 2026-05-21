@@ -91,26 +91,20 @@ export default function SemesterListPage() {
   const selectedSemesterId = store.get('/selected/semesterId') as string;
 
   useEffect(() => {
-    if (semesterModalOpen) {
+    if (semesterModalOpen && selectedSemesterId) {
       const currentName = store.get('/form/modal-semester-name-field') || '';
       const currentStart = store.get('/form/modal-start-date-field') || '';
       const currentEnd = store.get('/form/modal-end-date-field') || '';
 
-      if (selectedSemesterId) {
-        const semesters = (store.get('/data/listSemesters') as any[]) || [];
-        const found = semesters.find((s) => s.id === selectedSemesterId);
-        if (found) {
-          if (currentName !== found.name) store.set('/form/modal-semester-name-field', found.name);
-          if (currentStart !== found.startDate) store.set('/form/modal-start-date-field', found.startDate);
-          if (currentEnd !== found.endDate) store.set('/form/modal-end-date-field', found.endDate);
-        }
-      } else {
-        if (currentName !== '') store.set('/form/modal-semester-name-field', '');
-        if (currentStart !== '') store.set('/form/modal-start-date-field', '');
-        if (currentEnd !== '') store.set('/form/modal-end-date-field', '');
+      const semesters = (store.get('/data/listSemesters') as any[]) || [];
+      const found = semesters.find((s) => s.id === selectedSemesterId);
+      if (found) {
+        if (currentName !== found.name) store.set('/form/modal-semester-name-field', found.name);
+        if (currentStart !== found.startDate) store.set('/form/modal-start-date-field', found.startDate);
+        if (currentEnd !== found.endDate) store.set('/form/modal-end-date-field', found.endDate);
       }
     }
-  }, [semesterModalOpen, selectedSemesterId, store]);
+  }, [semesterModalOpen, selectedSemesterId]);
 
   return <Renderer spec={spec as any} registry={componentRegistry} />;
 }

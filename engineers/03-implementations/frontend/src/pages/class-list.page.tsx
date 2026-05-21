@@ -112,18 +112,12 @@ export default function ClassListPage() {
   const selectedClassId = store.get('/selected/classId') as string;
 
   useEffect(() => {
-    if (classModalOpen) {
+    if (classModalOpen && selectedClassId) {
       const currentVal = store.get('/form/modal-class-name-field');
-      if (selectedClassId) {
-        const classes = (store.get('/data/listClasses') as any[]) || [];
-        const found = classes.find((c) => c.id === selectedClassId);
-        if (found && currentVal !== found.name) {
-          store.set('/form/modal-class-name-field', found.name);
-        }
-      } else {
-        if (currentVal !== '') {
-          store.set('/form/modal-class-name-field', '');
-        }
+      const classes = (store.get('/data/listClasses') as any[]) || [];
+      const found = classes.find((c) => c.id === selectedClassId);
+      if (found && currentVal !== found.name) {
+        store.set('/form/modal-class-name-field', found.name);
       }
     }
   }, [classModalOpen, selectedClassId]);
