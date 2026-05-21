@@ -79,13 +79,57 @@ export default function {PageName}Page() {
 ```
 
 ### Phase 7 — Component Flow Unit Testing (Vitest + MSW)
-Generate automated unit tests at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx` to verify component connections:
-1. Setup **MSW (Mock Service Worker)** handlers to intercept the REST `operationId`s or GraphQL resolver methods extracted from the manifest's `data_ref`s.
-2. Render the page component using `@testing-library/react` wrapped in the necessary providers (e.g., `QueryClientProvider`).
-3. Simulate user interactions defined in the manifest (e.g., `on_click` triggering a `behavior_ref`) using `@testing-library/user-event`.
-4. Assert that the correct mocked API endpoints are called and that the UI state updates correctly to ensure the full component flow is robustly connected.
-5. **Deterministic Test Execution**: Ensure all tests are executed in continuous integration / verification mode using `npx vitest run`.
-6. **Code Coverage DoD (≥ 70%)**: Run coverage with `npx vitest run --coverage`. The coverage report must show **≥ 70% line/branch/function coverage** across all page and registry files. Failing to meet this threshold constitutes a DoD violation — add or improve tests until coverage is satisfied before proceeding.
+Generate `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx`.
+
+**Four mandatory test patterns** — ALL must be present for every page:
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event'; // MUST use userEvent, NOT fireEvent
+import { JSONUIProvider, createStateStore } from '@json-render/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { server } from '@/mocks/server';
+import { http, HttpResponse } from 'msw';
+
+const store = createStateStore({ modals: {}, form: {} });
+const executeBehavior = vi.fn(); // spy on ALL behavior_ref calls
+const openModal = vi.fn((p) => { if (p?.id) store.set(`/modals/${p.id}`, true); });
+const handlers = { navigate: vi.fn(), openModal, executeBehavior };
+
+beforeEach(() => { store.set('/modals', {}); vi.clearAllMocks(); });
+
+// Pattern 1 — Render
+it('renders heading', async () => { /* findByRole('heading') */ });
+
+// Pattern 2 — Modal state via userEvent
+it('opens modal on click', async () => {
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: /建立/i }));
+  expect(store.get('/modals/form-modal')).toBe(true); // assert store state
+});
+
+// Pattern 3 — executeBehavior spy for mutating buttons
+it('save calls executeBehavior', async () => {
+  store.set('/modals/form-modal', true);
+  await userEvent.setup().click(await screen.findByRole('button', { name: /儲存/i }));
+  expect(executeBehavior).toHaveBeenCalledWith(expect.objectContaining({ ref: 'BehaviorRef' }));
+});
+
+// Pattern 4 — MSW intercept assertion
+it('fetches data on mount', async () => {
+  let called = false;
+  server.use(http.get('*/endpoint*', () => { called = true; return HttpResponse.json([]); }));
+  /* render then */ await screen.findByRole('heading');
+  expect(called).toBe(true);
+});
+```
+
+**Rules:**
+- `userEvent.setup()` + `await user.click()` — never bare `fireEvent`.
+- Assert `store.get('/modals/...')` after every modal-open interaction.
+- Assert `executeBehavior` spy for every save / delete / confirm button.
+- Assert MSW intercept for every `data_ref` in the manifest.
+- **Coverage DoD ≥ 70%**: `npx vitest run --coverage` — failing = DoD violation.
 
 ### Phase 8 — Production Build
 After all unit tests pass and coverage thresholds are met, execute the Vite production build:
