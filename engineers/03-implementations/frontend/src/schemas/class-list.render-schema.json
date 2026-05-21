@@ -140,7 +140,7 @@
           {
             "action": "navigate",
             "params": {
-              "to": "class-list-page"
+              "to": "grade-entry-board-page"
             }
           }
         ]
@@ -160,7 +160,7 @@
           {
             "action": "navigate",
             "params": {
-              "to": "class-list-page"
+              "to": "student-list-page"
             }
           }
         ]
@@ -180,7 +180,7 @@
           {
             "action": "navigate",
             "params": {
-              "to": "class-list-page"
+              "to": "grade-item-list-page"
             }
           }
         ]
@@ -280,18 +280,7 @@
         "checks": null,
         "validateOn": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "Create a new Class in a Semester",
-              "id": "modal-class-name-field"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "modal-submit-class-trigger": {
       "type": "Button",
@@ -301,7 +290,18 @@
         "variant": "primary",
         "disabled": null
       },
-      "children": []
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new Class in a Semester",
+              "id": "modal-submit-class-trigger"
+            }
+          }
+        ]
+      }
     },
     "class-form-modal": {
       "type": "Dialog",
@@ -343,18 +343,7 @@
         "checks": null,
         "validateOn": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "nielsen:error-prevention",
-              "id": "delete-class-keyword-input"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "confirm-delete-class-trigger": {
       "type": "Button",

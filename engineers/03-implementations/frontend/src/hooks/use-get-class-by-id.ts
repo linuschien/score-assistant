@@ -14,9 +14,10 @@ export const getClassByIdKeys = {
   detail: (id: string) => ['getClassById', id] as const,
 };
 
-export function useGetClassById(id: string) {
+export function useGetClassById(semesterId: string, id: string) {
   return useQuery({
     queryKey: getClassByIdKeys.detail(id),
-    queryFn: () => api.get<ClassResponse>(`/classes/${id}`),
+    queryFn: () => api.get<ClassResponse>(`/api/v1/semesters/${semesterId}/classes/${id}`),
+    enabled: !!semesterId && !!id,
   });
 }

@@ -4,9 +4,28 @@ let mockSemesters = [
   { id: '1', semesterName: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
 ];
 
+let mockClasses = [
+  { id: '1', semesterId: '1', className: '資訊三甲' },
+  { id: '2', semesterId: '1', className: '資訊三乙' },
+  { id: '3', semesterId: '2', className: '電子三甲' }
+];
+
 export function resetMockSemesters() {
   mockSemesters = [
     { id: '1', semesterName: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
+  ];
+  mockClasses = [
+    { id: '1', semesterId: '1', className: '資訊三甲' },
+    { id: '2', semesterId: '1', className: '資訊三乙' },
+    { id: '3', semesterId: '2', className: '電子三甲' }
+  ];
+}
+
+export function resetMockClasses() {
+  mockClasses = [
+    { id: '1', semesterId: '1', className: '資訊三甲' },
+    { id: '2', semesterId: '1', className: '資訊三乙' },
+    { id: '3', semesterId: '2', className: '電子三甲' }
   ];
 }
 
@@ -50,8 +69,53 @@ export const handlers = [
     mockSemesters = mockSemesters.filter(s => s.id !== params.id);
     return HttpResponse.json({ success: true });
   }),
-  http.get('*/classes/:id', () => {
-    return HttpResponse.json({ id: '1', name: '資訊三甲', studentCount: 38 });
+
+  // Class REST endpoints
+  http.get('*/semesters/:semesterId/classes/:id', ({ params }) => {
+    const cls = mockClasses.find(c => c.id === params.id);
+    if (cls) {
+      return HttpResponse.json({ id: cls.id, className: cls.className, name: cls.className, semesterId: cls.semesterId });
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+  http.post('*/semesters/:semesterId/classes', async ({ request, params }) => {
+    const body = await request.json() as any;
+    if (!body.class_name || !body.class_name.trim()) {
+      return HttpResponse.json(
+        { error: 'Request validation failed: class_name: 不能為空白' },
+        { status: 400 }
+      );
+    }
+    const newClass = {
+      id: String(mockClasses.length + 1),
+      semesterId: params.semesterId as string,
+      className: body.class_name,
+    };
+    mockClasses.push(newClass);
+    return HttpResponse.json({ id: newClass.id, className: newClass.className, name: newClass.className, semesterId: newClass.semesterId }, { status: 201 });
+  }),
+  http.put('*/semesters/:semesterId/classes/:id', async ({ request, params }) => {
+    const body = await request.json() as any;
+    if (!body.class_name || !body.class_name.trim()) {
+      return HttpResponse.json(
+        { error: 'Request validation failed: class_name: 不能為空白' },
+        { status: 400 }
+      );
+    }
+    const idx = mockClasses.findIndex(c => c.id === params.id);
+    if (idx !== -1) {
+      mockClasses[idx] = {
+        ...mockClasses[idx],
+        className: body.class_name
+      };
+      const cls = mockClasses[idx];
+      return HttpResponse.json({ id: cls.id, className: cls.className, name: cls.className, semesterId: cls.semesterId });
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+  http.delete('*/semesters/:semesterId/classes/:id', ({ params }) => {
+    mockClasses = mockClasses.filter(c => c.id !== params.id);
+    return HttpResponse.json({ success: true });
   }),
   
   // Fallback GraphQL collection mocks
@@ -62,12 +126,14 @@ export const handlers = [
       }
     });
   }),
-  graphql.query('listClasses', () => {
+  graphql.query('listClasses', ({ variables }) => {
+    const filter = variables.filter as { semesterId?: string } | undefined;
+    const filtered = filter?.semesterId
+      ? mockClasses.filter(c => c.semesterId === filter.semesterId)
+      : mockClasses;
     return HttpResponse.json({
       data: {
-        listClasses: [
-          { id: '1', name: '資訊三甲', studentCount: 38 }
-        ]
+        listClasses: filtered
       }
     });
   }),

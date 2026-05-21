@@ -56,6 +56,24 @@ public class GlobalRestExceptionHandler {
         return Mono.just(problem);
     }
 
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public Mono<ProblemDetail> handleConstraintViolation(jakarta.validation.ConstraintViolationException ex) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Constraint validation failed: " + ex.getMessage());
+        problem.setType(URI.create("urn:scoreassistant:error:validation"));
+        problem.setTitle("Validation Error");
+        return Mono.just(problem);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public Mono<ProblemDetail> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Database integrity violation: " + (ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage()));
+        problem.setType(URI.create("urn:scoreassistant:error:validation"));
+        problem.setTitle("Database Error");
+        return Mono.just(problem);
+    }
+
     @ExceptionHandler(Exception.class)
     public Mono<ProblemDetail> handleGeneric(Exception ex) {
         var problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,

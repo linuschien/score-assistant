@@ -11,9 +11,11 @@ export interface Classes {
 }
 
 const LISTCLASSES_QUERY = gql`
-  query listClasses($filter: ClassesFilterInput) {
+  query listClasses($filter: ClassFilterInput) {
     listClasses(filter: $filter) {
       id
+      semesterId
+      className
     }
   }
 `;

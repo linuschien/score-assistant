@@ -17,6 +17,6 @@ export const getSemesterByIdKeys = {
 export function useGetSemesterById(id: string) {
   return useQuery({
     queryKey: getSemesterByIdKeys.detail(id),
-    queryFn: () => api.get<SemesterResponse>(`/semesters/${id}`),
+    queryFn: () => api.get<SemesterResponse>(`/api/v1/semesters/${id}`),
   });
 }
