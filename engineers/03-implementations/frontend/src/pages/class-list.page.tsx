@@ -9,6 +9,13 @@ import { queryClient } from '@/lib/query-client';
 import { api, API_BASE } from '@/lib/api-client';
 
 // Register Class behaviors statically
+registerBehavior('Open Class Form Modal for Create', async (_ref, store) => {
+  store.set('/selected/classId', null);
+  store.set('/form', {});
+  store.set('/modals/class-form-modal', true);
+  return null;
+});
+
 registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
   const selectedClassId = store.get('/selected/classId');
   if (selectedClassId) {

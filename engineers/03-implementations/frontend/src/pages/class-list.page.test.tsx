@@ -93,7 +93,9 @@ describe('ClassListPage', () => {
 
       await user.click(await screen.findByRole('button', { name: /建立班級/i }));
 
-      expect(openModal).toHaveBeenCalledWith(expect.objectContaining({ id: 'class-form-modal' }));
+      expect(executeBehavior).toHaveBeenCalledWith(
+        expect.objectContaining({ ref: 'Open Class Form Modal for Create' })
+      );
       expect(store.get('/modals/class-form-modal')).toBe(true);
     });
 
