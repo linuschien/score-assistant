@@ -49,6 +49,21 @@
   --ring: 263.4 70% 50.4%;
 }
 
+/* Base body styles — critical for Radix portal elements (Dialog, Toast) that render
+   outside the app root div and don't inherit its text/bg colors */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
 /* Ensure mouse cursor changes to a pointer/hand on all clickable elements */
 button,
 [role="button"],

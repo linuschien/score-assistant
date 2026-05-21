@@ -208,79 +208,36 @@
         "label": "學期名稱",
         "name": "modal-semester-name-field",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "例：112-1 第一學期",
         "value": {
           "$bindState": "/form/modal-semester-name-field"
         },
         "checks": null,
         "validateOn": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "Create a new Semester",
-              "id": "modal-semester-name-field"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "modal-start-date-field": {
-      "type": "Input",
+      "type": "DatePicker",
       "props": {
         "id": "modal-start-date-field",
         "label": "起始日期",
         "name": "modal-start-date-field",
-        "type": null,
-        "placeholder": null,
-        "value": {
-          "$bindState": "/form/modal-start-date-field"
-        },
-        "checks": null,
-        "validateOn": null
+        "storePath": "/form/modal-start-date-field",
+        "disabled": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "Create a new Semester",
-              "id": "modal-start-date-field"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "modal-end-date-field": {
-      "type": "Input",
+      "type": "DatePicker",
       "props": {
         "id": "modal-end-date-field",
         "label": "結束日期",
         "name": "modal-end-date-field",
-        "type": null,
-        "placeholder": null,
-        "value": {
-          "$bindState": "/form/modal-end-date-field"
-        },
-        "checks": null,
-        "validateOn": null
+        "storePath": "/form/modal-end-date-field",
+        "disabled": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "Create a new Semester",
-              "id": "modal-end-date-field"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "modal-submit-semester-trigger": {
       "type": "Button",

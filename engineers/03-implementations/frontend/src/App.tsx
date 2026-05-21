@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSONUIProvider, createStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { Activity } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 // Import all generated pages
 import StudentListPage from '@/pages/student-list.page';
@@ -23,12 +24,71 @@ export const queryClient = new QueryClient({
   },
 });
 
-const globalStore = createStateStore({ modals: {} });
+const globalStore = createStateStore({ modals: {}, form: {}, data: {} });
 
-type PageKey = 'student-list' | 'home' | 'score-preview-dashboard' | 'semester-list' | 'grade-item-list' | 'grade-entry-board' | 'grade-weight-dashboard' | 'class-list';
+type PageKey =
+  | 'student-list'
+  | 'home'
+  | 'score-preview-dashboard'
+  | 'semester-list'
+  | 'grade-item-list'
+  | 'grade-entry-board'
+  | 'grade-weight-dashboard'
+  | 'class-list';
 
 interface AppProps {
   queryClient?: QueryClient;
+}
+
+const API_BASE = '/api/v1';
+
+// Maps behavior refs to REST API actions + toast feedback
+async function dispatchBehavior(ref: string, store: ReturnType<typeof createStateStore>) {
+  if (ref === 'Create a new Semester') {
+    const form = (store.get('/form') as Record<string, string>) || {};
+    const res = await fetch(`${API_BASE}/semesters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        semester_name: form['modal-semester-name-field'],
+        start_date: form['modal-start-date-field'],
+        end_date: form['modal-end-date-field'],
+      }),
+    });
+    if (!res.ok) throw new Error(`建立失敗：${res.status}`);
+    store.set('/form', {});
+    store.set('/modals/semester-form-modal', false);
+    return '學期已建立';
+  }
+
+  if (ref === 'Update a Semester') {
+    const form = (store.get('/form') as Record<string, string>) || {};
+    const id = store.get('/selected/semesterId') as string;
+    const res = await fetch(`${API_BASE}/semesters/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        semester_name: form['modal-semester-name-field'],
+        start_date: form['modal-start-date-field'],
+        end_date: form['modal-end-date-field'],
+      }),
+    });
+    if (!res.ok) throw new Error(`更新失敗：${res.status}`);
+    store.set('/form', {});
+    store.set('/modals/semester-form-modal', false);
+    return '學期已更新';
+  }
+
+  if (ref === 'Delete a Semester') {
+    const id = store.get('/selected/semesterId') as string;
+    const res = await fetch(`${API_BASE}/semesters/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`刪除失敗：${res.status}`);
+    store.set('/modals/delete-semester-confirm-dialog', false);
+    return '學期已刪除';
+  }
+
+  console.log('[executeBehavior] unhandled ref:', ref);
+  return null;
 }
 
 export default function App({ queryClient: customQueryClient }: AppProps) {
@@ -38,43 +98,76 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash) {
-        setActivePage(hash as PageKey);
-      }
+      if (hash) setActivePage(hash as PageKey);
     };
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const handleExecuteBehavior = useCallback(
+    async (params: any) => {
+      const ref = params?.ref as string;
+      if (!ref) return;
+      const loadingId = toast.loading('執行中…');
+      try {
+        const msg = await dispatchBehavior(ref, globalStore);
+        toast.dismiss(loadingId);
+        if (msg) toast.success(msg);
+      } catch (err: any) {
+        toast.dismiss(loadingId);
+        toast.error(err?.message || '操作失敗，請稍後再試');
+      }
+    },
+    []
+  );
+
   const renderActivePage = () => {
     switch (activePage) {
-      case 'student-list': return <StudentListPage />;
-      case 'home': return <HomePage />;
+      case 'student-list':            return <StudentListPage />;
+      case 'home':                    return <HomePage />;
       case 'score-preview-dashboard': return <ScorePreviewDashboardPage />;
-      case 'semester-list': return <SemesterListPage />;
-      case 'grade-item-list': return <GradeItemListPage />;
-      case 'grade-entry-board': return <GradeEntryBoardPage />;
-      case 'grade-weight-dashboard': return <GradeWeightDashboardPage />;
-      case 'class-list': return <ClassListPage />;
-      default: return <HomePage />;
+      case 'semester-list':           return <SemesterListPage />;
+      case 'grade-item-list':         return <GradeItemListPage />;
+      case 'grade-entry-board':       return <GradeEntryBoardPage />;
+      case 'grade-weight-dashboard':  return <GradeWeightDashboardPage />;
+      case 'class-list':              return <ClassListPage />;
+      default:                        return <HomePage />;
     }
   };
 
   return (
     <QueryClientProvider client={localQueryClient}>
-      <JSONUIProvider 
+      <JSONUIProvider
         registry={componentRegistry}
         store={globalStore}
         handlers={{
-          navigate: (params: any) => { if (params?.to) window.location.hash = '#' + params.to.replace('-page', ''); },
-          openModal: (params: any) => { if (params?.id) globalStore.set(`/modals/${params.id}`, true); },
-          executeBehavior: (params: any) => { console.log('Executing behavior:', params?.ref); }
+          navigate: (params: any) => {
+            if (params?.to) window.location.hash = '#' + params.to.replace('-page', '');
+          },
+          openModal: (params: any) => {
+            if (params?.id) globalStore.set(`/modals/${params.id}`, true);
+          },
+          executeBehavior: handleExecuteBehavior,
         } as any}
       >
+        {/* Sonner Toast — dark theme matching app palette */}
+        <Toaster
+          theme="dark"
+          position="top-right"
+          richColors
+          toastOptions={{
+            style: {
+              background: 'hsl(215 27.9% 16.9%)',
+              border: '1px solid hsl(215 27.9% 25%)',
+              color: 'hsl(210 20% 98%)',
+            },
+          }}
+        />
+
         <div className="flex flex-col h-screen bg-[#080b11] text-slate-100 font-sans overflow-hidden">
           <header className="sticky top-0 z-40 bg-[#0d131f]/90 backdrop-blur-md border-b border-slate-800/60 px-6 sm:px-8 py-3 sm:py-4 flex justify-between items-center shrink-0">
-            <div 
+            <div
               className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => { window.location.hash = '#home'; }}
             >
@@ -82,13 +175,19 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
                 <Activity className="h-5 w-5 text-white" />
               </div>
               <div className="flex items-baseline space-x-2">
-                <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">Score Assistant</h1>
-                <p className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase hidden sm:block">Teacher Console</p>
+                <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">
+                  Score Assistant
+                </h1>
+                <p className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase hidden sm:block">
+                  Teacher Console
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-6">
-              <span className="text-xs text-slate-500 font-mono hidden md:inline-block">System Time: {new Date().toLocaleDateString('zh-TW')}</span>
+              <span className="text-xs text-slate-500 font-mono hidden md:inline-block">
+                System Time: {new Date().toLocaleDateString('zh-TW')}
+              </span>
               <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-200 leading-tight">Linus Chien</p>
@@ -105,9 +204,7 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
           </header>
 
           <main className="flex-1 overflow-y-auto bg-[#07090e] relative flex flex-col">
-            <div className="flex-1">
-              {renderActivePage()}
-            </div>
+            <div className="flex-1">{renderActivePage()}</div>
           </main>
         </div>
       </JSONUIProvider>
