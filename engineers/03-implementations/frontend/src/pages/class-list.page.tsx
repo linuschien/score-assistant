@@ -119,7 +119,7 @@ export default function ClassListPage() {
         }
       }
     }
-  }, [classModalOpen, selectedClassId, store]);
+  }, [classModalOpen, selectedClassId]);
 
   return <Renderer spec={spec as any} registry={componentRegistry} />;
 }

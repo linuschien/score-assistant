@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSONUIProvider, createStateStore } from '@json-render/react';
@@ -108,8 +108,11 @@ describe('ClassListPage', () => {
     it('calls executeBehavior with "Create a new Class in a Semester" on 儲存', async () => {
       const user = userEvent.setup();
       store.set('/modals/class-form-modal', true);
-      store.set('/form/modal-class-name-field', '資訊三甲');
       renderPage();
+
+      act(() => {
+        store.set('/form/modal-class-name-field', '資訊三甲');
+      });
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
 
@@ -121,8 +124,11 @@ describe('ClassListPage', () => {
     it('closes form modal after 儲存 is clicked', async () => {
       const user = userEvent.setup();
       store.set('/modals/class-form-modal', true);
-      store.set('/form/modal-class-name-field', '資訊三甲');
       renderPage();
+
+      act(() => {
+        store.set('/form/modal-class-name-field', '資訊三甲');
+      });
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
 
