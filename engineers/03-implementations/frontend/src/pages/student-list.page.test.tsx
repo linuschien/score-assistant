@@ -363,4 +363,63 @@ describe('StudentListPage', () => {
       createElementSpy.mockRestore();
     });
   });
+
+  // ── Search & Filter: 搜尋與篩選 ──────────────────────────────────────────
+  describe('Search & Filter', () => {
+    it('calls Filter Students List behavior when search button is clicked', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      const searchInput = await screen.findByLabelText(/搜尋座號或姓名/i);
+      await user.type(searchInput, '王小明');
+      
+      const searchButton = await screen.findByRole('button', { name: /搜尋/i });
+      await user.click(searchButton);
+
+      expect(executeBehavior).toHaveBeenCalledWith(
+        expect.objectContaining({ ref: 'Filter Students List' })
+      );
+    });
+
+    it('filters student list by name or seat number', async () => {
+      mockStudents = [
+        { id: '1', classId: '1', studentNumber: '01', studentName: '王小明' },
+        { id: '2', classId: '1', studentNumber: '02', studentName: '李小美' }
+      ];
+
+      renderPage();
+
+      // Verify both are present originally
+      expect(await screen.findByText('王小明')).toBeInTheDocument();
+      expect(await screen.findByText('李小美')).toBeInTheDocument();
+
+      // Perform filtering by setting keyword and executing the behavior
+      act(() => {
+        store.set('/form/student-search-field', '小美');
+      });
+      await act(async () => {
+        await executeRegisteredBehavior('Filter Students List', store);
+      });
+
+      // Verify only '李小美' matches
+      await waitFor(() => {
+        expect(screen.queryByText('王小明')).not.toBeInTheDocument();
+        expect(screen.getByText('李小美')).toBeInTheDocument();
+      });
+
+      // Clear search
+      act(() => {
+        store.set('/form/student-search-field', '');
+      });
+      await act(async () => {
+        await executeRegisteredBehavior('Filter Students List', store);
+      });
+
+      // Verify both are restored
+      await waitFor(() => {
+        expect(screen.getByText('王小明')).toBeInTheDocument();
+        expect(screen.getByText('李小美')).toBeInTheDocument();
+      });
+    });
+  });
 });

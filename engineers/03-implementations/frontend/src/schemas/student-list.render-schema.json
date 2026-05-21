@@ -208,9 +208,31 @@
       "on": {
         "press": [
           {
-            "action": "navigate",
+            "action": "executeBehavior",
             "params": {
-              "to": "student-list-page"
+              "ref": "Filter Students List",
+              "id": "student-search-field"
+            }
+          }
+        ]
+      }
+    },
+    "search-student-button": {
+      "type": "Button",
+      "props": {
+        "id": "search-student-button",
+        "label": "搜尋",
+        "variant": "primary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Filter Students List",
+              "id": "search-student-button"
             }
           }
         ]
@@ -223,7 +245,8 @@
         "variant": "filter-bar"
       },
       "children": [
-        "student-search-field"
+        "student-search-field",
+        "search-student-button"
       ]
     },
     "edit-student-trigger": {

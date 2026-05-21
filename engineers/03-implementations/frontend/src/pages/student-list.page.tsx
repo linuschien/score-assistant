@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Renderer, useStateStore } from '@json-render/react';
+import { useEffect, useRef } from 'react';
+import { Renderer, useStateStore, useStateValue } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { useListStudents } from '@/hooks/use-list-students';
 import { useGetClassById } from '@/hooks/use-get-class-by-id';
@@ -77,14 +77,44 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
   const semesterId = store.get('/selected/semesterId') as string;
   const classId = store.get('/selected/classId') as string;
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string | null>((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.csv';
+
+    let resolved = false;
+
+    const cleanup = () => {
+      window.removeEventListener('focus', onWindowFocus);
+    };
+
+    const handleResolve = (val: string | null) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(val);
+    };
+
+    const handleReject = (err: any) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      reject(err);
+    };
+
+    const onWindowFocus = () => {
+      // Give change event some time to fire first
+      setTimeout(() => {
+        if (!resolved) {
+          handleResolve(null);
+        }
+      }, 500);
+    };
+
     input.onchange = async (event: any) => {
       const file = event.target?.files?.[0];
       if (!file) {
-        reject(new Error('未選擇檔案'));
+        handleResolve(null);
         return;
       }
 
@@ -105,21 +135,35 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
         }
 
         queryClient.invalidateQueries({ queryKey: ['listStudents'] });
-        resolve('學生資料匯入成功');
+        handleResolve('學生資料匯入成功');
       } catch (err: any) {
-        reject(new Error(err.message || '匯入失敗'));
+        handleReject(new Error(err.message || '匯入失敗'));
       }
     };
+
+    input.oncancel = () => {
+      handleResolve(null);
+    };
+
+    // Fallback for cancel detection via window focus
+    window.addEventListener('focus', onWindowFocus);
+
     input.click();
   });
 });
 
+registerBehavior('Filter Students List', async (_ref, store) => {
+  const keyword = (store.get('/form/student-search-field') as string || '').trim().toLowerCase();
+  store.set('/selected/searchQuery', keyword);
+  return null;
+});
+
 export default function StudentListPage() {
   const store = useStateStore();
-  
-  // Get active class ID and semester ID from store
-  const classId = store.get('/selected/classId') as string;
-  const semesterId = store.get('/selected/semesterId') as string;
+
+  // Get active class ID and semester ID reactively from store
+  const classId = useStateValue('/selected/classId') as string;
+  const semesterId = useStateValue('/selected/semesterId') as string;
 
   // Query contexts if available
   const { data: semesterData } = useGetSemesterById(semesterId || '');
@@ -155,20 +199,39 @@ export default function StudentListPage() {
     }
   }, [classData, classId, store]);
 
-  // Sync students list into store
+  // Reset search keyword and active search query on class change using a ref to prevent re-triggering on store mutations
+  const prevClassIdRef = useRef(classId);
+  useEffect(() => {
+    if (prevClassIdRef.current !== classId) {
+      store.set('/selected/searchQuery', '');
+      store.set('/form/student-search-field', '');
+      prevClassIdRef.current = classId;
+    }
+  }, [classId]);
+
+  // Sync and filter students list into store based on active searchQuery reactively
+  const searchQuery = useStateValue('/selected/searchQuery') as string || '';
+
   useEffect(() => {
     if (data) {
-      const mapped = data.map((s: any) => ({
+      const keyword = searchQuery.trim().toLowerCase();
+      let mapped = data.map((s: any) => ({
         id: s.id,
         studentNumber: String(s.studentNumber),
         name: s.studentName,
       }));
+      if (keyword) {
+        mapped = mapped.filter((s: any) =>
+          s.studentNumber.toLowerCase().includes(keyword) ||
+          s.name.toLowerCase().includes(keyword)
+        );
+      }
       const current = store.get('/data/listStudents');
       if (JSON.stringify(current) !== JSON.stringify(mapped)) {
         store.set('/data/listStudents', mapped);
       }
     }
-  }, [data, store]);
+  }, [data, searchQuery, store]);
 
   // Decoupled Student Form Modal Logic:
   // Populate the student-form-modal inputs dynamically based on selectedStudentId

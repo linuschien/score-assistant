@@ -1,6 +1,24 @@
-import { render, screen } from '@testing-library/react';
+import { render as tlRender, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { JSONUIProvider, createStateStore } from '@json-render/react';
 import { componentRegistry } from './component-registry';
+
+function render(ui: React.ReactElement) {
+  const store = createStateStore({});
+  const result = tlRender(
+    <JSONUIProvider store={store} registry={componentRegistry} handlers={{}}>
+      {ui}
+    </JSONUIProvider>
+  );
+  return {
+    ...result,
+    rerender: (newUi: React.ReactElement) => result.rerender(
+      <JSONUIProvider store={store} registry={componentRegistry} handlers={{}}>
+        {newUi}
+      </JSONUIProvider>
+    )
+  };
+}
 
 describe('ComponentRegistry custom components', () => {
   it('renders MetricCard successfully with and without values', () => {
