@@ -5,8 +5,7 @@ import { useListSemesters } from '@/hooks/use-list-semesters';
 import spec from '@/schemas/semester-list.render-schema.json';
 import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
-
-const API_BASE = '/api/v1';
+import { api, API_BASE } from '@/lib/api-client';
 
 // Register Semester behaviors statically
 registerBehavior('Create a new Semester', async (_ref, store) => {
@@ -16,16 +15,11 @@ registerBehavior('Create a new Semester', async (_ref, store) => {
   }
 
   const form = (store.get('/form') as Record<string, string>) || {};
-  const res = await fetch(`${API_BASE}/semesters`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      semester_name: form['modal-semester-name-field'],
-      start_date: form['modal-start-date-field'],
-      end_date: form['modal-end-date-field'],
-    }),
+  await api.post(`${API_BASE}/semesters`, {
+    semester_name: form['modal-semester-name-field'],
+    start_date: form['modal-start-date-field'],
+    end_date: form['modal-end-date-field'],
   });
-  if (!res.ok) throw new Error(`建立失敗：${res.status}`);
   store.set('/form', {});
   store.set('/modals/semester-form-modal', false);
   queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
@@ -35,16 +29,11 @@ registerBehavior('Create a new Semester', async (_ref, store) => {
 registerBehavior('Update a Semester', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
   const id = store.get('/selected/semesterId') as string;
-  const res = await fetch(`${API_BASE}/semesters/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      semester_name: form['modal-semester-name-field'],
-      start_date: form['modal-start-date-field'],
-      end_date: form['modal-end-date-field'],
-    }),
+  await api.put(`${API_BASE}/semesters/${id}`, {
+    semester_name: form['modal-semester-name-field'],
+    start_date: form['modal-start-date-field'],
+    end_date: form['modal-end-date-field'],
   });
-  if (!res.ok) throw new Error(`更新失敗：${res.status}`);
   store.set('/form', {});
   store.set('/modals/semester-form-modal', false);
   queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
@@ -62,8 +51,7 @@ registerBehavior('Delete a Semester', async (_ref, store) => {
     throw new Error('輸入的學期名稱不相符，無法刪除');
   }
 
-  const res = await fetch(`${API_BASE}/semesters/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error(`刪除失敗：${res.status}`);
+  await api.delete(`${API_BASE}/semesters/${id}`);
   store.set('/form', {});
   store.set('/modals/delete-semester-confirm-dialog', false);
   queryClient.invalidateQueries({ queryKey: ['listSemesters'] });
