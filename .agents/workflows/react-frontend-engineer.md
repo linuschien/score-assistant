@@ -79,57 +79,8 @@ export default function {PageName}Page() {
 ```
 
 ### Phase 7 — Component Flow Unit Testing (Vitest + MSW)
-Generate `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx`.
-
-**Four mandatory test patterns** — ALL must be present for every page:
-
-```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event'; // MUST use userEvent, NOT fireEvent
-import { JSONUIProvider, createStateStore } from '@json-render/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { server } from '@/mocks/server';
-import { http, HttpResponse } from 'msw';
-
-const store = createStateStore({ modals: {}, form: {} });
-const executeBehavior = vi.fn(); // spy on ALL behavior_ref calls
-const openModal = vi.fn((p) => { if (p?.id) store.set(`/modals/${p.id}`, true); });
-const handlers = { navigate: vi.fn(), openModal, executeBehavior };
-
-beforeEach(() => { store.set('/modals', {}); vi.clearAllMocks(); });
-
-// Pattern 1 — Render
-it('renders heading', async () => { /* findByRole('heading') */ });
-
-// Pattern 2 — Modal state via userEvent
-it('opens modal on click', async () => {
-  const user = userEvent.setup();
-  await user.click(await screen.findByRole('button', { name: /建立/i }));
-  expect(store.get('/modals/form-modal')).toBe(true); // assert store state
-});
-
-// Pattern 3 — executeBehavior spy for mutating buttons
-it('save calls executeBehavior', async () => {
-  store.set('/modals/form-modal', true);
-  await userEvent.setup().click(await screen.findByRole('button', { name: /儲存/i }));
-  expect(executeBehavior).toHaveBeenCalledWith(expect.objectContaining({ ref: 'BehaviorRef' }));
-});
-
-// Pattern 4 — MSW intercept assertion
-it('fetches data on mount', async () => {
-  let called = false;
-  server.use(http.get('*/endpoint*', () => { called = true; return HttpResponse.json([]); }));
-  /* render then */ await screen.findByRole('heading');
-  expect(called).toBe(true);
-});
-```
-
-**Rules:**
-- `userEvent.setup()` + `await user.click()` — never bare `fireEvent`.
-- Assert `store.get('/modals/...')` after every modal-open interaction.
-- Assert `executeBehavior` spy for every save / delete / confirm button.
-- Assert MSW intercept for every `data_ref` in the manifest.
-- **Coverage DoD ≥ 70%**: `npx vitest run --coverage` — failing = DoD violation.
+> **Invoke Skill**: Read `.agents/skills/vitest-msw-tester/SKILL.md`.  
+> Generate `engineers/03-implementations/frontend/src/pages/{ui_id}.page.test.tsx` following the skill's mandatory harness and four test patterns (Render, Query, Modal+executeBehavior, Row Actions). All four patterns must be present. Run `npx vitest run --coverage` — **≥ 70% line/branch/function coverage is a hard DoD gate**.
 
 ### Phase 8 — Production Build
 After all unit tests pass and coverage thresholds are met, execute the Vite production build:
