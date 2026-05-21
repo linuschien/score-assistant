@@ -190,7 +190,7 @@ Transform the UI Manifest's `root_element` tree directly into a flat spec tree m
 - **Strip Internal Fields**: Strip `ui_id`, `domain_module` from output.
 - **Zod Verification Phase (DoD)**: After generating any `*.render-schema.json`, run the validation script:
   ```bash
-  node .agents/skills/json-render-transpiler/scripts/validate-render-schema.mjs \
+  node .agents/skills/json-render-transpiler/scripts/validate-render-schema.cjs \
     engineers/03-implementations/frontend/src/schemas/<ui_id>.render-schema.json
   ```
   The script validates every `@json-render/shadcn` element against its Zod prop schema and reports failures per element. **Any `❌ FAIL` constitutes a DoD violation — fix all errors before committing.**

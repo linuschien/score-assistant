@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// validate-render-schema.mjs
-// Usage: node .agents/skills/json-render-transpiler/scripts/validate-render-schema.mjs \
+// validate-render-schema.cjs
+// Usage: node .agents/skills/json-render-transpiler/scripts/validate-render-schema.cjs \
 //              <schema-file.json> [frontend-dir]
 //
 // Validates every element in a *.render-schema.json against the Zod schemas
@@ -8,14 +8,15 @@
 //
 // Exit code 0 = all pass, 1 = validation errors found.
 
-import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+'use strict';
+
+const { readFileSync, existsSync } = require('fs');
+const { resolve } = require('path');
 
 const [,, schemaFile, frontendDir = 'engineers/03-implementations/frontend'] = process.argv;
 
 if (!schemaFile) {
-  console.error('Usage: node validate-render-schema.mjs <schema-file.json> [frontend-dir]');
+  console.error('Usage: node validate-render-schema.cjs <schema-file.json> [frontend-dir]');
   process.exit(1);
 }
 
@@ -29,26 +30,25 @@ try {
   process.exit(1);
 }
 
-// Load shadcnComponentDefinitions from the frontend node_modules
+// Load shadcnComponentDefinitions via CJS require
 const catalogPath = resolve(
   process.cwd(),
   frontendDir,
-  'node_modules/@json-render/shadcn/dist/catalog.mjs'
+  'node_modules/@json-render/shadcn/dist/catalog.js'
 );
 
-let shadcnComponentDefinitions;
-try {
-  const mod = await import(pathToFileURL(catalogPath).href);
-  shadcnComponentDefinitions = mod.shadcnComponentDefinitions;
-} catch (e) {
-  console.error(`❌ Cannot load @json-render/shadcn catalog from: ${catalogPath}\n${e.message}`);
+if (!existsSync(catalogPath)) {
+  console.error(`❌ Cannot find catalog at: ${catalogPath}`);
+  console.error(`   Run: cd ${frontendDir} && npm install`);
   process.exit(1);
 }
 
+const { shadcnComponentDefinitions } = require(catalogPath);
 const availableKeys = new Set(Object.keys(shadcnComponentDefinitions));
 
 console.log('========================================================');
 console.log(`  Validating: ${schemaFile}`);
+console.log(`  Against: @json-render/shadcn catalog (${availableKeys.size} components)`);
 console.log('========================================================\n');
 
 const elements = renderSchema.elements ?? {};
@@ -66,7 +66,7 @@ for (const [elementId, element] of Object.entries(elements)) {
 
   totalChecked++;
   const definition = shadcnComponentDefinitions[componentKey];
-  const zodSchema = definition?.props;
+  const zodSchema = definition && definition.props;
 
   if (!zodSchema) {
     console.log(`⚠️  WARN  [${elementId}] type="${componentKey}" — no props schema in catalog`);
@@ -76,7 +76,7 @@ for (const [elementId, element] of Object.entries(elements)) {
   // Pre-process: replace $bindState/$bindItem runtime expressions with null
   // to avoid false-positive Zod failures on bound fields.
   const normalizedProps = Object.fromEntries(
-    Object.entries(element.props ?? {}).map(([k, v]) => {
+    Object.entries(element.props || {}).map(([k, v]) => {
       if (v !== null && typeof v === 'object' && ('$bindState' in v || '$bindItem' in v)) {
         return [k, null];
       }
