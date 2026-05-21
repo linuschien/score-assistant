@@ -12,25 +12,25 @@ Converts a validated UI Manifest directly into the flat spec tree consumed by `<
 
 ## 🔍 Step 0 — Verify the Actual Component Catalog FIRST
 
-**Before resolving any component key**, you MUST confirm what `@json-render/shadcn` actually exports by reading the package type definitions. Do NOT assume — always verify.
-
-Run the following to get the authoritative list of available components:
+**Before resolving any component key**, run the catalog verification script from the workspace root. Do NOT assume — always verify.
 
 ```bash
-# 1. All exported component implementations (shadcnComponents keys):
-grep -n "^    [A-Z]" node_modules/@json-render/shadcn/dist/index.d.ts
-
-# 2. All Zod-validated prop schemas (shadcnComponentDefinitions keys):
-grep -n "^    [A-Z]" node_modules/@json-render/shadcn/dist/catalog.d.ts
-
-# 3. Specific component's prop shape (example: Input):
-sed -n '/^    Input:/,/^    [A-Z]/p' node_modules/@json-render/shadcn/dist/catalog.d.ts | head -40
-
-# 4. Specific component's prop shape (example: Dialog):
-sed -n '/^    Dialog:/,/^    [A-Z]/p' node_modules/@json-render/shadcn/dist/catalog.d.ts | head -40
+bash .agents/skills/json-render-transpiler/scripts/verify-catalog.sh [frontend-dir]
+# Default frontend-dir: engineers/03-implementations/frontend
 ```
 
-> **CRITICAL**: If a component name does NOT appear in both `index.d.ts` (runtime) and `catalog.d.ts` (schema), it is NOT available in `@json-render/shadcn`. You MUST NOT map any UI Manifest element to it. Use the custom registry fallback instead.
+The script reads `node_modules/@json-render/shadcn/dist/index.d.ts` and `catalog.d.ts` and prints:
+- All available runtime components (`shadcnComponents` keys)
+- All Zod-validated prop schemas (`shadcnComponentDefinitions` keys)
+- Any runtime-only components without a schema
+
+To inspect a specific component's prop shape:
+```bash
+sed -n '/^    Input:/,/^    [A-Z]/p' \
+  engineers/03-implementations/frontend/node_modules/@json-render/shadcn/dist/catalog.d.ts | head -40
+```
+
+> **CRITICAL**: If a component does NOT appear in both `index.d.ts` and `catalog.d.ts`, it is NOT available in `@json-render/shadcn`. Do NOT map any UI Manifest element to it. Use the custom registry fallback instead.
 
 ### ✅ Verified `@json-render/shadcn` Component List (as of v0.19.x)
 
@@ -188,7 +188,13 @@ Transform the UI Manifest's `root_element` tree directly into a flat spec tree m
   @source "../node_modules/@json-render/shadcn/dist/**/*.js";
   ```
 - **Strip Internal Fields**: Strip `ui_id`, `domain_module` from output.
-- **Zod Verification Phase (DoD)**: After generating any `*.render-schema.json`, run the Zod validators from `shadcnComponentDefinitions` against every element using a `@json-render/shadcn` preset. Any validation failure = transpilation failure.
+- **Zod Verification Phase (DoD)**: After generating any `*.render-schema.json`, run the validation script:
+  ```bash
+  node .agents/skills/json-render-transpiler/scripts/validate-render-schema.mjs \
+    engineers/03-implementations/frontend/src/schemas/<ui_id>.render-schema.json
+  ```
+  The script validates every `@json-render/shadcn` element against its Zod prop schema and reports failures per element. **Any `❌ FAIL` constitutes a DoD violation — fix all errors before committing.**
+- **`$bindState` / `$bindItem` Binding Expressions**: These runtime binding objects (e.g., `{ "$bindState": "/form/fieldName" }`) are resolved at runtime by `@json-render/react` — they are NOT plain string values. Zod will report `"Invalid input: expected string, received object"` for bound fields. This is a known false positive. The validation script reports these as `❌ FAIL` but they are acceptable **only when the binding object is the sole value**. To suppress false positives, pre-process the props before Zod validation: replace any `{ "$bindState": "..." }` or `{ "$bindItem": "..." }` value with `null` before calling `safeParse()`.
 
 ---
 
