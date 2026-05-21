@@ -290,7 +290,18 @@
         "variant": "primary",
         "disabled": null
       },
-      "children": []
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new Semester",
+              "id": "modal-submit-semester-trigger"
+            }
+          }
+        ]
+      }
     },
     "semester-form-modal": {
       "type": "Dialog",
