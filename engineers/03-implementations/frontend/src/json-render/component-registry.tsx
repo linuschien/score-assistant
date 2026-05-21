@@ -32,15 +32,14 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
           // Skip semester and class since they are handled page-locally
           if (
             label.includes('學期') || id.includes('semester') ||
-            label.includes('班級') || id.includes('class')
+            label.includes('班級') || id.includes('class') ||
+            label.includes('學生') || id.includes('student')
           ) {
             // Handled page-locally
           } else {
             const selected = store.get('/selected') || {};
             const updatedSelected = { ...selected };
-            if (label.includes('學生') || id.includes('student')) {
-              updatedSelected.studentId = null;
-            } else if (label.includes('成績項目') || id.includes('grade-item') || id.includes('gradeItem')) {
+            if (label.includes('成績項目') || id.includes('grade-item') || id.includes('gradeItem')) {
               updatedSelected.gradeItemId = null;
             } else {
               Object.keys(updatedSelected).forEach((k) => {

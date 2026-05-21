@@ -11,9 +11,12 @@ export interface Students {
 }
 
 const LISTSTUDENTS_QUERY = gql`
-  query listStudents($filter: StudentsFilterInput) {
+  query listStudents($filter: StudentFilterInput) {
     listStudents(filter: $filter) {
       id
+      classId
+      studentNumber
+      studentName
     }
   }
 `;
