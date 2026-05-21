@@ -79,6 +79,7 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
           props.variant = 'default';
         }
       }
+      props['data-variant'] = props.variant;
     }
 
     return React.createElement(Comp, {

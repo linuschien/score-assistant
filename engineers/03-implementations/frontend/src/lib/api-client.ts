@@ -1,10 +1,15 @@
 export const API_BASE = '/api/v1';
 
+const handleResponse = async <T>(res: Response, errorMsg: string): Promise<T> => {
+  if (!res.ok) throw new Error(`${errorMsg}：${res.status}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : ({} as T);
+};
+
 export const api = {
   get: async <T>(url: string, options?: any): Promise<T> => {
     const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`請求失敗：${res.status}`);
-    return res.json();
+    return handleResponse<T>(res, '請求失敗');
   },
   post: async <T>(url: string, body?: any): Promise<T> => {
     const res = await fetch(url, {
@@ -12,8 +17,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`建立失敗：${res.status}`);
-    return res.json();
+    return handleResponse<T>(res, '建立失敗');
   },
   put: async <T>(url: string, body?: any): Promise<T> => {
     const res = await fetch(url, {
@@ -21,13 +25,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`更新失敗：${res.status}`);
-    return res.json();
+    return handleResponse<T>(res, '更新失敗');
   },
   delete: async <T>(url: string): Promise<T> => {
     const res = await fetch(url, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`刪除失敗：${res.status}`);
-    return res.json();
+    return handleResponse<T>(res, '刪除失敗');
   }
 };
 
