@@ -16,11 +16,11 @@ const MOCK_GRADE_ITEMS_INITIAL = [
     id: '1',
     classId: '1',
     itemName: '期中考',
-    itemType: '考試',
+    itemType: 'ASSIGNMENT',
     itemDate: '2026-11-01',
     itemDescription: '期中學科測驗',
     maxScore: 100,
-    weight: 30,
+    weight: 0.3,
   },
 ];
 
@@ -50,49 +50,57 @@ function setupMocks() {
     }),
 
     http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
-      const body = (await request.json()) as any;
-      if (!body.item_name || !body.item_name.trim()) {
-        return HttpResponse.json(
-          { error: 'Request validation failed: item_name: 不能為空白' },
-          { status: 400 }
-        );
-      }
-      const newGradeItem = {
-        id: String(mockGradeItems.length + 1),
-        classId: params.classId as string,
-        itemName: body.item_name,
-        itemType: body.item_type || '其他',
-        itemDate: body.item_date || '',
-        itemDescription: body.item_description || '',
-        maxScore: body.max_score || 0,
-        weight: body.weight || 0,
-      };
-      mockGradeItems.push(newGradeItem);
-      return HttpResponse.json(newGradeItem, { status: 201 });
-    }),
-
-    http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
-      const body = (await request.json()) as any;
-      if (!body.item_name || !body.item_name.trim()) {
-        return HttpResponse.json(
-          { error: 'Request validation failed: item_name: 不能為空白' },
-          { status: 400 }
-        );
-      }
-      const idx = mockGradeItems.findIndex((gi) => gi.id === params.gradeItemId);
-      if (idx !== -1) {
-        mockGradeItems[idx] = {
-          ...mockGradeItems[idx],
+      try {
+        const body = (await request.json()) as any;
+        if (!body.item_name || !body.item_name.trim()) {
+          return HttpResponse.json(
+            { error: 'Request validation failed: item_name: 不能為空白' },
+            { status: 400 }
+          );
+        }
+        const newGradeItem = {
+          id: String(mockGradeItems.length + 1),
+          classId: params.classId as string,
           itemName: body.item_name,
-          itemType: body.item_type || '其他',
+          itemType: body.item_type || 'OTHER',
           itemDate: body.item_date || '',
           itemDescription: body.item_description || '',
           maxScore: body.max_score || 0,
           weight: body.weight || 0,
         };
-        return HttpResponse.json(mockGradeItems[idx]);
+        mockGradeItems.push(newGradeItem);
+        return HttpResponse.json(newGradeItem, { status: 201 });
+      } catch (err) {
+        return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
       }
-      return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+    }),
+
+    http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
+      try {
+        const body = (await request.json()) as any;
+        if (!body.item_name || !body.item_name.trim()) {
+          return HttpResponse.json(
+            { error: 'Request validation failed: item_name: 不能為空白' },
+            { status: 400 }
+          );
+        }
+        const idx = mockGradeItems.findIndex((gi) => gi.id === params.gradeItemId);
+        if (idx !== -1) {
+          mockGradeItems[idx] = {
+            ...mockGradeItems[idx],
+            itemName: body.item_name,
+            itemType: body.item_type || 'OTHER',
+            itemDate: body.item_date || '',
+            itemDescription: body.item_description || '',
+            maxScore: body.max_score || 0,
+            weight: body.weight || 0,
+          };
+          return HttpResponse.json(mockGradeItems[idx]);
+        }
+        return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+      } catch (err) {
+        return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      }
     }),
 
     http.delete('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', ({ params }) => {
@@ -184,7 +192,7 @@ describe('GradeItemListPage', () => {
       const dialog = await screen.findByRole('dialog');
       expect(dialog).toBeInTheDocument();
       expect(await screen.findByLabelText(/^項目名稱$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^項目類型$/)).toBeInTheDocument();
+      expect(await screen.findByText(/^項目類型$/)).toBeInTheDocument();
       expect(await screen.findByLabelText(/^日期$/)).toBeInTheDocument();
       expect(await screen.findByLabelText(/^說明$/)).toBeInTheDocument();
       expect(await screen.findByLabelText(/^滿分$/)).toBeInTheDocument();
@@ -234,7 +242,7 @@ describe('GradeItemListPage', () => {
       const result = await executeRegisteredBehavior('Create a new GradeItem', store);
       expect(result).toBe('成績項目已建立');
       expect(mockGradeItems).toContainEqual(
-        expect.objectContaining({ itemName: '作業一', itemType: '作業', maxScore: 100, weight: 10 })
+        expect.objectContaining({ itemName: '作業一', itemType: 'ASSIGNMENT', maxScore: 100, weight: 0.1 })
       );
       expect(store.get('/modals/grade-item-form-modal')).toBe(false);
     });
@@ -257,7 +265,7 @@ describe('GradeItemListPage', () => {
       // Verify that the page-level effect has reactive synchronized values loaded
       await waitFor(() => {
         expect(store.get('/form/modal-item-name-field')).toBe('期中考');
-        expect(store.get('/form/modal-item-type-selection')).toBe('考試');
+        expect(store.get('/form/modal-item-type-selection')).toBe('作業');
         expect(store.get('/form/modal-max-score-field')).toBe(100);
         expect(store.get('/form/modal-weight-field')).toBe(30);
       });
@@ -274,7 +282,7 @@ describe('GradeItemListPage', () => {
       const result = await executeRegisteredBehavior('Create a new GradeItem', store);
       expect(result).toBe('成績項目已更新');
       expect(mockGradeItems.find(gi => gi.id === '1')).toEqual(
-        expect.objectContaining({ itemName: '期中大考', maxScore: 120, weight: 35 })
+        expect.objectContaining({ itemName: '期中大考', itemType: 'ASSIGNMENT', maxScore: 120, weight: 0.35 })
       );
     });
   });
@@ -342,13 +350,13 @@ describe('GradeItemListPage', () => {
       renderPage();
 
       act(() => {
-        store.set('/form/item-type-filter', '考試');
+        store.set('/form/item-type-filter', '作業');
         store.set('/form/item-date-filter', '2026-11-01');
       });
 
       await executeRegisteredBehavior('Apply Grade Item Filters', store);
 
-      expect(store.get('/selected/filterType')).toBe('考試');
+      expect(store.get('/selected/filterType')).toBe('作業');
       expect(store.get('/selected/filterDate')).toBe('2026-11-01');
 
       // Verify that list shows the matching item
@@ -363,7 +371,7 @@ describe('GradeItemListPage', () => {
       renderPage();
 
       act(() => {
-        store.set('/form/item-type-filter', '作業'); // Does not match "考試"
+        store.set('/form/item-type-filter', '出席'); // Does not match "作業"
       });
 
       await executeRegisteredBehavior('Apply Grade Item Filters', store);
@@ -375,9 +383,9 @@ describe('GradeItemListPage', () => {
     });
 
     it('clears active filters successfully via clear behavior', async () => {
-      store.set('/selected/filterType', '考試');
+      store.set('/selected/filterType', '作業');
       store.set('/selected/filterDate', '2026-11-01');
-      store.set('/form/item-type-filter', '考試');
+      store.set('/form/item-type-filter', '作業');
       store.set('/form/item-date-filter', '2026-11-01');
 
       renderPage();

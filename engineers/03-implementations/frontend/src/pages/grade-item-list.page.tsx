@@ -9,6 +9,24 @@ import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registr
 import { queryClient } from '@/lib/query-client';
 import { api, API_BASE } from '@/lib/api-client';
 
+// Localized type translation maps
+const TYPE_TO_BACKEND: Record<string, string> = {
+  '考試': 'ASSIGNMENT',
+  '作業': 'ASSIGNMENT',
+  '報告': 'REPORT',
+  '出席': 'ATTENDANCE',
+  '課堂表現': 'CLASSROOM_PERFORMANCE',
+  '其他': 'OTHER',
+};
+
+const TYPE_TO_FRONTEND: Record<string, string> = {
+  'ASSIGNMENT': '作業',
+  'REPORT': '報告',
+  'ATTENDANCE': '出席',
+  'CLASSROOM_PERFORMANCE': '課堂表現',
+  'OTHER': '其他',
+};
+
 // Register GradeItem behaviors statically
 registerBehavior('Open Grade Item Form Modal for Create', async (_ref, store) => {
   store.set('/selected/gradeItemId', null);
@@ -42,13 +60,24 @@ registerBehavior('Create a new GradeItem', async (_ref, store) => {
   const classId = store.get('/selected/classId') as string;
   const form = (store.get('/form') as Record<string, any>) || {};
 
+  const itemName = form['modal-item-name-field'];
+  if (!itemName || !itemName.trim()) {
+    throw new Error('項目名稱不能為空白');
+  }
+
+  const rawType = form['modal-item-type-selection'] || '其他';
+  const backendType = TYPE_TO_BACKEND[rawType] || 'OTHER';
+
+  const rawWeight = form['modal-weight-field'] ? Number(form['modal-weight-field']) : 0;
+  const backendWeight = rawWeight / 100;
+
   await api.post(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items`, {
-    item_name: form['modal-item-name-field'],
-    item_type: form['modal-item-type-selection'],
+    item_name: itemName,
+    item_type: backendType,
     item_date: form['modal-item-date-field'] || null,
     item_description: form['modal-item-description-field'] || null,
     max_score: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
-    weight: form['modal-weight-field'] ? Number(form['modal-weight-field']) : 0,
+    weight: backendWeight,
   });
 
   store.set('/form', {});
@@ -63,13 +92,24 @@ registerBehavior('Update a GradeItem', async (_ref, store) => {
   const gradeItemId = store.get('/selected/gradeItemId') as string;
   const form = (store.get('/form') as Record<string, any>) || {};
 
+  const itemName = form['modal-item-name-field'];
+  if (!itemName || !itemName.trim()) {
+    throw new Error('項目名稱不能為空白');
+  }
+
+  const rawType = form['modal-item-type-selection'] || '其他';
+  const backendType = TYPE_TO_BACKEND[rawType] || 'OTHER';
+
+  const rawWeight = form['modal-weight-field'] ? Number(form['modal-weight-field']) : 0;
+  const backendWeight = rawWeight / 100;
+
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items/${gradeItemId}`, {
-    item_name: form['modal-item-name-field'],
-    item_type: form['modal-item-type-selection'],
+    item_name: itemName,
+    item_type: backendType,
     item_date: form['modal-item-date-field'] || null,
     item_description: form['modal-item-description-field'] || null,
     max_score: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
-    weight: form['modal-weight-field'] ? Number(form['modal-weight-field']) : 0,
+    weight: backendWeight,
   });
 
   store.set('/form', {});
@@ -160,9 +200,9 @@ export default function GradeItemListPage() {
       let mapped = data.map((gi: any) => ({
         id: gi.id,
         name: gi.itemName,
-        type: gi.itemType,
+        type: TYPE_TO_FRONTEND[gi.itemType] || gi.itemType,
         examDate: gi.itemDate || '',
-        weight: gi.weight,
+        weight: gi.weight !== undefined && gi.weight !== null ? parseFloat((gi.weight * 100).toFixed(4)) : 0,
         description: gi.itemDescription || '',
         maxScore: gi.maxScore,
       }));

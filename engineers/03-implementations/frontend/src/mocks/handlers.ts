@@ -34,11 +34,11 @@ let mockGradeItems = [
     id: '1',
     classId: '1',
     itemName: '期中考',
-    itemType: '考試',
+    itemType: 'ASSIGNMENT',
     itemDate: '2026-11-01',
     itemDescription: '期中學科測驗',
     maxScore: 100,
-    weight: 30,
+    weight: 0.3,
   }
 ];
 
@@ -48,11 +48,11 @@ export function resetMockGradeItems() {
       id: '1',
       classId: '1',
       itemName: '期中考',
-      itemType: '考試',
+      itemType: 'ASSIGNMENT',
       itemDate: '2026-11-01',
       itemDescription: '期中學科測驗',
       maxScore: 100,
-      weight: 30,
+      weight: 0.3,
     }
   ];
 }
@@ -60,49 +60,57 @@ export function resetMockGradeItems() {
 export const handlers = [
   // Grade Item REST endpoints
   http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
-    const body = (await request.json()) as any;
-    if (!body.item_name || !body.item_name.trim()) {
-      return HttpResponse.json(
-        { error: 'Request validation failed: item_name: 不能為空白' },
-        { status: 400 }
-      );
-    }
-    const newGradeItem = {
-      id: String(mockGradeItems.length + 1),
-      classId: params.classId as string,
-      itemName: body.item_name,
-      itemType: body.item_type || '其他',
-      itemDate: body.item_date || '',
-      itemDescription: body.item_description || '',
-      maxScore: body.max_score || 0,
-      weight: body.weight || 0,
-    };
-    mockGradeItems.push(newGradeItem);
-    return HttpResponse.json(newGradeItem, { status: 201 });
-  }),
-
-  http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
-    const body = (await request.json()) as any;
-    if (!body.item_name || !body.item_name.trim()) {
-      return HttpResponse.json(
-        { error: 'Request validation failed: item_name: 不能為空白' },
-        { status: 400 }
-      );
-    }
-    const idx = mockGradeItems.findIndex((gi) => gi.id === params.gradeItemId);
-    if (idx !== -1) {
-      mockGradeItems[idx] = {
-        ...mockGradeItems[idx],
+    try {
+      const body = (await request.json()) as any;
+      if (!body.item_name || !body.item_name.trim()) {
+        return HttpResponse.json(
+          { error: 'Request validation failed: item_name: 不能為空白' },
+          { status: 400 }
+        );
+      }
+      const newGradeItem = {
+        id: String(mockGradeItems.length + 1),
+        classId: params.classId as string,
         itemName: body.item_name,
-        itemType: body.item_type || '其他',
+        itemType: body.item_type || 'OTHER',
         itemDate: body.item_date || '',
         itemDescription: body.item_description || '',
         maxScore: body.max_score || 0,
         weight: body.weight || 0,
       };
-      return HttpResponse.json(mockGradeItems[idx]);
+      mockGradeItems.push(newGradeItem);
+      return HttpResponse.json(newGradeItem, { status: 201 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+
+  http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
+    try {
+      const body = (await request.json()) as any;
+      if (!body.item_name || !body.item_name.trim()) {
+        return HttpResponse.json(
+          { error: 'Request validation failed: item_name: 不能為空白' },
+          { status: 400 }
+        );
+      }
+      const idx = mockGradeItems.findIndex((gi) => gi.id === params.gradeItemId);
+      if (idx !== -1) {
+        mockGradeItems[idx] = {
+          ...mockGradeItems[idx],
+          itemName: body.item_name,
+          itemType: body.item_type || 'OTHER',
+          itemDate: body.item_date || '',
+          itemDescription: body.item_description || '',
+          maxScore: body.max_score || 0,
+          weight: body.weight || 0,
+        };
+        return HttpResponse.json(mockGradeItems[idx]);
+      }
+      return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
   }),
 
   http.delete('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', ({ params }) => {
