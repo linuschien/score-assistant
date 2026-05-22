@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { shadcnComponents } from '@json-render/shadcn';
 import { useStateStore, useStateValue } from '@json-render/react';
 import type { ComponentType } from 'react';
+import { PieChart as ReChartsPie, Pie, Cell, Tooltip as ReChartsTooltip, Legend as ReChartsLegend } from 'recharts';
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Adapter: bridges @json-render/react's ComponentRenderProps  { element, children, emit, on, bindings, loading }
@@ -139,12 +140,51 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
 // Custom composite components (ComponentRenderProps signature: { element, children, ... })
 // ────────────────────────────────────────────────────────────────────────────────
 const MetricCard: ComponentType<any> = ({ element }: any) => {
-  const { label, value } = element?.props || {};
+  const { label, value, dataRef } = element?.props || {};
+  let displayValue = value;
+  if (dataRef === 'listGradeItems') {
+    const list = useStateValue('/data/listGradeItems');
+    const total = Array.isArray(list) ? list.reduce((sum: number, item: any) => sum + (Number(item.weight) || 0), 0) : 0;
+    displayValue = `${parseFloat(total.toFixed(4))}%`;
+  }
   return (
     <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-xl shadow-lg relative overflow-hidden group hover:border-slate-700/80 transition-all duration-300">
       <div className="text-xs font-semibold tracking-wider text-slate-400 uppercase">{label}</div>
-      <div className="mt-3 text-3xl font-extrabold text-white tracking-tight">{value ?? '—'}</div>
+      <div className="mt-3 text-3xl font-extrabold text-white tracking-tight">{displayValue ?? '—'}</div>
     </div>
+  );
+};
+
+const WeightInlineInput = ({ rowId, value, onChange }: { rowId: string; value: number; onChange: (val: number) => void }) => {
+  const [localVal, setLocalVal] = useState(String(value));
+
+  useEffect(() => {
+    setLocalVal(String(value));
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalVal(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed)) {
+      onChange(parsed);
+    } else if (val === '') {
+      onChange(0);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      value={localVal}
+      onChange={handleChange}
+      className="w-24 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary [color-scheme:dark]"
+      placeholder="0"
+      min="0"
+      max="100"
+      step="any"
+      data-testid={`weight-input-${rowId}`}
+    />
   );
 };
 
@@ -167,10 +207,26 @@ const DataTable: ComponentType<any> = ({ element, children, bindings }: any) => 
     bindPath = dataProp.$bindState;
   }
 
-  const boundData = useStateValue(bindPath || '/__dummy__');
-  const data = bindPath ? boundData : dataProp;
+  const isWeightTable = element?.props?.id === 'weight-editor-table';
+
+  const boundData = useStateValue(isWeightTable ? '/data/listGradeItems' : (bindPath || '/__dummy__'));
+  const data = isWeightTable ? boundData : (bindPath ? boundData : dataProp);
 
   const rows: any[] = Array.isArray(data) ? data : [];
+
+  const handleWeightChange = (rowId: string, newVal: number) => {
+    if (store) {
+      const currentList = store.get('/data/listGradeItems') || [];
+      const updatedList = currentList.map((item: any) => {
+        if (item.id === rowId) {
+          return { ...item, weight: newVal };
+        }
+        return item;
+      });
+      store.set('/data/listGradeItems', updatedList);
+    }
+  };
+
   return (
     <div className="bg-[#0d1321]/80 backdrop-blur-sm border border-slate-800/80 rounded-xl overflow-hidden shadow-xl">
       <table className="w-full text-left border-collapse text-slate-300 text-sm" aria-label={label}>
@@ -179,14 +235,15 @@ const DataTable: ComponentType<any> = ({ element, children, bindings }: any) => 
             {columns?.map((col: any) => (
               <th key={col.field} className="px-6 py-4">{col.label}</th>
             ))}
-            {children && <th className="px-6 py-4 text-right">操作</th>}
+            {isWeightTable && <th className="px-6 py-4 text-right">權重 (%)</th>}
+            {!isWeightTable && children && <th className="px-6 py-4 text-right">操作</th>}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
               <td
-                colSpan={(columns?.length || 0) + (children ? 1 : 0)}
+                colSpan={(columns?.length || 0) + (children || isWeightTable ? 1 : 0)}
                 className="px-6 py-8 text-center text-slate-500 font-medium"
               >
                 (沒有資料)
@@ -198,7 +255,16 @@ const DataTable: ComponentType<any> = ({ element, children, bindings }: any) => 
                 {columns?.map((col: any) => (
                   <td key={col.field} className="px-6 py-4">{String(row[col.field] ?? '')}</td>
                 ))}
-                {children && (
+                {isWeightTable && (
+                  <td className="px-6 py-4 text-right">
+                    <WeightInlineInput
+                      rowId={row.id}
+                      value={row.weight ?? 0}
+                      onChange={(newVal) => handleWeightChange(row.id, newVal)}
+                    />
+                  </td>
+                )}
+                {!isWeightTable && children && (
                   <td className="px-6 py-4 text-right space-x-2">
                     {React.Children.map(children, (child) => {
                       if (!React.isValidElement(child)) return child;
@@ -268,6 +334,54 @@ const ChartPlaceholder = (type: string): ComponentType<any> =>
       {type} Chart: {element?.props?.label}
     </div>
   );
+
+const RechartsPieChartComponent: ComponentType<any> = () => {
+  const list = useStateValue('/data/listGradeItems') || [];
+  const items = Array.isArray(list) ? list.filter((item: any) => (Number(item.weight) || 0) > 0) : [];
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 bg-slate-900/40 border border-slate-800/80 rounded-xl h-64">
+        <p className="text-sm text-slate-500 font-medium text-slate-450">尚無權重設定，請在下方表格輸入權重</p>
+      </div>
+    );
+  }
+
+  const data = items.map((item: any) => ({
+    name: item.name || '',
+    value: Number(item.weight) || 0,
+  }));
+
+  return (
+    <div className="bg-[#0f172a] border border-slate-800/80 p-6 rounded-xl shadow-xl">
+      <h3 className="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-4">權重分布圖</h3>
+      <div className="h-64 w-full flex items-center justify-center">
+        <ReChartsPie width={300} height={200}>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={50}
+            outerRadius={75}
+            paddingAngle={4}
+            dataKey="value"
+            isAnimationActive={false}
+          >
+            {data.map((_: any, index: number) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <ReChartsTooltip
+            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#f1f5f9' }}
+            itemStyle={{ color: '#94a3b8' }}
+          />
+          <ReChartsLegend verticalAlign="bottom" height={36} />
+        </ReChartsPie>
+      </div>
+    </div>
+  );
+};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // DatePicker — native HTML date picker, writes to explicit storePath
@@ -395,7 +509,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   // ── 4. Chart wrappers ───────────────────────────────────────────────────────
   'Chart:bar': ChartPlaceholder('Bar'),
   'Chart:line': ChartPlaceholder('Line'),
-  'Chart:pie': ChartPlaceholder('Pie'),
+  'Chart:pie': RechartsPieChartComponent,
 
   // ── 5. Native HTML wrapper (no-op passthrough) ──────────────────────────────
   'div': ({ element, children }) => (
