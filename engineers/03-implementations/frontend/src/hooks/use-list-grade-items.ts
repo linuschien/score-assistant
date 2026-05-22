@@ -11,9 +11,16 @@ export interface GradeItems {
 }
 
 const LISTGRADEITEMS_QUERY = gql`
-  query listGradeItems($filter: GradeItemsFilterInput) {
+  query listGradeItems($filter: GradeItemFilterInput) {
     listGradeItems(filter: $filter) {
       id
+      classId
+      itemName
+      itemType
+      itemDate
+      itemDescription
+      maxScore
+      weight
     }
   }
 `;

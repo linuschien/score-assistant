@@ -148,9 +148,9 @@
       "on": {
         "press": [
           {
-            "action": "openModal",
+            "action": "executeBehavior",
             "params": {
-              "id": "grade-item-form-modal"
+              "ref": "Open Grade Item Form Modal for Create"
             }
           }
         ]
@@ -510,7 +510,17 @@
         "variant": "primary",
         "disabled": null
       },
-      "children": []
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Create a new GradeItem"
+            }
+          }
+        ]
+      }
     },
     "grade-item-form-modal": {
       "type": "Dialog",
