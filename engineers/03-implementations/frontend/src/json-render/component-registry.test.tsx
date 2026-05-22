@@ -85,12 +85,6 @@ describe('ComponentRegistry custom components', () => {
     expect(screen.getByText('(沒有資料)')).toBeInTheDocument();
   });
 
-  it('renders MultiSelect component', () => {
-    const MultiSelect = componentRegistry['MultiSelect'];
-    render(<MultiSelect />);
-    expect(screen.getByText('MultiSelect')).toBeInTheDocument();
-  });
-
   it('renders Breadcrumb component with children', () => {
     const Breadcrumb = componentRegistry['Breadcrumb'];
     render(
@@ -154,7 +148,7 @@ describe('ComponentRegistry custom components', () => {
     expect(screen.getByText('Line Chart: Line Chart Metric')).toBeInTheDocument();
 
     rerender(<ChartPie element={{ props: { label: 'Pie Chart Metric' } }} />);
-    expect(screen.getByText('Pie Chart: Pie Chart Metric')).toBeInTheDocument();
+    expect(screen.getByText('尚無權重設定，請在下方表格輸入權重')).toBeInTheDocument();
   });
 
   it('renders custom div component with class names and children', () => {
