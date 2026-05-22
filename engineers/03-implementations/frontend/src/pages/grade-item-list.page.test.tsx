@@ -335,4 +335,59 @@ describe('GradeItemListPage', () => {
       expect(store.get('/modals/delete-grade-item-confirm-dialog')).toBe(false);
     });
   });
+
+  // ── Filter: 篩選成績項目 ────────────────────────────────────────────────────
+  describe('Filter', () => {
+    it('applies type and date filters successfully via behavior', async () => {
+      renderPage();
+
+      act(() => {
+        store.set('/form/item-type-filter', '考試');
+        store.set('/form/item-date-filter', '2026-11-01');
+      });
+
+      await executeRegisteredBehavior('Apply Grade Item Filters', store);
+
+      expect(store.get('/selected/filterType')).toBe('考試');
+      expect(store.get('/selected/filterDate')).toBe('2026-11-01');
+
+      // Verify that list shows the matching item
+      await waitFor(() => {
+        const list = store.get('/data/listGradeItems') as any[];
+        expect(list).toHaveLength(1);
+        expect(list[0].name).toBe('期中考');
+      });
+    });
+
+    it('filters out items that do not match type or date', async () => {
+      renderPage();
+
+      act(() => {
+        store.set('/form/item-type-filter', '作業'); // Does not match "考試"
+      });
+
+      await executeRegisteredBehavior('Apply Grade Item Filters', store);
+
+      await waitFor(() => {
+        const list = store.get('/data/listGradeItems') as any[];
+        expect(list).toHaveLength(0);
+      });
+    });
+
+    it('clears active filters successfully via clear behavior', async () => {
+      store.set('/selected/filterType', '考試');
+      store.set('/selected/filterDate', '2026-11-01');
+      store.set('/form/item-type-filter', '考試');
+      store.set('/form/item-date-filter', '2026-11-01');
+
+      renderPage();
+
+      await executeRegisteredBehavior('Clear Grade Item Filters', store);
+
+      expect(store.get('/selected/filterType')).toBe('');
+      expect(store.get('/selected/filterDate')).toBe('');
+      expect(store.get('/form/item-type-filter')).toBe('');
+      expect(store.get('/form/item-date-filter')).toBe('');
+    });
+  });
 });

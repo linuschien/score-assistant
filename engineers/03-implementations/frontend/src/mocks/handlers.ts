@@ -29,7 +29,86 @@ export function resetMockClasses() {
   ];
 }
 
+let mockGradeItems = [
+  {
+    id: '1',
+    classId: '1',
+    itemName: '期中考',
+    itemType: '考試',
+    itemDate: '2026-11-01',
+    itemDescription: '期中學科測驗',
+    maxScore: 100,
+    weight: 30,
+  }
+];
+
+export function resetMockGradeItems() {
+  mockGradeItems = [
+    {
+      id: '1',
+      classId: '1',
+      itemName: '期中考',
+      itemType: '考試',
+      itemDate: '2026-11-01',
+      itemDescription: '期中學科測驗',
+      maxScore: 100,
+      weight: 30,
+    }
+  ];
+}
+
 export const handlers = [
+  // Grade Item REST endpoints
+  http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
+    const body = (await request.json()) as any;
+    if (!body.item_name || !body.item_name.trim()) {
+      return HttpResponse.json(
+        { error: 'Request validation failed: item_name: 不能為空白' },
+        { status: 400 }
+      );
+    }
+    const newGradeItem = {
+      id: String(mockGradeItems.length + 1),
+      classId: params.classId as string,
+      itemName: body.item_name,
+      itemType: body.item_type || '其他',
+      itemDate: body.item_date || '',
+      itemDescription: body.item_description || '',
+      maxScore: body.max_score || 0,
+      weight: body.weight || 0,
+    };
+    mockGradeItems.push(newGradeItem);
+    return HttpResponse.json(newGradeItem, { status: 201 });
+  }),
+
+  http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
+    const body = (await request.json()) as any;
+    if (!body.item_name || !body.item_name.trim()) {
+      return HttpResponse.json(
+        { error: 'Request validation failed: item_name: 不能為空白' },
+        { status: 400 }
+      );
+    }
+    const idx = mockGradeItems.findIndex((gi) => gi.id === params.gradeItemId);
+    if (idx !== -1) {
+      mockGradeItems[idx] = {
+        ...mockGradeItems[idx],
+        itemName: body.item_name,
+        itemType: body.item_type || '其他',
+        itemDate: body.item_date || '',
+        itemDescription: body.item_description || '',
+        maxScore: body.max_score || 0,
+        weight: body.weight || 0,
+      };
+      return HttpResponse.json(mockGradeItems[idx]);
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+
+  http.delete('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', ({ params }) => {
+    mockGradeItems = mockGradeItems.filter((gi) => gi.id !== params.gradeItemId);
+    return HttpResponse.json(null, { status: 204 });
+  }),
   // Fallback REST endpoint mocks
   http.get('*/semesters/:id', ({ params }) => {
     const sem = mockSemesters.find(s => s.id === params.id);
@@ -146,13 +225,24 @@ export const handlers = [
       }
     });
   }),
-  graphql.query('listGradeItems', () => {
+  graphql.query('listGradeItems', ({ variables }) => {
+    const filter = variables.filter as { classId?: string } | undefined;
+    const filtered = filter?.classId
+      ? mockGradeItems.filter((gi) => gi.classId === filter.classId)
+      : mockGradeItems;
     return HttpResponse.json({
       data: {
-        listGradeItems: [
-          { id: '1', name: '第一次期中考', type: 'exam', examDate: '2023-10-15', weight: 30 }
-        ]
-      }
+        listGradeItems: filtered.map((gi) => ({
+          id: gi.id,
+          classId: gi.classId,
+          itemName: gi.itemName,
+          itemType: gi.itemType,
+          itemDate: gi.itemDate,
+          itemDescription: gi.itemDescription,
+          maxScore: gi.maxScore,
+          weight: gi.weight,
+        })),
+      },
     });
   }),
   graphql.query('listGradeRecords', () => {

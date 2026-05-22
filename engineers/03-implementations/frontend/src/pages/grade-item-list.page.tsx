@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Renderer, useStateStore, useStateValue } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { useListGradeItems } from '@/hooks/use-list-grade-items';
@@ -14,6 +14,21 @@ registerBehavior('Open Grade Item Form Modal for Create', async (_ref, store) =>
   store.set('/selected/gradeItemId', null);
   store.set('/form', {});
   store.set('/modals/grade-item-form-modal', true);
+  return null;
+});
+
+registerBehavior('Apply Grade Item Filters', async (_ref, store) => {
+  const form = (store.get('/form') as Record<string, any>) || {};
+  store.set('/selected/filterType', form['item-type-filter'] || '');
+  store.set('/selected/filterDate', form['item-date-filter'] || '');
+  return null;
+});
+
+registerBehavior('Clear Grade Item Filters', async (_ref, store) => {
+  store.set('/form/item-type-filter', '');
+  store.set('/form/item-date-filter', '');
+  store.set('/selected/filterType', '');
+  store.set('/selected/filterDate', '');
   return null;
 });
 
@@ -124,10 +139,25 @@ export default function GradeItemListPage() {
     }
   }, [classData, classId, store]);
 
-  // Sync grade items list into store, mapping all necessary fields for editing
+  // Reset search keyword, filters and active query on class change
+  const prevClassIdRef = useRef(classId);
+  useEffect(() => {
+    if (prevClassIdRef.current !== classId) {
+      store.set('/selected/filterType', '');
+      store.set('/selected/filterDate', '');
+      store.set('/form/item-type-filter', '');
+      store.set('/form/item-date-filter', '');
+      prevClassIdRef.current = classId;
+    }
+  }, [classId, store]);
+
+  // Sync and filter grade items list into store reactively
+  const filterType = useStateValue('/selected/filterType') as string || '';
+  const filterDate = useStateValue('/selected/filterDate') as string || '';
+
   useEffect(() => {
     if (data) {
-      const mapped = data.map((gi: any) => ({
+      let mapped = data.map((gi: any) => ({
         id: gi.id,
         name: gi.itemName,
         type: gi.itemType,
@@ -136,12 +166,23 @@ export default function GradeItemListPage() {
         description: gi.itemDescription || '',
         maxScore: gi.maxScore,
       }));
+
+      // Apply type filter reactively
+      if (filterType) {
+        mapped = mapped.filter((gi: any) => gi.type === filterType);
+      }
+
+      // Apply date filter reactively
+      if (filterDate) {
+        mapped = mapped.filter((gi: any) => gi.examDate === filterDate);
+      }
+
       const current = store.get('/data/listGradeItems');
       if (JSON.stringify(current) !== JSON.stringify(mapped)) {
         store.set('/data/listGradeItems', mapped);
       }
     }
-  }, [data, store]);
+  }, [data, filterType, filterDate, store]);
 
   // Decoupled Grade Item Form Modal Logic:
   // Populate form inputs dynamically based on selectedGradeItemId

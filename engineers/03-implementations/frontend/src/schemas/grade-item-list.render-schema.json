@@ -216,26 +216,51 @@
       }
     },
     "item-date-filter": {
-      "type": "Input",
+      "type": "DatePicker",
       "props": {
         "id": "item-date-filter",
         "label": "篩選日期",
         "name": "item-date-filter",
-        "type": null,
-        "placeholder": null,
-        "value": {
-          "$bindState": "/form/item-date-filter"
-        },
-        "checks": null,
-        "validateOn": null
+        "storePath": "/form/item-date-filter",
+        "disabled": null
+      },
+      "children": []
+    },
+    "apply-filters-button": {
+      "type": "Button",
+      "props": {
+        "id": "apply-filters-button",
+        "label": "篩選",
+        "variant": "primary",
+        "disabled": null
       },
       "children": [],
       "on": {
         "press": [
           {
-            "action": "navigate",
+            "action": "executeBehavior",
             "params": {
-              "to": "grade-item-list-page"
+              "ref": "Apply Grade Item Filters"
+            }
+          }
+        ]
+      }
+    },
+    "clear-filters-button": {
+      "type": "Button",
+      "props": {
+        "id": "clear-filters-button",
+        "label": "清除",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Clear Grade Item Filters"
             }
           }
         ]
@@ -249,7 +274,9 @@
       },
       "children": [
         "item-type-filter",
-        "item-date-filter"
+        "item-date-filter",
+        "apply-filters-button",
+        "clear-filters-button"
       ]
     },
     "edit-grade-item-trigger": {
@@ -395,31 +422,15 @@
       }
     },
     "modal-item-date-field": {
-      "type": "Input",
+      "type": "DatePicker",
       "props": {
         "id": "modal-item-date-field",
         "label": "日期",
         "name": "modal-item-date-field",
-        "type": null,
-        "placeholder": null,
-        "value": {
-          "$bindState": "/form/modal-item-date-field"
-        },
-        "checks": null,
-        "validateOn": null
+        "storePath": "/form/modal-item-date-field",
+        "disabled": null
       },
-      "children": [],
-      "on": {
-        "press": [
-          {
-            "action": "executeBehavior",
-            "params": {
-              "ref": "Create a new GradeItem",
-              "id": "modal-item-date-field"
-            }
-          }
-        ]
-      }
+      "children": []
     },
     "modal-item-description-field": {
       "type": "Input",
