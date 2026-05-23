@@ -164,25 +164,30 @@ registerBehavior('Download an Attachment', async (_ref, store) => {
   }
 
   const res = await api.get(`${API_BASE}/grade-records/${gradeRecordId}/attachments/${attachmentId}`) as any;
-  if (res && res.file_data) {
-    const byteCharacters = atob(res.file_data);
+  const fileData = res?.file_data ?? res?.fileData;
+  const fileName = res?.file_name ?? res?.fileName ?? 'download';
+  const mimeType = res?.mime_type ?? res?.mimeType ?? 'application/octet-stream';
+
+  if (res && fileData !== undefined && fileData !== null) {
+    const byteCharacters = atob(fileData);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: res.mime_type || res.mimeType || 'application/octet-stream' });
+    const blob = new Blob([byteArray], { type: mimeType });
     
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = res.file_name || res.fileName || 'download';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
     return '檔案下載成功';
   } else {
-    alert('檔案下載失敗，無內容返回');
+    const keys = Object.keys(res || {}).join(', ');
+    alert(`檔案下載失敗。伺服器傳回欄位: [${keys}]，大小: ${res?.file_size ?? res?.fileSize ?? 'N/A'}，資料長度: ${(fileData || '').length}`);
     return '檔案下載失敗';
   }
 });
