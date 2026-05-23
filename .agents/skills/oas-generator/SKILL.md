@@ -30,12 +30,15 @@ Receives structured metadata to produce a standardized OpenAPI 3.2.0 contract. T
 ### 3. Endpoint Architecture
 - **Collection GET Ban**: For any Collection `GET` path, set `deprecated: true` and inject a description directing users to a GraphQL gateway.
 - **Custom Action Syntax**: Implement `POST {path}/{id}:{action}` for business behaviors.
-- **Path Parameters**: Use unique, descriptive parameters (e.g., `{inverter_id}`) for nested hierarchies.
+- **Path Parameters**: Use unique, descriptive parameters in camelCase (e.g., `{inverterId}`) for nested hierarchies.
 - **Default Base Path**: If no base path is specified in metadata, default to `/api/v1` in the `servers` block.
 
 ### 4. Concurrency & Sync Guardrails
 - **409 Conflict Injection**: When `409_required` is true, both `PUT` and `PATCH` MUST include the `409 Conflict` response definition with the `ConflictError` schema.
-- **Idempotency**: Document `PUT` as the primary synchronization point for `external_id` if sync is flagged.
+- **Idempotency**: Document `PUT` as the primary synchronization point for `externalId` if sync is flagged.
+
+### 5. Naming Conventions (camelCase)
+- **Strict camelCase**: All attributes/properties, path parameters, query parameters, and `operationId`s MUST strictly use `camelCase` (e.g., `passingThreshold` instead of `passing_threshold`, and `{semesterId}` instead of `{semester_id}`).
 
 ## ⚠️ Output Requirements
 - **Format**: Pure YAML (OpenAPI 3.2.0).
