@@ -145,11 +145,13 @@ public class GradeItemService {
                                         for (int i = 0; i < items.size(); i++) {
                                             header.createCell(i + 2).setCellValue(items.get(i).itemName());
                                         }
+                                        header.createCell(items.size() + 2).setCellValue("加權總分");
                                         for (int r = 0; r < students.size(); r++) {
                                             var student = students.get(r);
                                             var row = sheet.createRow(r + 1);
                                             row.createCell(0).setCellValue(student.studentNumber());
                                             row.createCell(1).setCellValue(student.studentName());
+                                            double weightedTotal = 0.0;
                                             for (int c = 0; c < items.size(); c++) {
                                                 var item = items.get(c);
                                                 var score = records.stream()
@@ -158,7 +160,10 @@ public class GradeItemService {
                                                         .map(gr -> gr.score() != null ? gr.score().doubleValue() : 0.0)
                                                         .orElse(0.0);
                                                 row.createCell(c + 2).setCellValue(score);
+                                                double weight = item.weight() != null ? item.weight().doubleValue() : 0.0;
+                                                weightedTotal += score * weight;
                                             }
+                                            row.createCell(items.size() + 2).setCellValue(weightedTotal);
                                         }
                                         var out = new ByteArrayOutputStream();
                                         wb.write(out);

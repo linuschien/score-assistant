@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Renderer, useStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { useListSemesters } from '@/hooks/use-list-semesters';
+import { useListClasses } from '@/hooks/use-list-classes';
 import spec from '@/schemas/semester-list.render-schema.json';
 import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
@@ -68,22 +69,28 @@ registerBehavior('Delete a Semester', async (_ref, store) => {
 export default function SemesterListPage() {
   const store = useStateStore();
   const { data } = useListSemesters();
+  const { data: classesData } = useListClasses();
 
   useEffect(() => {
     if (data) {
-      const mapped = data.map((s: any) => ({
-        id: s.id,
-        name: s.semesterName,
-        startDate: s.startDate,
-        endDate: s.endDate,
-        classCount: 0,
-      }));
+      const mapped = data.map((s: any) => {
+        const classCount = classesData
+          ? classesData.filter((c: any) => c.semesterId === s.id).length
+          : 0;
+        return {
+          id: s.id,
+          name: s.semesterName,
+          startDate: s.startDate,
+          endDate: s.endDate,
+          classCount,
+        };
+      });
       const current = store.get('/data/listSemesters');
       if (JSON.stringify(current) !== JSON.stringify(mapped)) {
         store.set('/data/listSemesters', mapped);
       }
     }
-  }, [data, store]);
+  }, [data, classesData, store]);
 
   // Decoupled Semester Form Modal Logic:
   // Populate the semester-form-modal inputs dynamically based on selectedSemesterId

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Renderer, useStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import { useListClasses } from '@/hooks/use-list-classes';
+import { useListStudents } from '@/hooks/use-list-students';
 import { useGetSemesterById } from '@/hooks/use-get-semester-by-id';
 import spec from '@/schemas/class-list.render-schema.json';
 import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registry';
@@ -77,6 +78,9 @@ export default function ClassListPage() {
   // Query classes for the active semester
   const { data } = useListClasses(semesterId ? { semesterId } : undefined);
 
+  // Query all students to count them per class
+  const { data: studentsData } = useListStudents();
+
   // Sync active semester details into store for title header
   useEffect(() => {
     if (semesterData) {
@@ -94,17 +98,22 @@ export default function ClassListPage() {
   // Sync classes list into store
   useEffect(() => {
     if (data) {
-      const mapped = data.map((c: any) => ({
-        id: c.id,
-        name: c.className,
-        studentCount: 0, // Fallback/default since backend doesn't support studentCount on Class
-      }));
+      const mapped = data.map((c: any) => {
+        const studentCount = studentsData
+          ? studentsData.filter((s: any) => s.classId === c.id).length
+          : 0;
+        return {
+          id: c.id,
+          name: c.className,
+          studentCount,
+        };
+      });
       const current = store.get('/data/listClasses');
       if (JSON.stringify(current) !== JSON.stringify(mapped)) {
         store.set('/data/listClasses', mapped);
       }
     }
-  }, [data, store]);
+  }, [data, studentsData, store]);
 
   // Decoupled Class Form Modal Logic:
   // Populate the class-form-modal inputs dynamically based on selectedClassId
