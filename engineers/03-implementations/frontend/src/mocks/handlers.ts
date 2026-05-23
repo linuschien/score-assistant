@@ -412,7 +412,13 @@ export const handlers = [
     try {
       const body = await request.json() as any;
       if (body.format === 'EXCEL' || body.format === 'CSV' || body.format === 'xlsx') {
-        return HttpResponse.json({ success: true, message: 'Export completed', affectedCount: 1 });
+        return HttpResponse.json({
+          success: true,
+          message: 'Export completed',
+          affectedCount: 1,
+          fileData: 'UEsDBAoAAAAAAIi2KlYAAAAAAAAAAAAAAAAGABwAdGVzdC9VVAkAAzh2emM4dnpjVVgA/gEEAP0BAAD+/wAAD21vY2sgZXhjZWwgZmlsZQ==',
+          fileName: '成績總表.xlsx'
+        });
       }
       return HttpResponse.json({ error: 'Request validation failed: format: 不能為空白' }, { status: 400 });
     } catch (err) {
@@ -421,7 +427,13 @@ export const handlers = [
   }),
 
   http.post(/\/semesters\/[^\/]+\/classes\/[^\/]+:exportAttendance$/, async () => {
-    return HttpResponse.json({ success: true, message: 'Attendance export completed', affectedCount: 1 });
+    return HttpResponse.json({
+      success: true,
+      message: 'Attendance export completed',
+      affectedCount: 1,
+      fileData: 'UEsDBAoAAAAAAIi2KlYAAAAAAAAAAAAAAAAGABwAdGVzdC9VVAkAAzh2emM4dnpjVVgA/gEEAP0BAAD+/wAAD21vY2sgZXhjZWwgZmlsZQ==',
+      fileName: '出缺席總表.xlsx'
+    });
   }),
 
   http.post(/\/semesters\/[^\/]+\/classes\/[^\/]+:calculateWeightedScores$/, async () => {

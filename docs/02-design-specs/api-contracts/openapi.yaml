@@ -1346,6 +1346,14 @@ components:
         affectedCount:
           type: integer
           example: 30
+        fileData:
+          type: string
+          description: "Optional base64-encoded spreadsheet payload data"
+          example: "UEsDBAoAAAAAAIi2KlY..."
+        fileName:
+          type: string
+          description: "Optional target name of the spreadsheet file"
+          example: "成績總表.xlsx"
       required:
         - success
         - message

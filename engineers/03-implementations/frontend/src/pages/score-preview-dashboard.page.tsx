@@ -29,6 +29,26 @@ registerBehavior('Export grades to a file', async (_ref, store) => {
   }) as any;
 
   if (res && res.success) {
+    if (res.fileData) {
+      try {
+        const binaryString = atob(res.fileData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.fileName || '成績總表.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Failed to trigger browser download:', e);
+      }
+    }
     return '成績已匯出';
   } else {
     throw new Error(res?.message || '匯出失敗');

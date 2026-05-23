@@ -123,6 +123,7 @@ class GradeItemServiceTest {
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.empty());
         when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
+        when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.empty());
 
         StepVerifier.create(gradeItemService.exportAttendance(classId, new ExportAttendanceRequestDto("xlsx")))
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 1)

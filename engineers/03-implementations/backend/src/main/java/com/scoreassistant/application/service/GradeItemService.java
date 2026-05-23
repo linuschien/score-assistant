@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -161,11 +162,18 @@ public class GradeItemService {
                                         }
                                         var out = new ByteArrayOutputStream();
                                         wb.write(out);
-                                        return students.size();
+                                        return new Object[] { out.toByteArray(), students.size() };
                                     }
                                 }).subscribeOn(Schedulers.boundedElastic()))
-                        ))
-                .map(count -> new OperationStatusDto(true, "Export completed", count));
+                                .map(resObj -> {
+                                    byte[] bytes = (byte[]) resObj[0];
+                                    int count = (Integer) resObj[1];
+                                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                                    String fileName = "成績總表.xlsx";
+                                    return new OperationStatusDto(true, "Export completed", count, base64, fileName);
+                                })
+                        )
+                );
     }
 
     public Mono<OperationStatusDto> exportAttendance(UUID classId, ExportAttendanceRequestDto req) {
@@ -176,7 +184,62 @@ public class GradeItemService {
         return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
                 .collectList()
                 .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher)).collectList()
-                        .map(students -> new OperationStatusDto(true, "Attendance export completed", students.size()))
+                        .flatMap(students -> gradeRecordRepository.findByClassId(classId).collectList()
+                                .flatMap(records -> Mono.fromCallable(() -> {
+                                    try (var wb = new XSSFWorkbook()) {
+                                        var sheet = wb.createSheet("Attendance");
+                                        var header = sheet.createRow(0);
+                                        header.createCell(0).setCellValue("Student Number");
+                                        header.createCell(1).setCellValue("Student Name");
+                                        header.createCell(2).setCellValue("Present Count");
+                                        header.createCell(3).setCellValue("Absent Count");
+                                        header.createCell(4).setCellValue("Excused Count");
+
+                                        for (int r = 0; r < students.size(); r++) {
+                                            var student = students.get(r);
+                                            var row = sheet.createRow(r + 1);
+                                            row.createCell(0).setCellValue(student.studentNumber());
+                                            row.createCell(1).setCellValue(student.studentName());
+
+                                            long present = 0;
+                                            long absent = 0;
+                                            long excused = 0;
+                                            for (var item : items) {
+                                                var opt = records.stream()
+                                                        .filter(gr -> gr.gradeItemId().equals(item.id()) && gr.studentId().equals(student.id()))
+                                                        .findFirst();
+                                                if (opt.isPresent()) {
+                                                    var scoreVal = opt.get().score();
+                                                    if (scoreVal != null) {
+                                                        double val = scoreVal.doubleValue();
+                                                        if (val == 100.0) present++;
+                                                        else if (val == 0.0) absent++;
+                                                        else excused++;
+                                                    } else {
+                                                        present++;
+                                                    }
+                                                } else {
+                                                    present++;
+                                                }
+                                            }
+                                            row.createCell(2).setCellValue(present);
+                                            row.createCell(3).setCellValue(absent);
+                                            row.createCell(4).setCellValue(excused);
+                                        }
+
+                                        var out = new ByteArrayOutputStream();
+                                        wb.write(out);
+                                        return new Object[] { out.toByteArray(), students.size() };
+                                    }
+                                }).subscribeOn(Schedulers.boundedElastic()))
+                                .map(resObj -> {
+                                    byte[] bytes = (byte[]) resObj[0];
+                                    int count = (Integer) resObj[1];
+                                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                                    String fileName = "出缺席總表.xlsx";
+                                    return new OperationStatusDto(true, "Attendance export completed", count, base64, fileName);
+                                })
+                        )
                 );
     }
 
