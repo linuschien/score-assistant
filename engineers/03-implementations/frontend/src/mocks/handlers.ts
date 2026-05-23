@@ -57,6 +57,38 @@ export function resetMockGradeItems() {
   ];
 }
 
+export function setMockGradeItems(items: any[]) {
+  mockGradeItems = items;
+}
+
+export let mockGradeRecords: any[] = [
+  { id: '1', gradeItemId: '1', studentId: '1', score: 85, lastModifiedAt: '2026-05-22T22:23:43', version: 1 }
+];
+
+export function resetMockGradeRecords() {
+  mockGradeRecords = [
+    { id: '1', gradeItemId: '1', studentId: '1', score: 85, lastModifiedAt: '2026-05-22T22:23:43', version: 1 }
+  ];
+}
+
+export function setMockGradeRecords(records: any[]) {
+  mockGradeRecords = records;
+}
+
+export let mockAttachments: any[] = [
+  { id: '1', gradeRecordId: '1', fileName: 'homework1.pdf', mimeType: 'application/pdf', fileSize: 10240, uploadedAt: '2023-09-15' }
+];
+
+export function resetMockAttachments() {
+  mockAttachments = [
+    { id: '1', gradeRecordId: '1', fileName: 'homework1.pdf', mimeType: 'application/pdf', fileSize: 10240, uploadedAt: '2023-09-15' }
+  ];
+}
+
+export function setMockAttachments(attachmentsList: any[]) {
+  mockAttachments = attachmentsList;
+}
+
 export const handlers = [
   // Grade Item REST endpoints
   http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
@@ -204,6 +236,166 @@ export const handlers = [
     mockClasses = mockClasses.filter(c => c.id !== params.id);
     return HttpResponse.json({ success: true });
   }),
+
+  // Grade Records REST endpoints
+  http.get('*/grade-records/:id', ({ params }) => {
+    const record = mockGradeRecords.find(r => r.id === params.id);
+    if (record) {
+      return HttpResponse.json({
+        id: record.id,
+        grade_record_id: record.id,
+        gradeItemId: record.gradeItemId,
+        studentId: record.studentId,
+        score: record.score,
+        lastModifiedAt: record.lastModifiedAt,
+        version: record.version
+      });
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+
+  http.post('*/grade-records', async ({ request }) => {
+    try {
+      const body = await request.json() as any;
+      let scoreVal = body.score;
+      if (body.attendance_status !== undefined) {
+        if (body.attendance_status === 'PRESENT') scoreVal = 1.0;
+        else if (body.attendance_status === 'ABSENT') scoreVal = 0.0;
+        else if (body.attendance_status === 'EXCUSED') scoreVal = 0.5;
+      }
+
+      // Check boundaries if item is not CLASSROOM_PERFORMANCE
+      const item = mockGradeItems.find(gi => gi.id === body.gradeItemId);
+      if (item && item.itemType !== 'CLASSROOM_PERFORMANCE') {
+        if (scoreVal !== null && scoreVal !== undefined && scoreVal < 0) {
+          return HttpResponse.json({ error: 'Request validation failed: score must be positive' }, { status: 400 });
+        }
+      }
+
+      const newRecord = {
+        id: 'r-' + String(mockGradeRecords.length + 1) + '-' + Math.random().toString(36).substring(2, 6),
+        gradeItemId: body.gradeItemId,
+        studentId: body.studentId,
+        score: scoreVal !== null && scoreVal !== undefined ? Number(scoreVal) : null,
+        lastModifiedAt: new Date().toISOString(),
+        version: 1
+      };
+      mockGradeRecords.push(newRecord);
+      return HttpResponse.json({
+        id: newRecord.id,
+        grade_record_id: newRecord.id,
+        gradeItemId: newRecord.gradeItemId,
+        grade_item_id: newRecord.gradeItemId,
+        studentId: newRecord.studentId,
+        student_id: newRecord.studentId,
+        score: newRecord.score,
+        lastModifiedAt: newRecord.lastModifiedAt,
+        last_modified_at: newRecord.lastModifiedAt,
+        version: newRecord.version
+      }, { status: 201 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }),
+
+  http.put('*/grade-records/:id', async ({ request, params }) => {
+    try {
+      const body = await request.json() as any;
+      const idx = mockGradeRecords.findIndex(r => r.id === params.id);
+      if (idx !== -1) {
+        mockGradeRecords[idx] = {
+          ...mockGradeRecords[idx],
+          score: body.score !== null && body.score !== undefined ? Number(body.score) : mockGradeRecords[idx].score,
+          lastModifiedAt: new Date().toISOString(),
+          version: mockGradeRecords[idx].version + 1
+        };
+        const record = mockGradeRecords[idx];
+        return HttpResponse.json({
+          id: record.id,
+          grade_record_id: record.id,
+          gradeItemId: record.gradeItemId,
+          grade_item_id: record.gradeItemId,
+          studentId: record.studentId,
+          student_id: record.studentId,
+          score: record.score,
+          lastModifiedAt: record.lastModifiedAt,
+          last_modified_at: record.lastModifiedAt,
+          version: record.version
+        });
+      }
+      return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }),
+
+  http.patch('*/grade-records/:id', async ({ request, params }) => {
+    try {
+      const body = await request.json() as any;
+      const idx = mockGradeRecords.findIndex(r => r.id === params.id);
+      if (idx !== -1) {
+        mockGradeRecords[idx] = {
+          ...mockGradeRecords[idx],
+          score: body.score !== null && body.score !== undefined ? Number(body.score) : mockGradeRecords[idx].score,
+          lastModifiedAt: new Date().toISOString(),
+          version: mockGradeRecords[idx].version + 1
+        };
+        const record = mockGradeRecords[idx];
+        return HttpResponse.json({
+          id: record.id,
+          grade_record_id: record.id,
+          gradeItemId: record.gradeItemId,
+          studentId: record.studentId,
+          score: record.score,
+          lastModifiedAt: record.lastModifiedAt,
+          version: record.version
+        });
+      }
+      return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }),
+
+  // Attachments REST endpoints
+  http.get('*/grade-records/:gradeRecordId/attachments', ({ params }) => {
+    const list = mockAttachments.filter(a => a.gradeRecordId === params.gradeRecordId);
+    return HttpResponse.json(list);
+  }),
+
+  http.post('*/grade-records/:gradeRecordId/attachments', async ({ request, params }) => {
+    try {
+      const sizeHeader = request.headers.get('content-length');
+      const size = sizeHeader ? Number(sizeHeader) : 0;
+      if (size > 10 * 1024 * 1024) {
+        return HttpResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
+      }
+
+      const count = mockAttachments.filter(a => a.gradeRecordId === params.gradeRecordId).length;
+      if (count >= 5) {
+        return HttpResponse.json({ error: 'Attachment limit reached (max 5)' }, { status: 400 });
+      }
+
+      const newAttachment = {
+        id: 'att-' + String(mockAttachments.length + 1) + '-' + Math.random().toString(36).substring(2, 6),
+        attachment_id: 'att-' + String(mockAttachments.length + 1),
+        gradeRecordId: params.gradeRecordId,
+        grade_record_id: params.gradeRecordId,
+        fileName: 'homework_mock.pdf',
+        file_name: 'homework_mock.pdf',
+        mimeType: 'application/pdf',
+        mime_type: 'application/pdf',
+        fileSize: size || 1024,
+        file_size: size || 1024,
+        uploadedAt: new Date().toISOString(),
+        uploaded_at: new Date().toISOString()
+      };
+      mockAttachments.push(newAttachment);
+      return HttpResponse.json(newAttachment, { status: 201 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }),
   
   // Fallback GraphQL collection mocks
   graphql.query('listSemesters', () => {
@@ -256,18 +448,23 @@ export const handlers = [
   graphql.query('listGradeRecords', () => {
     return HttpResponse.json({
       data: {
-        listGradeRecords: [
-          { id: '1', studentNumber: '01', name: '王小明', score: 85, status: 'normal' }
-        ]
+        listGradeRecords: mockGradeRecords.map(r => ({
+          ...r,
+          studentNumber: '01',
+          name: '王小明',
+          status: 'normal'
+        }))
       }
     });
   }),
-  graphql.query('listAttachments', () => {
+  graphql.query('listAttachments', ({ variables }) => {
+    const filter = variables.filter as { gradeRecordId?: string } | undefined;
+    const filtered = filter?.gradeRecordId
+      ? mockAttachments.filter(a => a.gradeRecordId === filter.gradeRecordId)
+      : mockAttachments;
     return HttpResponse.json({
       data: {
-        listAttachments: [
-          { id: '1', fileName: 'homework1.pdf', uploadedAt: '2023-09-15' }
-        ]
+        listAttachments: filtered
       }
     });
   }),
