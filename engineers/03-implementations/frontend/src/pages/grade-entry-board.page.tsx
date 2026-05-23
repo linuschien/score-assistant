@@ -26,9 +26,7 @@ registerBehavior('Update an existing GradeRecord', async (_ref, store) => {
   let newRec: any = null;
   const payload = {
     gradeItemId,
-    grade_item_id: gradeItemId,
     studentId,
-    student_id: studentId,
     score
   };
 
@@ -62,18 +60,13 @@ registerBehavior('Record Attendance with automatic status-to-score mapping', asy
   const studentId = store.get('/form/activeStudentId') as string;
   const gradeItemId = store.get('/form/activeGradeItemId') as string;
   const score = store.get('/form/activeScore') as number | null;
-  const attendanceStatus = store.get('/form/activeAttendanceStatus') as string;
   const recordId = store.get('/form/activeRecordId') as string | null;
 
   let newRec: any = null;
   const payload = {
     gradeItemId,
-    grade_item_id: gradeItemId,
     studentId,
-    student_id: studentId,
-    score,
-    attendance_status: attendanceStatus,
-    attendanceStatus
+    score
   };
 
   if (recordId) {
@@ -115,6 +108,9 @@ registerBehavior('Upload an Attachment for a GradeRecord', async (_ref, store) =
     input.onchange = (e: any) => {
       const files = e.target.files;
       resolve(files && files.length > 0 ? files[0] : null);
+    };
+    input.oncancel = () => {
+      resolve(null);
     };
     input.click();
   });

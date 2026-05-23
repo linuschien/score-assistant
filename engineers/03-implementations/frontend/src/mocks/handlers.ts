@@ -265,7 +265,9 @@ export const handlers = [
       }
 
       // Check boundaries if item is not CLASSROOM_PERFORMANCE
-      const item = mockGradeItems.find(gi => gi.id === body.gradeItemId);
+      const itemId = body.gradeItemId || body.grade_item_id;
+      const studentId = body.studentId || body.student_id;
+      const item = mockGradeItems.find(gi => gi.id === itemId);
       if (item && item.itemType !== 'CLASSROOM_PERFORMANCE') {
         if (scoreVal !== null && scoreVal !== undefined && scoreVal < 0) {
           return HttpResponse.json({ error: 'Request validation failed: score must be positive' }, { status: 400 });
@@ -274,8 +276,8 @@ export const handlers = [
 
       const newRecord = {
         id: 'r-' + String(mockGradeRecords.length + 1) + '-' + Math.random().toString(36).substring(2, 6),
-        gradeItemId: body.gradeItemId,
-        studentId: body.studentId,
+        gradeItemId: itemId,
+        studentId: studentId,
         score: scoreVal !== null && scoreVal !== undefined ? Number(scoreVal) : null,
         lastModifiedAt: new Date().toISOString(),
         version: 1

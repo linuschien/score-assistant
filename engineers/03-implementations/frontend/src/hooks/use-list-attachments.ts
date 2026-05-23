@@ -11,9 +11,14 @@ export interface Attachments {
 }
 
 const LISTATTACHMENTS_QUERY = gql`
-  query listAttachments($filter: AttachmentsFilterInput) {
+  query listAttachments($filter: AttachmentFilterInput) {
     listAttachments(filter: $filter) {
       id
+      gradeRecordId
+      fileName
+      mimeType
+      fileSize
+      uploadedAt
     }
   }
 `;
