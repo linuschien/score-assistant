@@ -143,11 +143,11 @@ registerBehavior('Upload an Attachment for a GradeRecord', async (_ref, store) =
   });
 
   await api.post(`${API_BASE}/grade-records/${gradeRecordId}/attachments`, {
-    file_name: file.name,
-    mime_type: file.type || 'application/octet-stream',
-    file_size: file.size,
-    file_data: base64Data,
-    uploaded_at: new Date().toISOString()
+    fileName: file.name,
+    mimeType: file.type || 'application/octet-stream',
+    fileSize: file.size,
+    fileData: base64Data,
+    uploadedAt: new Date().toISOString()
   });
 
   await queryClient.invalidateQueries({ queryKey: ['listAttachments'] });
@@ -164,9 +164,9 @@ registerBehavior('Download an Attachment', async (_ref, store) => {
   }
 
   const res = await api.get(`${API_BASE}/grade-records/${gradeRecordId}/attachments/${attachmentId}`) as any;
-  const fileData = res?.file_data ?? res?.fileData;
-  const fileName = res?.file_name ?? res?.fileName ?? 'download';
-  const mimeType = res?.mime_type ?? res?.mimeType ?? 'application/octet-stream';
+  const fileData = res?.fileData;
+  const fileName = res?.fileName ?? 'download';
+  const mimeType = res?.mimeType ?? 'application/octet-stream';
 
   if (res && fileData !== undefined && fileData !== null) {
     const byteCharacters = atob(fileData);
@@ -187,7 +187,7 @@ registerBehavior('Download an Attachment', async (_ref, store) => {
     return '檔案下載成功';
   } else {
     const keys = Object.keys(res || {}).join(', ');
-    alert(`檔案下載失敗。伺服器傳回欄位: [${keys}]，大小: ${res?.file_size ?? res?.fileSize ?? 'N/A'}，資料長度: ${(fileData || '').length}`);
+    alert(`檔案下載失敗。伺服器傳回欄位: [${keys}]，大小: ${res?.fileSize ?? 'N/A'}，資料長度: ${(fileData || '').length}`);
     return '檔案下載失敗';
   }
 });

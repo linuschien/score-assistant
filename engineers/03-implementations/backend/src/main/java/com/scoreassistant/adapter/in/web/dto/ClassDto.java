@@ -10,19 +10,19 @@ public sealed interface ClassDto permits
         ClassDto.ClassResponse {
 
     record ClassRequest(
-            @NotBlank String class_name,
-            BigDecimal passing_threshold
+            @NotBlank String className,
+            BigDecimal passingThreshold
     ) implements ClassDto {}
 
     record ClassPatchRequest(
-            String class_name,
-            BigDecimal passing_threshold
+            String className,
+            BigDecimal passingThreshold
     ) implements ClassDto {}
 
     record ClassResponse(
             String id,
-            String semester_id,
-            String class_name,
-            BigDecimal passing_threshold
+            String semesterId,
+            String className,
+            BigDecimal passingThreshold
     ) implements ClassDto {}
 }

@@ -94,20 +94,20 @@ export const handlers = [
   http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
     try {
       const body = (await request.json()) as any;
-      if (!body.item_name || !body.item_name.trim()) {
+      if (!body.itemName || !body.itemName.trim()) {
         return HttpResponse.json(
-          { error: 'Request validation failed: item_name: 不能為空白' },
+          { error: 'Request validation failed: itemName: 不能為空白' },
           { status: 400 }
         );
       }
       const newGradeItem = {
         id: String(mockGradeItems.length + 1),
         classId: params.classId as string,
-        itemName: body.item_name,
-        itemType: body.item_type || 'OTHER',
-        itemDate: body.item_date || '',
-        itemDescription: body.item_description || '',
-        maxScore: body.max_score || 0,
+        itemName: body.itemName,
+        itemType: body.itemType || 'OTHER',
+        itemDate: body.itemDate || '',
+        itemDescription: body.itemDescription || '',
+        maxScore: body.maxScore || 0,
         weight: body.weight || 0,
       };
       mockGradeItems.push(newGradeItem);
@@ -120,9 +120,9 @@ export const handlers = [
   http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
     try {
       const body = (await request.json()) as any;
-      if (!body.item_name || !body.item_name.trim()) {
+      if (!body.itemName || !body.itemName.trim()) {
         return HttpResponse.json(
-          { error: 'Request validation failed: item_name: 不能為空白' },
+          { error: 'Request validation failed: itemName: 不能為空白' },
           { status: 400 }
         );
       }
@@ -130,11 +130,11 @@ export const handlers = [
       if (idx !== -1) {
         mockGradeItems[idx] = {
           ...mockGradeItems[idx],
-          itemName: body.item_name,
-          itemType: body.item_type || 'OTHER',
-          itemDate: body.item_date || '',
-          itemDescription: body.item_description || '',
-          maxScore: body.max_score || 0,
+          itemName: body.itemName,
+          itemType: body.itemType || 'OTHER',
+          itemDate: body.itemDate || '',
+          itemDescription: body.itemDescription || '',
+          maxScore: body.maxScore || 0,
           weight: body.weight || 0,
         };
         return HttpResponse.json(mockGradeItems[idx]);
@@ -153,7 +153,7 @@ export const handlers = [
   http.get('*/semesters/:id', ({ params }) => {
     const sem = mockSemesters.find(s => s.id === params.id);
     if (sem) {
-      return HttpResponse.json({ id: sem.id, name: sem.semesterName, startDate: sem.startDate, endDate: sem.endDate });
+      return HttpResponse.json({ id: sem.id, semesterName: sem.semesterName, startDate: sem.startDate, endDate: sem.endDate });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
@@ -161,13 +161,13 @@ export const handlers = [
     const body = await request.json() as any;
     const newSem = {
       id: String(mockSemesters.length + 1),
-      semesterName: body.semester_name,
-      startDate: body.start_date,
-      endDate: body.end_date,
+      semesterName: body.semesterName,
+      startDate: body.startDate,
+      endDate: body.endDate,
       classCount: 0
     };
     mockSemesters.push(newSem);
-    return HttpResponse.json({ id: newSem.id, name: newSem.semesterName, startDate: newSem.startDate, endDate: newSem.endDate }, { status: 201 });
+    return HttpResponse.json({ id: newSem.id, semesterName: newSem.semesterName, startDate: newSem.startDate, endDate: newSem.endDate }, { status: 201 });
   }),
   http.put('*/semesters/:id', async ({ request, params }) => {
     const body = await request.json() as any;
@@ -175,12 +175,12 @@ export const handlers = [
     if (idx !== -1) {
       mockSemesters[idx] = {
         ...mockSemesters[idx],
-        semesterName: body.semester_name,
-        startDate: body.start_date,
-        endDate: body.end_date
+        semesterName: body.semesterName,
+        startDate: body.startDate,
+        endDate: body.endDate
       };
       const sem = mockSemesters[idx];
-      return HttpResponse.json({ id: sem.id, name: sem.semesterName, startDate: sem.startDate, endDate: sem.endDate });
+      return HttpResponse.json({ id: sem.id, semesterName: sem.semesterName, startDate: sem.startDate, endDate: sem.endDate });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
@@ -193,31 +193,31 @@ export const handlers = [
   http.get('*/semesters/:semesterId/classes/:id', ({ params }) => {
     const cls = mockClasses.find(c => c.id === params.id);
     if (cls) {
-      return HttpResponse.json({ id: cls.id, className: cls.className, name: cls.className, semesterId: cls.semesterId });
+      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
   http.post('*/semesters/:semesterId/classes', async ({ request, params }) => {
     const body = await request.json() as any;
-    if (!body.class_name || !body.class_name.trim()) {
+    if (!body.className || !body.className.trim()) {
       return HttpResponse.json(
-        { error: 'Request validation failed: class_name: 不能為空白' },
+        { error: 'Request validation failed: className: 不能為空白' },
         { status: 400 }
       );
     }
     const newClass = {
       id: String(mockClasses.length + 1),
       semesterId: params.semesterId as string,
-      className: body.class_name,
+      className: body.className,
     };
     mockClasses.push(newClass);
-    return HttpResponse.json({ id: newClass.id, className: newClass.className, name: newClass.className, semesterId: newClass.semesterId }, { status: 201 });
+    return HttpResponse.json({ id: newClass.id, className: newClass.className, semesterId: newClass.semesterId }, { status: 201 });
   }),
   http.put('*/semesters/:semesterId/classes/:id', async ({ request, params }) => {
     const body = await request.json() as any;
-    if (!body.class_name || !body.class_name.trim()) {
+    if (!body.className || !body.className.trim()) {
       return HttpResponse.json(
-        { error: 'Request validation failed: class_name: 不能為空白' },
+        { error: 'Request validation failed: className: 不能為空白' },
         { status: 400 }
       );
     }
@@ -225,10 +225,10 @@ export const handlers = [
     if (idx !== -1) {
       mockClasses[idx] = {
         ...mockClasses[idx],
-        className: body.class_name
+        className: body.className
       };
       const cls = mockClasses[idx];
-      return HttpResponse.json({ id: cls.id, className: cls.className, name: cls.className, semesterId: cls.semesterId });
+      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
@@ -243,7 +243,7 @@ export const handlers = [
     if (record) {
       return HttpResponse.json({
         id: record.id,
-        grade_record_id: record.id,
+        gradeRecordId: record.id,
         gradeItemId: record.gradeItemId,
         studentId: record.studentId,
         score: record.score,
@@ -258,15 +258,15 @@ export const handlers = [
     try {
       const body = await request.json() as any;
       let scoreVal = body.score;
-      if (body.attendance_status !== undefined) {
-        if (body.attendance_status === 'PRESENT') scoreVal = 1.0;
-        else if (body.attendance_status === 'ABSENT') scoreVal = 0.0;
-        else if (body.attendance_status === 'EXCUSED') scoreVal = 0.5;
+      if (body.attendanceStatus !== undefined) {
+        if (body.attendanceStatus === 'PRESENT') scoreVal = 1.0;
+        else if (body.attendanceStatus === 'ABSENT') scoreVal = 0.0;
+        else if (body.attendanceStatus === 'EXCUSED') scoreVal = 0.5;
       }
 
       // Check boundaries if item is not CLASSROOM_PERFORMANCE
-      const itemId = body.gradeItemId || body.grade_item_id;
-      const studentId = body.studentId || body.student_id;
+      const itemId = body.gradeItemId;
+      const studentId = body.studentId;
       const item = mockGradeItems.find(gi => gi.id === itemId);
       if (item && item.itemType !== 'CLASSROOM_PERFORMANCE') {
         if (scoreVal !== null && scoreVal !== undefined && scoreVal < 0) {
@@ -285,14 +285,11 @@ export const handlers = [
       mockGradeRecords.push(newRecord);
       return HttpResponse.json({
         id: newRecord.id,
-        grade_record_id: newRecord.id,
+        gradeRecordId: newRecord.id,
         gradeItemId: newRecord.gradeItemId,
-        grade_item_id: newRecord.gradeItemId,
         studentId: newRecord.studentId,
-        student_id: newRecord.studentId,
         score: newRecord.score,
         lastModifiedAt: newRecord.lastModifiedAt,
-        last_modified_at: newRecord.lastModifiedAt,
         version: newRecord.version
       }, { status: 201 });
     } catch (err) {
@@ -314,14 +311,11 @@ export const handlers = [
         const record = mockGradeRecords[idx];
         return HttpResponse.json({
           id: record.id,
-          grade_record_id: record.id,
+          gradeRecordId: record.id,
           gradeItemId: record.gradeItemId,
-          grade_item_id: record.gradeItemId,
           studentId: record.studentId,
-          student_id: record.studentId,
           score: record.score,
           lastModifiedAt: record.lastModifiedAt,
-          last_modified_at: record.lastModifiedAt,
           version: record.version
         });
       }
@@ -345,7 +339,7 @@ export const handlers = [
         const record = mockGradeRecords[idx];
         return HttpResponse.json({
           id: record.id,
-          grade_record_id: record.id,
+          gradeRecordId: record.id,
           gradeItemId: record.gradeItemId,
           studentId: record.studentId,
           score: record.score,
@@ -380,17 +374,11 @@ export const handlers = [
 
       const newAttachment = {
         id: 'att-' + String(mockAttachments.length + 1) + '-' + Math.random().toString(36).substring(2, 6),
-        attachment_id: 'att-' + String(mockAttachments.length + 1),
         gradeRecordId: params.gradeRecordId,
-        grade_record_id: params.gradeRecordId,
         fileName: 'homework_mock.pdf',
-        file_name: 'homework_mock.pdf',
         mimeType: 'application/pdf',
-        mime_type: 'application/pdf',
         fileSize: size || 1024,
-        file_size: size || 1024,
-        uploadedAt: new Date().toISOString(),
-        uploaded_at: new Date().toISOString()
+        uploadedAt: new Date().toISOString()
       };
       mockAttachments.push(newAttachment);
       return HttpResponse.json(newAttachment, { status: 201 });
@@ -400,18 +388,18 @@ export const handlers = [
   }),
 
   http.get('*/grade-records/:gradeRecordId/attachments/:attachmentId', ({ params }) => {
-    const att = mockAttachments.find(a => a.id === params.attachmentId || a.attachment_id === params.attachmentId);
+    const att = mockAttachments.find(a => a.id === params.attachmentId);
     if (att) {
       return HttpResponse.json({
         ...att,
-        file_data: att.fileData || 'bW9jayBiYXNlNjQgZGF0YQ=='
+        fileData: att.fileData || 'bW9jayBiYXNlNjQgZGF0YQ=='
       });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
 
   http.delete('*/grade-records/:gradeRecordId/attachments/:attachmentId', ({ params }) => {
-    const idx = mockAttachments.findIndex(a => a.id === params.attachmentId || a.attachment_id === params.attachmentId);
+    const idx = mockAttachments.findIndex(a => a.id === params.attachmentId);
     if (idx !== -1) {
       mockAttachments.splice(idx, 1);
       return new HttpResponse(null, { status: 204 });

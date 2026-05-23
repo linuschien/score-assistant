@@ -39,7 +39,7 @@ public class StudentService {
                     var now = LocalDateTime.now();
                     var entity = new StudentEntity(
                             null, classId,
-                            req.student_number(), req.student_name(),
+                            req.studentNumber(), req.studentName(),
                             now, now, false, null
                     );
                     return studentRepository.save(entity);
@@ -61,7 +61,7 @@ public class StudentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(),
-                        req.student_number(), req.student_name(),
+                        req.studentNumber(), req.studentName(),
                         e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
@@ -73,8 +73,8 @@ public class StudentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(),
-                        req.student_number() != null ? req.student_number() : e.studentNumber(),
-                        req.student_name() != null ? req.student_name() : e.studentName(),
+                        req.studentNumber() != null ? req.studentNumber() : e.studentNumber(),
+                        req.studentName() != null ? req.studentName() : e.studentName(),
                         e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }

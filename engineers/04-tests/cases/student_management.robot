@@ -30,14 +30,14 @@ Add a Student — 王小明 seat 1 should return 201
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to students endpoint with number "1" and name "王小明"
     Then the response code should be 201
-    And the response should contain a valid UUID for "student_id"
+    And the response should contain a valid UUID for "id"
 
 Add a Student — 李小華 seat 2 should return 201
     [Documentation]    US-03-02 — Reused from: student_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to students endpoint with number "2" and name "李小華"
     Then the response code should be 201
-    And the response should contain a valid UUID for "student_id"
+    And the response should contain a valid UUID for "id"
 
 Add a Student — seat 0 should return 400
     [Documentation]    US-03-02 — Reused from: student_management.feature
@@ -64,7 +64,7 @@ List all Students in a Class via GraphQL
     ...                UI: student-table (student-list.ui-manifest.json)
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a GraphQL query is made for all Students in Class "${CLASS_ID}"
-    Then the response should contain a list of Students ordered by student_number ascending
+    Then the response should contain a list of Students ordered by studentNumber ascending
 
 # ---------------------------------------------------------------------------
 # US-03-03: Get a Student by ID
@@ -73,7 +73,7 @@ Get a Student by ID
     [Documentation]    US-03-03 — Reused from: student_management.feature
     When a GET request is made to student detail endpoint
     Then the response code should be 200
-    And the response body should contain "student_id" equal to "${STUDENT_ID}"
+    And the response body should contain "id" equal to "${STUDENT_ID}"
 
 # ---------------------------------------------------------------------------
 # US-03-04: Update Student information
@@ -115,8 +115,8 @@ Import Students from CSV (happy path)
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to import students endpoint with CSV content and no conflicts
     Then the response code should be 200
-    And the response body should contain "success_count" equal to "3"
-    And the response body should contain "failure_count" equal to "0"
+    And the response body should contain "success" equal to "True"
+    And the response body should contain "affectedCount" equal to "3"
 
 # ---------------------------------------------------------------------------
 # US-03-01 AC4: Import with conflicts
@@ -125,17 +125,17 @@ Import Students from CSV (happy path)
 Import Students from CSV with conflicts — SKIP strategy
     [Documentation]    US-03-01 AC4 — Reused from: student_management.feature
     ...                Seat 99 already exists via ${STUDENT_ID} from Suite Setup
-    When a POST request is made to import students endpoint with conflict_resolution "SKIP"
+    When a POST request is made to import students endpoint with conflictResolution "SKIP"
     Then the response code should be 200
-    And the response body should contain "failure_count" equal to "1"
-    And the response body should contain "success_count" equal to "0"
+    And the response body should contain "success" equal to "True"
+    And the response body should contain "affectedCount" equal to "0"
 
 Import Students from CSV with conflicts — OVERWRITE strategy
     [Documentation]    US-03-01 AC4 — Reused from: student_management.feature
-    When a POST request is made to import students endpoint with conflict_resolution "OVERWRITE"
+    When a POST request is made to import students endpoint with conflictResolution "OVERWRITE"
     Then the response code should be 200
-    And the response body should contain "failure_count" equal to "0"
-    And the response body should contain "success_count" equal to "1"
+    And the response body should contain "success" equal to "True"
+    And the response body should contain "affectedCount" equal to "1"
 
 *** Keywords ***
 # ---------------------------------------------------------------------------
@@ -145,23 +145,23 @@ Initialize Student Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Create Semester
     ${s_payload}=    Create Dictionary
-    ...    semester_name=AutoTest-StudentSuite-Semester
-    ...    start_date=2024-09-01
-    ...    end_date=2025-01-31
+    ...    semesterName=AutoTest-StudentSuite-Semester
+    ...    startDate=2024-09-01
+    ...    endDate=2025-01-31
     ${s_resp}=    POST On Session    score_api    /semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Create Class
-    ${c_payload}=    Create Dictionary    class_name=AutoTest-StudentSuite-Class
+    ${c_payload}=    Create Dictionary    className=AutoTest-StudentSuite-Class
     ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
-    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[class_id]
+    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
     Set Suite Variable    ${STUDENTS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/students
     # Step 3: Create Student (seat 99) — used by GET/PUT and duplicate/import conflict tests
-    ${st_payload}=    Create Dictionary    student_number=99    student_name=AutoTest-SuiteStudent
+    ${st_payload}=    Create Dictionary    studentNumber=99    studentName=AutoTest-SuiteStudent
     ${st_resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${st_payload}
     Should Be Equal As Strings    ${st_resp.status_code}    201
-    Set Suite Variable    ${STUDENT_ID}    ${st_resp.json()}[student_id]
+    Set Suite Variable    ${STUDENT_ID}    ${st_resp.json()}[id]
 
 Cleanup Student Suite
     # Deleting Semester cascades to Class → Students
@@ -177,10 +177,10 @@ a Class with ID "${class_id}" exists in Semester "${semester_id}"
 
 a disposable Student is created in Class "${class_id}"
     [Documentation]    Creates a temporary student for DELETE test — uses seat 50 (not conflicting with suite seat 99).
-    ${payload}=    Create Dictionary    student_number=50    student_name=AutoTest-Disposable-Student
+    ${payload}=    Create Dictionary    studentNumber=50    studentName=AutoTest-Disposable-Student
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Test Variable    ${DISPOSABLE_STUDENT_ID}    ${resp.json()}[student_id]
+    Set Test Variable    ${DISPOSABLE_STUDENT_ID}    ${resp.json()}[id]
 
 # ---------------------------------------------------------------------------
 # When Steps
@@ -188,15 +188,15 @@ a disposable Student is created in Class "${class_id}"
 a POST request is made to students endpoint with number "${number}" and name "${name}"
     [Documentation]    POST /semesters/{id}/classes/{id}/students
     ...    UI: add-student-button → student-number-field, student-name-field, submit-student-trigger
-    ${payload}=    Create Dictionary    student_number=${number}    student_name=${name}
+    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GraphQL query is made for all Students in Class "${class_id}"
-    [Documentation]    POST /graphql — students ordered by student_number ASC
+    [Documentation]    POST /graphql — students ordered by studentNumber ASC
     ...    UI: student-table (student-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { studentsByClass(classId: "${class_id}", orderBy: STUDENT_NUMBER_ASC) { student_id student_number student_name } }
+    ...    { listStudents(filter: { classId: "${class_id}" }) { id studentNumber studentName } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -208,12 +208,12 @@ a GET request is made to student detail endpoint
 a PUT request is made to student detail endpoint with number "${number}" and name "${name}"
     [Documentation]    PUT /semesters/{id}/classes/{id}/students/{id}
     ...    UI: edit-student-trigger → student-number-field, student-name-field, submit-student-trigger
-    ${payload}=    Create Dictionary    student_number=${number}    student_name=${name}
+    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
     ${resp}=    PUT On Session    score_api    ${STUDENTS_BASE}/${STUDENT_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to "${url}" with number "${number}" and name "${name}"
-    ${payload}=    Create Dictionary    student_number=${number}    student_name=${name}
+    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
     ${resp}=    PUT On Session    score_api    ${url}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -232,11 +232,11 @@ a POST request is made to import students endpoint with CSV content and no confl
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to import students endpoint with conflict_resolution "${strategy}"
-    [Documentation]    POST /semesters/{id}/classes/{id}/students:importStudents?conflict_resolution={strategy}
+    [Documentation]    POST /semesters/{id}/classes/{id}/students:importStudents?conflictResolution={strategy}
     ...                CSV contains seat 99, which already exists (${STUDENT_ID} from Suite Setup)
     ${csv_content}=    Set Variable    number,name\n99,衝突學生
     ${files}=    Create Dictionary    file=${csv_content.encode()}
-    ${params}=    Create Dictionary    conflict_resolution=${strategy}
+    ${params}=    Create Dictionary    conflictResolution=${strategy}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}:importStudents    files=${files}    params=${params}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -259,12 +259,12 @@ the response body should contain "${field}" equal to "${value}"
 the response should contain a list of Students ordered by student_number ascending
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    data
-    Dictionary Should Contain Key    ${body}[data]    studentsByClass
-    ${items}=    Set Variable    ${body}[data][studentsByClass]
+    Dictionary Should Contain Key    ${body}[data]    listStudents
+    ${items}=    Set Variable    ${body}[data][listStudents]
     Should Not Be Empty    ${items}
     ${length}=    Get Length    ${items}
     FOR    ${i}    IN RANGE    0    ${length} - 1
-        Should Be True    ${items}[${i}][student_number] <= ${items}[${i+1}][student_number]
+        Should Be True    ${items}[${i}][studentNumber] <= ${items}[${i+1}][studentNumber]
     END
 
 the Student with ID "${student_id}" should no longer exist

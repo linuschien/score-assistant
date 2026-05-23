@@ -12,31 +12,31 @@ public sealed interface GradeItemDto permits
         GradeItemDto.GradeItemResponse {
 
     record GradeItemRequest(
-            @NotBlank String item_name,
-            @NotBlank String item_type,
-            LocalDate item_date,
-            String item_description,
-            @NotNull BigDecimal max_score,
+            @NotBlank String itemName,
+            @NotBlank String itemType,
+            LocalDate itemDate,
+            String itemDescription,
+            @NotNull BigDecimal maxScore,
             @NotNull BigDecimal weight
     ) implements GradeItemDto {}
 
     record GradeItemPatchRequest(
-            String item_name,
-            String item_type,
-            LocalDate item_date,
-            String item_description,
-            BigDecimal max_score,
+            String itemName,
+            String itemType,
+            LocalDate itemDate,
+            String itemDescription,
+            BigDecimal maxScore,
             BigDecimal weight
     ) implements GradeItemDto {}
 
     record GradeItemResponse(
             String id,
-            String class_id,
-            String item_name,
-            String item_type,
-            LocalDate item_date,
-            String item_description,
-            BigDecimal max_score,
+            String classId,
+            String itemName,
+            String itemType,
+            LocalDate itemDate,
+            String itemDescription,
+            BigDecimal maxScore,
             BigDecimal weight
     ) implements GradeItemDto {}
 }

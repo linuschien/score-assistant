@@ -9,19 +9,19 @@ public sealed interface StudentDto permits
         StudentDto.StudentResponse {
 
     record StudentRequest(
-            @NotNull Integer student_number,
-            @NotBlank String student_name
+            @NotNull Integer studentNumber,
+            @NotBlank String studentName
     ) implements StudentDto {}
 
     record StudentPatchRequest(
-            Integer student_number,
-            String student_name
+            Integer studentNumber,
+            String studentName
     ) implements StudentDto {}
 
     record StudentResponse(
             String id,
-            String class_id,
-            int student_number,
-            String student_name
+            String classId,
+            int studentNumber,
+            String studentName
     ) implements StudentDto {}
 }

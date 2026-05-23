@@ -27,17 +27,17 @@ public class StudentGraphQLResolver {
 
     @SchemaMapping(typeName = "Student", field = "classId")
     public String classId(StudentResponse student) {
-        return student.class_id();
+        return student.classId();
     }
 
     @SchemaMapping(typeName = "Student", field = "studentNumber")
     public int studentNumber(StudentResponse student) {
-        return student.student_number();
+        return student.studentNumber();
     }
 
     @SchemaMapping(typeName = "Student", field = "studentName")
     public String studentName(StudentResponse student) {
-        return student.student_name();
+        return student.studentName();
     }
 
     public record StudentFilterInput(String classId) {}

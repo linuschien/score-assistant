@@ -59,7 +59,7 @@ class AttachmentServiceTest {
                 new byte[]{1, 2, 3}, LocalDateTime.now());
 
         StepVerifier.create(attachmentService.create(gradeRecordId, req))
-                .expectNextMatches(r -> r.file_name().equals("homework.pdf"))
+                .expectNextMatches(r -> r.fileName().equals("homework.pdf"))
                 .verifyComplete();
     }
 
@@ -140,7 +140,7 @@ class AttachmentServiceTest {
                 new byte[]{1, 2}, LocalDateTime.now());
 
         StepVerifier.create(attachmentService.update(attachmentId, req))
-                .expectNextMatches(r -> r.file_name().equals("homework.pdf")) // returns updated entity (mocked response is attachmentEntity)
+                .expectNextMatches(r -> r.fileName().equals("homework.pdf")) // returns updated entity (mocked response is attachmentEntity)
                 .verifyComplete();
     }
 

@@ -323,7 +323,8 @@
       "props": {
         "id": "download-attachment-trigger",
         "label": "下載",
-        "variant": "outline"
+        "variant": "secondary",
+        "disabled": null
       },
       "children": [],
       "on": {
@@ -343,7 +344,8 @@
       "props": {
         "id": "delete-attachment-trigger",
         "label": "刪除",
-        "variant": "danger"
+        "variant": "danger",
+        "disabled": null
       },
       "children": [],
       "on": {

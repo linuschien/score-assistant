@@ -64,7 +64,7 @@ class GradeItemServiceTest {
                 "Midterm exam", BigDecimal.valueOf(100.0), BigDecimal.valueOf(0.3));
 
         StepVerifier.create(gradeItemService.create(classId, req))
-                .expectNextMatches(r -> r.item_name().equals("Midterm Exam"))
+                .expectNextMatches(r -> r.itemName().equals("Midterm Exam"))
                 .verifyComplete();
     }
 

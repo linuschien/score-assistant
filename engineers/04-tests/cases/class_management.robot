@@ -28,14 +28,14 @@ Create a new Class — 三年甲班 should return 201
     Given a Semester with ID "${SEMESTER_ID}" exists
     When a POST request is made to classes endpoint with class_name "三年甲班"
     Then the response code should be 201
-    And the response should contain a valid UUID for "class_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new Class — 二年乙班 should return 201
     [Documentation]    US-02-01 — Reused from: class_management.feature
     Given a Semester with ID "${SEMESTER_ID}" exists
     When a POST request is made to classes endpoint with class_name "二年乙班"
     Then the response code should be 201
-    And the response should contain a valid UUID for "class_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new Class — empty name should return 400
     [Documentation]    US-02-01 — Reused from: class_management.feature
@@ -71,7 +71,7 @@ Get a Class by ID
     [Documentation]    US-02-02 — Reused from: class_management.feature
     When a GET request is made to class detail endpoint
     Then the response code should be 200
-    And the response body should contain "class_id" equal to "${CLASS_ID}"
+    And the response body should contain "id" equal to "${CLASS_ID}"
 
 # ---------------------------------------------------------------------------
 # US-02-03: Update Class information
@@ -112,17 +112,17 @@ Initialize Class Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Create Semester → get runtime UUID
     ${s_payload}=    Create Dictionary
-    ...    semester_name=AutoTest-ClassSuite-Semester
-    ...    start_date=2024-09-01
-    ...    end_date=2025-01-31
+    ...    semesterName=AutoTest-ClassSuite-Semester
+    ...    startDate=2024-09-01
+    ...    endDate=2025-01-31
     ${s_resp}=    POST On Session    score_api    /semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Create Class → get runtime UUID (used by GET/PUT tests)
-    ${c_payload}=    Create Dictionary    class_name=AutoTest-SuiteClass
+    ${c_payload}=    Create Dictionary    className=AutoTest-SuiteClass
     ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
-    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[class_id]
+    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
 
 Cleanup Class Suite
     # Deleting Semester cascades to all Classes underneath
@@ -137,10 +137,10 @@ a Semester with ID "${semester_id}" exists
     Should Be Equal As Strings    ${resp.status_code}    200
 
 a disposable Class is created in Semester "${semester_id}"
-    ${payload}=    Create Dictionary    class_name=AutoTest-Disposable-Class
+    ${payload}=    Create Dictionary    className=AutoTest-Disposable-Class
     ${resp}=    POST On Session    score_api    /semesters/${semester_id}/classes    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Test Variable    ${DISPOSABLE_CLASS_ID}    ${resp.json()}[class_id]
+    Set Test Variable    ${DISPOSABLE_CLASS_ID}    ${resp.json()}[id]
 
 # ---------------------------------------------------------------------------
 # When Steps
@@ -148,7 +148,7 @@ a disposable Class is created in Semester "${semester_id}"
 a POST request is made to classes endpoint with class_name "${class_name}"
     [Documentation]    POST /semesters/{id}/classes
     ...    UI: class-name-field, submit-class-trigger (class-form.ui-manifest.json)
-    ${payload}=    Create Dictionary    class_name=${class_name}
+    ${payload}=    Create Dictionary    className=${class_name}
     ${resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -156,7 +156,7 @@ a GraphQL query is made for all Classes in Semester "${semester_id}"
     [Documentation]    POST /graphql
     ...    UI: class-table (class-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { classesBySemester(semesterId: "${semester_id}") { class_id class_name } }
+    ...    { listClasses(filter: { semesterId: "${semester_id}" }) { id className semesterId } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -169,12 +169,12 @@ a GET request is made to class detail endpoint
 a PUT request is made to class detail endpoint with class_name "${class_name}"
     [Documentation]    PUT /semesters/{id}/classes/{classId}
     ...    UI: edit-class-trigger → class-name-field, submit-class-trigger
-    ${payload}=    Create Dictionary    class_name=${class_name}
+    ${payload}=    Create Dictionary    className=${class_name}
     ${resp}=    PUT On Session    score_api    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to "/semesters/${semester_id}/classes/${class_id}" with class_name "${class_name}"
-    ${payload}=    Create Dictionary    class_name=${class_name}
+    ${payload}=    Create Dictionary    className=${class_name}
     ${resp}=    PUT On Session    score_api    /semesters/${semester_id}/classes/${class_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -203,8 +203,8 @@ the response body should contain "${field}" equal to "${value}"
 the response should contain a list of Classes
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    data
-    Dictionary Should Contain Key    ${body}[data]    classesBySemester
-    Should Not Be Empty    ${body}[data][classesBySemester]
+    Dictionary Should Contain Key    ${body}[data]    listClasses
+    Should Not Be Empty    ${body}[data][listClasses]
 
 the Class with ID "${class_id}" should no longer exist in Semester "${semester_id}"
     ${resp}=    GET On Session    score_api    /semesters/${semester_id}/classes/${class_id}    expected_status=any

@@ -31,7 +31,7 @@ public class AttachmentService {
 
     @Transactional
     public Mono<AttachmentResponse> create(UUID gradeRecordId, AttachmentRequest req) {
-        if (req.file_size() <= 0) {
+        if (req.fileSize() <= 0) {
             return Mono.error(new ValidationException("File size must be greater than 0"));
         }
         var recordProbe = new GradeRecordEntity(gradeRecordId, null, null, null, null, 0, null, null, false, null);
@@ -45,8 +45,8 @@ public class AttachmentService {
                     var now = LocalDateTime.now();
                     var entity = new AttachmentEntity(
                             null, gradeRecordId,
-                            req.file_name(), req.mime_type(), req.file_size(), req.file_data(),
-                            req.uploaded_at(), now, now, false, null
+                            req.fileName(), req.mimeType(), req.fileSize(), req.fileData(),
+                            req.uploadedAt(), now, now, false, null
                     );
                     return attachmentRepository.save(entity);
                 })
@@ -62,7 +62,7 @@ public class AttachmentService {
 
     @Transactional
     public Mono<AttachmentResponse> update(UUID id, AttachmentRequest req) {
-        if (req.file_size() <= 0) {
+        if (req.fileSize() <= 0) {
             return Mono.error(new ValidationException("File size must be greater than 0"));
         }
         return attachmentRepository.findById(id)
@@ -70,8 +70,8 @@ public class AttachmentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .flatMap(e -> attachmentRepository.save(new AttachmentEntity(
                         e.id(), e.gradeRecordId(),
-                        req.file_name(), req.mime_type(), req.file_size(), req.file_data(),
-                        req.uploaded_at(), e.createdAt(), LocalDateTime.now(), false, null)))
+                        req.fileName(), req.mimeType(), req.fileSize(), req.fileData(),
+                        req.uploadedAt(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
 
@@ -82,7 +82,7 @@ public class AttachmentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))
                 .flatMap(e -> attachmentRepository.save(new AttachmentEntity(
                         e.id(), e.gradeRecordId(),
-                        req.file_name() != null ? req.file_name() : e.fileName(),
+                        req.fileName() != null ? req.fileName() : e.fileName(),
                         e.mimeType(), e.fileSize(), e.fileData(),
                         e.uploadedAt(), e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);

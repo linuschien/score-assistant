@@ -59,7 +59,7 @@ class ClassServiceTest {
         var req = new ClassRequest("CS-101", BigDecimal.valueOf(60.0));
 
         StepVerifier.create(classService.create(semesterId, req))
-                .expectNextMatches(r -> r.class_name().equals("CS-101"))
+                .expectNextMatches(r -> r.className().equals("CS-101"))
                 .verifyComplete();
     }
 

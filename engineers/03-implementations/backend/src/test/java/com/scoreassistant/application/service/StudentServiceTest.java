@@ -58,7 +58,7 @@ class StudentServiceTest {
         var req = new StudentRequest(2026001, "Alice");
 
         StepVerifier.create(studentService.create(classId, req))
-                .expectNextMatches(r -> r.student_name().equals("Alice"))
+                .expectNextMatches(r -> r.studentName().equals("Alice"))
                 .verifyComplete();
     }
 

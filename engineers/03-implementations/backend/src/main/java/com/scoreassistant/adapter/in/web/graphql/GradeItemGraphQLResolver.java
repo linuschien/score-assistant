@@ -29,32 +29,32 @@ public class GradeItemGraphQLResolver {
 
     @SchemaMapping(typeName = "GradeItem", field = "classId")
     public String classId(GradeItemResponse item) {
-        return item.class_id();
+        return item.classId();
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "itemName")
     public String itemName(GradeItemResponse item) {
-        return item.item_name();
+        return item.itemName();
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "itemType")
     public String itemType(GradeItemResponse item) {
-        return item.item_type();
+        return item.itemType();
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "itemDate")
     public String itemDate(GradeItemResponse item) {
-        return item.item_date() != null ? item.item_date().toString() : null;
+        return item.itemDate() != null ? item.itemDate().toString() : null;
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "itemDescription")
     public String itemDescription(GradeItemResponse item) {
-        return item.item_description();
+        return item.itemDescription();
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "maxScore")
     public BigDecimal maxScore(GradeItemResponse item) {
-        return item.max_score();
+        return item.maxScore();
     }
 
     @SchemaMapping(typeName = "GradeItem", field = "weight")

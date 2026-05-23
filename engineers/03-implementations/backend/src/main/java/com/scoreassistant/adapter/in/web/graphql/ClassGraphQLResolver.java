@@ -29,17 +29,17 @@ public class ClassGraphQLResolver {
 
     @SchemaMapping(typeName = "Class", field = "semesterId")
     public String semesterId(ClassResponse cls) {
-        return cls.semester_id();
+        return cls.semesterId();
     }
 
     @SchemaMapping(typeName = "Class", field = "className")
     public String className(ClassResponse cls) {
-        return cls.class_name();
+        return cls.className();
     }
 
     @SchemaMapping(typeName = "Class", field = "passingThreshold")
     public BigDecimal passingThreshold(ClassResponse cls) {
-        return cls.passing_threshold();
+        return cls.passingThreshold();
     }
 
     public record ClassFilterInput(String semesterId, String className) {}

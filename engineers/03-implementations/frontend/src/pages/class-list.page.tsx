@@ -25,7 +25,7 @@ registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
   const semesterId = store.get('/selected/semesterId') as string;
   const form = (store.get('/form') as Record<string, string>) || {};
   await api.post(`${API_BASE}/semesters/${semesterId}/classes`, {
-    class_name: form['modal-class-name-field'],
+    className: form['modal-class-name-field'],
   });
   store.set('/form', {});
   store.set('/modals/class-form-modal', false);
@@ -38,7 +38,7 @@ registerBehavior('Update a Class', async (_ref, store) => {
   const classId = store.get('/selected/classId') as string;
   const semesterId = store.get('/selected/semesterId') as string;
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}`, {
-    class_name: form['modal-class-name-field'],
+    className: form['modal-class-name-field'],
   });
   store.set('/form', {});
   store.set('/modals/class-form-modal', false);

@@ -28,9 +28,9 @@ public class SemesterService {
         var now = LocalDateTime.now();
         var entity = new SemesterEntity(
                 null,
-                req.semester_name(),
-                req.start_date(),
-                req.end_date(),
+                req.semesterName(),
+                req.startDate(),
+                req.endDate(),
                 now, now, false, null
         );
         return semesterRepository.save(entity).map(this::toResponse);
@@ -51,9 +51,9 @@ public class SemesterService {
                 .flatMap(existing -> {
                     var updated = new SemesterEntity(
                             existing.id(),
-                            req.semester_name(),
-                            req.start_date(),
-                            req.end_date(),
+                            req.semesterName(),
+                            req.startDate(),
+                            req.endDate(),
                             existing.createdAt(),
                             LocalDateTime.now(),
                             false,
@@ -72,9 +72,9 @@ public class SemesterService {
                 .flatMap(existing -> {
                     var updated = new SemesterEntity(
                             existing.id(),
-                            req.semester_name() != null ? req.semester_name() : existing.semesterName(),
-                            req.start_date() != null ? req.start_date() : existing.startDate(),
-                            req.end_date() != null ? req.end_date() : existing.endDate(),
+                            req.semesterName() != null ? req.semesterName() : existing.semesterName(),
+                            req.startDate() != null ? req.startDate() : existing.startDate(),
+                            req.endDate() != null ? req.endDate() : existing.endDate(),
                             existing.createdAt(),
                             LocalDateTime.now(),
                             false,

@@ -28,27 +28,27 @@ public class AttachmentGraphQLResolver {
 
     @SchemaMapping(typeName = "Attachment", field = "gradeRecordId")
     public String gradeRecordId(AttachmentResponse att) {
-        return att.grade_record_id();
+        return att.gradeRecordId();
     }
 
     @SchemaMapping(typeName = "Attachment", field = "fileName")
     public String fileName(AttachmentResponse att) {
-        return att.file_name();
+        return att.fileName();
     }
 
     @SchemaMapping(typeName = "Attachment", field = "mimeType")
     public String mimeType(AttachmentResponse att) {
-        return att.mime_type();
+        return att.mimeType();
     }
 
     @SchemaMapping(typeName = "Attachment", field = "fileSize")
     public int fileSize(AttachmentResponse att) {
-        return att.file_size();
+        return att.fileSize();
     }
 
     @SchemaMapping(typeName = "Attachment", field = "uploadedAt")
     public String uploadedAt(AttachmentResponse att) {
-        return att.uploaded_at().toString();
+        return att.uploadedAt().toString();
     }
 
     public record AttachmentFilterInput(String gradeRecordId) {}

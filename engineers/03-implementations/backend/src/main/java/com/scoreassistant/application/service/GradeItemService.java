@@ -52,9 +52,9 @@ public class GradeItemService {
                     var now = LocalDateTime.now();
                     var entity = new GradeItemEntity(
                             null, classId,
-                            req.item_name(), req.item_type(),
-                            req.item_date(), req.item_description(),
-                            req.max_score(), req.weight(),
+                            req.itemName(), req.itemType(),
+                            req.itemDate(), req.itemDescription(),
+                            req.maxScore(), req.weight(),
                             now, now, false, null
                     );
                     return gradeItemRepository.save(entity);
@@ -76,9 +76,9 @@ public class GradeItemService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .flatMap(e -> gradeItemRepository.save(new GradeItemEntity(
                         e.id(), e.classId(),
-                        req.item_name(), req.item_type(),
-                        req.item_date(), req.item_description(),
-                        req.max_score(), req.weight(),
+                        req.itemName(), req.itemType(),
+                        req.itemDate(), req.itemDescription(),
+                        req.maxScore(), req.weight(),
                         e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
@@ -90,11 +90,11 @@ public class GradeItemService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeItem", id)))
                 .flatMap(e -> gradeItemRepository.save(new GradeItemEntity(
                         e.id(), e.classId(),
-                        req.item_name() != null ? req.item_name() : e.itemName(),
-                        req.item_type() != null ? req.item_type() : e.itemType(),
-                        req.item_date() != null ? req.item_date() : e.itemDate(),
-                        req.item_description() != null ? req.item_description() : e.itemDescription(),
-                        req.max_score() != null ? req.max_score() : e.maxScore(),
+                        req.itemName() != null ? req.itemName() : e.itemName(),
+                        req.itemType() != null ? req.itemType() : e.itemType(),
+                        req.itemDate() != null ? req.itemDate() : e.itemDate(),
+                        req.itemDescription() != null ? req.itemDescription() : e.itemDescription(),
+                        req.maxScore() != null ? req.maxScore() : e.maxScore(),
                         req.weight() != null ? req.weight() : e.weight(),
                         e.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);

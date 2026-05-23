@@ -52,20 +52,20 @@ function setupMocks() {
     http.post('*/semesters/:semesterId/classes/:classId/grade-items', async ({ request, params }) => {
       try {
         const body = (await request.json()) as any;
-        if (!body.item_name || !body.item_name.trim()) {
+        if (!body.itemName || !body.itemName.trim()) {
           return HttpResponse.json(
-            { error: 'Request validation failed: item_name: 不能為空白' },
+            { error: 'Request validation failed: itemName: 不能為空白' },
             { status: 400 }
           );
         }
         const newGradeItem = {
           id: String(mockGradeItems.length + 1),
           classId: params.classId as string,
-          itemName: body.item_name,
-          itemType: body.item_type || 'OTHER',
-          itemDate: body.item_date || '',
-          itemDescription: body.item_description || '',
-          maxScore: body.max_score || 0,
+          itemName: body.itemName,
+          itemType: body.itemType || 'OTHER',
+          itemDate: body.itemDate || '',
+          itemDescription: body.itemDescription || '',
+          maxScore: body.maxScore || 0,
           weight: body.weight || 0,
         };
         mockGradeItems.push(newGradeItem);
@@ -78,9 +78,9 @@ function setupMocks() {
     http.put('*/semesters/:semesterId/classes/:classId/grade-items/:gradeItemId', async ({ request, params }) => {
       try {
         const body = (await request.json()) as any;
-        if (!body.item_name || !body.item_name.trim()) {
+        if (!body.itemName || !body.itemName.trim()) {
           return HttpResponse.json(
-            { error: 'Request validation failed: item_name: 不能為空白' },
+            { error: 'Request validation failed: itemName: 不能為空白' },
             { status: 400 }
           );
         }
@@ -88,11 +88,11 @@ function setupMocks() {
         if (idx !== -1) {
           mockGradeItems[idx] = {
             ...mockGradeItems[idx],
-            itemName: body.item_name,
-            itemType: body.item_type || 'OTHER',
-            itemDate: body.item_date || '',
-            itemDescription: body.item_description || '',
-            maxScore: body.max_score || 0,
+            itemName: body.itemName,
+            itemType: body.itemType || 'OTHER',
+            itemDate: body.itemDate || '',
+            itemDescription: body.itemDescription || '',
+            maxScore: body.maxScore || 0,
             weight: body.weight || 0,
           };
           return HttpResponse.json(mockGradeItems[idx]);

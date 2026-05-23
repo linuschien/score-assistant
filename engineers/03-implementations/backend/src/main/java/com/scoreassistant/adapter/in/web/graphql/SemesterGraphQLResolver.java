@@ -25,17 +25,17 @@ public class SemesterGraphQLResolver {
 
     @SchemaMapping(typeName = "Semester", field = "semesterName")
     public String semesterName(SemesterResponse semester) {
-        return semester.semester_name();
+        return semester.semesterName();
     }
 
     @SchemaMapping(typeName = "Semester", field = "startDate")
     public String startDate(SemesterResponse semester) {
-        return semester.start_date().toString();
+        return semester.startDate().toString();
     }
 
     @SchemaMapping(typeName = "Semester", field = "endDate")
     public String endDate(SemesterResponse semester) {
-        return semester.end_date().toString();
+        return semester.endDate().toString();
     }
 
     public record SemesterFilterInput(String semesterName) {}

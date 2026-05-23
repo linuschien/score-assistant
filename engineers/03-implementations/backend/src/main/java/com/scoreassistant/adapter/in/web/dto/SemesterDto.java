@@ -13,21 +13,21 @@ public sealed interface SemesterDto permits
         SemesterDto.SemesterResponse {
 
     record SemesterRequest(
-            @NotBlank String semester_name,
-            @NotNull  LocalDate start_date,
-            @NotNull  LocalDate end_date
+            @NotBlank String semesterName,
+            @NotNull  LocalDate startDate,
+            @NotNull  LocalDate endDate
     ) implements SemesterDto {}
 
     record SemesterPatchRequest(
-            String semester_name,
-            LocalDate start_date,
-            LocalDate end_date
+            String semesterName,
+            LocalDate startDate,
+            LocalDate endDate
     ) implements SemesterDto {}
 
     record SemesterResponse(
             String id,
-            String semester_name,
-            LocalDate start_date,
-            LocalDate end_date
+            String semesterName,
+            LocalDate startDate,
+            LocalDate endDate
     ) implements SemesterDto {}
 }

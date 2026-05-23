@@ -72,11 +72,11 @@ registerBehavior('Create a new GradeItem', async (_ref, store) => {
   const backendWeight = rawWeight / 100;
 
   await api.post(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items`, {
-    item_name: itemName,
-    item_type: backendType,
-    item_date: form['modal-item-date-field'] || null,
-    item_description: form['modal-item-description-field'] || null,
-    max_score: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
+    itemName: itemName,
+    itemType: backendType,
+    itemDate: form['modal-item-date-field'] || null,
+    itemDescription: form['modal-item-description-field'] || null,
+    maxScore: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
     weight: backendWeight,
   });
 
@@ -104,11 +104,11 @@ registerBehavior('Update a GradeItem', async (_ref, store) => {
   const backendWeight = rawWeight / 100;
 
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items/${gradeItemId}`, {
-    item_name: itemName,
-    item_type: backendType,
-    item_date: form['modal-item-date-field'] || null,
-    item_description: form['modal-item-description-field'] || null,
-    max_score: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
+    itemName: itemName,
+    itemType: backendType,
+    itemDate: form['modal-item-date-field'] || null,
+    itemDescription: form['modal-item-description-field'] || null,
+    maxScore: form['modal-max-score-field'] ? Number(form['modal-max-score-field']) : 0,
     weight: backendWeight,
   });
 

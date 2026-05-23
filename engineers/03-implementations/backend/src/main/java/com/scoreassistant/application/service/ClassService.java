@@ -38,7 +38,7 @@ public class ClassService {
                     var now = LocalDateTime.now();
                     var entity = new ClassEntity(
                             null, semesterId,
-                            req.class_name(), req.passing_threshold() != null ? req.passing_threshold() : BigDecimal.valueOf(60.0),
+                            req.className(), req.passingThreshold() != null ? req.passingThreshold() : BigDecimal.valueOf(60.0),
                             now, now, false, null
                     );
                     return classRepository.save(entity);
@@ -60,7 +60,7 @@ public class ClassService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
-                        req.class_name(), req.passing_threshold() != null ? req.passing_threshold() : existing.passingThreshold(),
+                        req.className(), req.passingThreshold() != null ? req.passingThreshold() : existing.passingThreshold(),
                         existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
@@ -72,8 +72,8 @@ public class ClassService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
-                        req.class_name() != null ? req.class_name() : existing.className(),
-                        req.passing_threshold() != null ? req.passing_threshold() : existing.passingThreshold(),
+                        req.className() != null ? req.className() : existing.className(),
+                        req.passingThreshold() != null ? req.passingThreshold() : existing.passingThreshold(),
                         existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }

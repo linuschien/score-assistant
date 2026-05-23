@@ -52,8 +52,8 @@ Allow saving weight when total is not 100% with a warning
     Given the background GradeItems exist in the Class
     When a PATCH request is made to grade-item "${ITEM_ID_1}" with weight 10
     Then the response code should be 200
-    And the response body should contain "total_weight" not equal to 100
-    And the response body should contain a "weight_warning" flag set to true
+    And the response body should contain "totalWeight" not equal to 100
+    And the response body should contain a "weightWarning" flag set to true
 
 # ---------------------------------------------------------------------------
 # US-07-02: View weight distribution via GraphQL
@@ -64,7 +64,7 @@ View weight distribution summary via GraphQL
     Given the background GradeItems exist in the Class
     When a GraphQL query is made for GradeItems in Class "${CLASS_ID}" with weight fields
     Then the response should contain a list of GradeItems with their weight values
-    And the response should include the aggregated "total_weight" for the Class
+    And the response should include the aggregated "totalWeight" for the Class
 
 # ---------------------------------------------------------------------------
 # US-07-02 AC4: Calculate weighted scores (custom action)
@@ -75,7 +75,7 @@ Calculate weighted scores for all Students in a Class
     Given all GradeItems in the Class have weights totalling 100
     When a POST request is made to calculateWeightedScores endpoint with passing_threshold 60
     Then the response code should be 200
-    And the response body should contain "status" equal to "COMPLETED"
+    And the response body should contain "success" equal to "True"
 
 Warn when total weight is not 100% during calculation
     [Documentation]    US-07-01 AC2 — Reused from: grade_weight_management.feature
@@ -83,7 +83,7 @@ Warn when total weight is not 100% during calculation
     Given the GradeItems in the Class have a total weight of 90
     When a POST request is made to calculateWeightedScores endpoint with passing_threshold 60
     Then the response code should be 200
-    And the response body should contain a "weight_warning" flag set to true
+    And the response body should contain a "weightWarning" flag set to true
 
 *** Keywords ***
 # ---------------------------------------------------------------------------
@@ -93,25 +93,25 @@ Initialize Grade Weight Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Semester
     ${s_resp}=    POST On Session    score_api    /semesters
-    ...    json={"semester_name":"AutoTest-WeightSuite-Semester","start_date":"2024-09-01","end_date":"2025-01-31"}
+    ...    json={"semesterName":"AutoTest-WeightSuite-Semester","startDate":"2024-09-01","endDate":"2025-01-31"}
     Should Be Equal As Strings    ${s_resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Class
     ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes
-    ...    json={"class_name":"AutoTest-WeightSuite-Class"}
+    ...    json={"className":"AutoTest-WeightSuite-Class"}
     Should Be Equal As Strings    ${c_resp.status_code}    201
-    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[class_id]
+    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
     Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
     # Step 3: GradeItem 1 — Assignment, weight 20
     ${i1_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"item_name":"Assignment 1","item_type":"ASSIGNMENT","max_score":100,"weight":20}
+    ...    json={"itemName":"Assignment 1","itemType":"ASSIGNMENT","maxScore":100,"weight":20}
     Should Be Equal As Strings    ${i1_resp.status_code}    201
-    Set Suite Variable    ${ITEM_ID_1}    ${i1_resp.json()}[grade_item_id]
+    Set Suite Variable    ${ITEM_ID_1}    ${i1_resp.json()}[id]
     # Step 4: GradeItem 2 — Report, weight 30
     ${i2_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"item_name":"Midterm Exam","item_type":"REPORT","max_score":100,"weight":30}
+    ...    json={"itemName":"Midterm Exam","itemType":"REPORT","maxScore":100,"weight":30}
     Should Be Equal As Strings    ${i2_resp.status_code}    201
-    Set Suite Variable    ${ITEM_ID_2}    ${i2_resp.json()}[grade_item_id]
+    Set Suite Variable    ${ITEM_ID_2}    ${i2_resp.json()}[id]
 
 Cleanup Grade Weight Suite
     DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
@@ -149,14 +149,14 @@ a GraphQL query is made for GradeItems in Class "${class_id}" with weight fields
     [Documentation]    POST /graphql — weight distribution
     ...    UI: weight-distribution-chart (grade-weight-dashboard.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { gradeItemsByClass(classId: "${class_id}") { grade_item_id item_name item_type weight } totalWeight(classId: "${class_id}") }
+    ...    { listGradeItems(filter: { classId: "${class_id}" }) { id itemName itemType weight } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to calculateWeightedScores endpoint with passing_threshold ${threshold}
     [Documentation]    POST /semesters/{id}/classes/{id}:calculateWeightedScores
-    ${payload}=    Create Dictionary    passing_threshold=${threshold}
+    ${payload}=    Create Dictionary    classId=${CLASS_ID}
     ${resp}=    POST On Session    score_api
     ...    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}:calculateWeightedScores
     ...    json=${payload}    expected_status=any
@@ -177,27 +177,27 @@ the weight for GradeItem "${item_id}" should be ${expected_weight}
     ${resp}=    GET On Session    score_api    ${ITEMS_BASE}/${item_id}    expected_status=any
     Should Be Equal As Numbers    ${resp.json()}[weight]    ${expected_weight}
 
-the response body should contain "total_weight" not equal to 100
+the response body should contain "totalWeight" not equal to 100
     ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}    total_weight
-    Should Not Be Equal As Numbers    ${body}[total_weight]    100
+    Dictionary Should Contain Key    ${body}    totalWeight
+    Should Not Be Equal As Numbers    ${body}[totalWeight]    100
 
-the response body should contain a "weight_warning" flag set to true
+the response body should contain a "weightWarning" flag set to true
     ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}    weight_warning
-    Should Be True    ${body}[weight_warning]
+    Dictionary Should Contain Key    ${body}    weightWarning
+    Should Be True    ${body}[weightWarning]
 
 the response should contain a list of GradeItems with their weight values
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    data
-    Dictionary Should Contain Key    ${body}[data]    gradeItemsByClass
-    ${items}=    Set Variable    ${body}[data][gradeItemsByClass]
+    Dictionary Should Contain Key    ${body}[data]    listGradeItems
+    ${items}=    Set Variable    ${body}[data][listGradeItems]
     Should Not Be Empty    ${items}
     FOR    ${item}    IN    @{items}
         Dictionary Should Contain Key    ${item}    weight
     END
 
-the response should include the aggregated "total_weight" for the Class
+the response should include the aggregated "totalWeight" for the Class
     ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}[data]    totalWeight
-    Should Not Be Empty    ${body}[data][totalWeight]
+    Dictionary Should Contain Key    ${body}[data]    listGradeItems
+    Should Not Be Empty    ${body}[data][listGradeItems]

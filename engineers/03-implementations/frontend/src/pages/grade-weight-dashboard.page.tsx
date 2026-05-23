@@ -40,11 +40,11 @@ registerBehavior('Allow saving weight when total is not 100% with a warning', as
     const backendType = TYPE_TO_BACKEND[item.type] || 'OTHER';
     const backendWeight = (Number(item.weight) || 0) / 100;
     await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items/${item.id}`, {
-      item_name: item.name,
-      item_type: backendType,
-      item_date: item.examDate || null,
-      item_description: item.description || null,
-      max_score: item.maxScore || 0,
+      itemName: item.name,
+      itemType: backendType,
+      itemDate: item.examDate || null,
+      itemDescription: item.description || null,
+      maxScore: item.maxScore || 0,
       weight: backendWeight,
     });
   }

@@ -52,7 +52,7 @@ class SemesterServiceTest {
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31));
 
         StepVerifier.create(semesterService.create(req))
-                .expectNextMatches(r -> r.semester_name().equals("2026-Fall"))
+                .expectNextMatches(r -> r.semesterName().equals("2026-Fall"))
                 .verifyComplete();
     }
 

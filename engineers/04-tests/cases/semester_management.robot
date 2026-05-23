@@ -20,15 +20,14 @@ ${SEMESTER_ID}          ${EMPTY}
 # ---------------------------------------------------------------------------
 # US-01-01: Create a new Semester — valid cases
 # Each creates a new semester and self-cleans via [Teardown]
-# ---------------------------------------------------------------------------
-Create a new Semester — 113學年度第一學期 should return 201
+# ------------------------------------------------------------------------Create a new Semester — 113學年度第一學期 should return 201
     [Documentation]    US-01-01 — Reused from: semester_management.feature
     ...                UI: semester-name-field, start-date-field, end-date-field, submit-semester-trigger
     [Teardown]    Delete Last Created Semester
     Given the "score-assistant" service is initialized
     When a POST request is made to "/semesters" with name "113學年度第一學期-TC1" start "2024-09-01" end "2025-01-31"
     Then the response code should be 201
-    And the response should contain a valid UUID for "semester_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new Semester — 113學年度第二學期 should return 201
     [Documentation]    US-01-01 — Reused from: semester_management.feature
@@ -36,7 +35,7 @@ Create a new Semester — 113學年度第二學期 should return 201
     Given the "score-assistant" service is initialized
     When a POST request is made to "/semesters" with name "113學年度第二學期-TC2" start "2025-02-01" end "2025-06-30"
     Then the response code should be 201
-    And the response should contain a valid UUID for "semester_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new Semester — empty name should return 400
     [Documentation]    US-01-01 — Reused from: semester_management.feature
@@ -63,7 +62,7 @@ List all Semesters via GraphQL
     Given the "score-assistant" service is initialized
     When a GraphQL query is made for all Semesters
     Then the response should contain a list of Semesters
-    And the list should be ordered by start_date descending
+    And the list should be ordered by startDate descending
 
 # ---------------------------------------------------------------------------
 # US-01-02: Get a Semester by ID
@@ -72,7 +71,7 @@ Get a Semester by ID
     [Documentation]    US-01-02 — Reused from: semester_management.feature
     When a GET request is made to "/semesters/${SEMESTER_ID}"
     Then the response code should be 200
-    And the response body should contain "semester_id" equal to "${SEMESTER_ID}"
+    And the response body should contain "id" equal to "${SEMESTER_ID}"
 
 # ---------------------------------------------------------------------------
 # US-01-03: Update Semester information
@@ -95,7 +94,7 @@ Update a non-existent Semester returns 404
 
 # ---------------------------------------------------------------------------
 # US-01-04: Delete a Semester
-# Uses a dedicated disposable semester — does NOT touch ${SEMESTER_ID}
+# Uses a disposable semester — does NOT touch ${SEMESTER_ID}
 # ---------------------------------------------------------------------------
 Delete a Semester
     [Documentation]    US-01-04 — Reused from: semester_management.feature
@@ -117,12 +116,12 @@ Delete a non-existent Semester returns 404
 Initialize Semester Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     ${payload}=    Create Dictionary
-    ...    semester_name=AutoTest-SuiteSemester
-    ...    start_date=2024-09-01
-    ...    end_date=2025-01-31
+    ...    semesterName=AutoTest-SuiteSemester
+    ...    startDate=2024-09-01
+    ...    endDate=2025-01-31
     ${resp}=    POST On Session    score_api    /semesters    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${resp.json()}[id]
 
 Cleanup Semester Suite
     DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
@@ -137,12 +136,12 @@ the "score-assistant" service is initialized
 
 a disposable Semester is created and its ID stored as "${var_name}"
     ${payload}=    Create Dictionary
-    ...    semester_name=AutoTest-Disposable-${var_name}
-    ...    start_date=2099-01-01
-    ...    end_date=2099-06-30
+    ...    semesterName=AutoTest-Disposable-${var_name}
+    ...    startDate=2099-01-01
+    ...    endDate=2099-06-30
     ${resp}=    POST On Session    score_api    /semesters    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Test Variable    ${DISPOSABLE_SEMESTER_ID}    ${resp.json()}[semester_id]
+    Set Test Variable    ${DISPOSABLE_SEMESTER_ID}    ${resp.json()}[id]
 
 # ---------------------------------------------------------------------------
 # When Steps
@@ -150,15 +149,15 @@ a disposable Semester is created and its ID stored as "${var_name}"
 a POST request is made to "/semesters" with name "${name}" start "${start}" end "${end}"
     [Documentation]    POST /semesters
     ...    UI: semester-name-field, start-date-field, end-date-field, submit-semester-trigger
-    ${payload}=    Create Dictionary    semester_name=${name}    start_date=${start}    end_date=${end}
+    ${payload}=    Create Dictionary    semesterName=${name}    startDate=${start}    endDate=${end}
     ${resp}=    POST On Session    score_api    /semesters    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GraphQL query is made for all Semesters
-    [Documentation]    POST /graphql — list semesters ordered by start_date DESC
+    [Documentation]    POST /graphql — list semesters ordered by startDate DESC
     ...    UI: semester-table (semester-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { semesters(orderBy: START_DATE_DESC) { semester_id semester_name start_date end_date } }
+    ...    { listSemesters(orderBy: START_DATE_DESC) { id semesterName startDate endDate } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -170,7 +169,7 @@ a GET request is made to "/semesters/${semester_id}"
 a PUT request is made to "/semesters/${semester_id}" with name "${name}" start "${start}" end "${end}"
     [Documentation]    PUT /semesters/{id}
     ...    UI: edit-semester-trigger → semester-name-field, submit-semester-trigger
-    ${payload}=    Create Dictionary    semester_name=${name}    start_date=${start}    end_date=${end}
+    ${payload}=    Create Dictionary    semesterName=${name}    startDate=${start}    endDate=${end}
     ${resp}=    PUT On Session    score_api    /semesters/${semester_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -199,14 +198,14 @@ the response body should contain "${field}" equal to "${value}"
 the response should contain a list of Semesters
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    data
-    Dictionary Should Contain Key    ${body}[data]    semesters
-    Should Not Be Empty    ${body}[data][semesters]
+    Dictionary Should Contain Key    ${body}[data]    listSemesters
+    Should Not Be Empty    ${body}[data][listSemesters]
 
-the list should be ordered by start_date descending
-    ${items}=    Set Variable    ${RESPONSE.json()}[data][semesters]
+the list should be ordered by startDate descending
+    ${items}=    Set Variable    ${RESPONSE.json()}[data][listSemesters]
     ${length}=    Get Length    ${items}
     FOR    ${i}    IN RANGE    0    ${length} - 1
-        Should Be True    '${items}[${i}][start_date]' >= '${items}[${i+1}][start_date]'
+        Should Be True    '${items}[${i}][startDate]' >= '${items}[${i+1}][startDate]'
     END
 
 the error message should indicate that the name is already taken
@@ -223,6 +222,6 @@ the Semester with ID "${semester_id}" should no longer exist
 Delete Last Created Semester
     [Documentation]    Cleans up a semester created within a test case (for CREATE 201 tests).
     ${created_id}=    Run Keyword If    '${RESPONSE.status_code}' == '201'
-    ...    Set Variable    ${RESPONSE.json()}[semester_id]
+    ...    Set Variable    ${RESPONSE.json()}[id]
     Run Keyword If    '${created_id}' != '${None}'
     ...    DELETE On Session    score_api    /semesters/${created_id}    expected_status=any

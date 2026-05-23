@@ -12,24 +12,24 @@ public sealed interface AttachmentDto permits
         AttachmentDto.AttachmentResponse {
 
     record AttachmentRequest(
-            @NotBlank String file_name,
-            @NotBlank String mime_type,
-            @NotNull @Min(value = 1, message = "File size must be greater than 0") Integer file_size,
-            @NotNull  byte[] file_data,
-            @NotNull  LocalDateTime uploaded_at
+            @NotBlank String fileName,
+            @NotBlank String mimeType,
+            @NotNull @Min(value = 1, message = "File size must be greater than 0") Integer fileSize,
+            @NotNull  byte[] fileData,
+            @NotNull  LocalDateTime uploadedAt
     ) implements AttachmentDto {}
 
     record AttachmentPatchRequest(
-            String file_name
+            String fileName
     ) implements AttachmentDto {}
 
     record AttachmentResponse(
             String id,
-            String grade_record_id,
-            String file_name,
-            String mime_type,
-            int file_size,
-            byte[] file_data,
-            LocalDateTime uploaded_at
+            String gradeRecordId,
+            String fileName,
+            String mimeType,
+            int fileSize,
+            byte[] fileData,
+            LocalDateTime uploadedAt
     ) implements AttachmentDto {}
 }

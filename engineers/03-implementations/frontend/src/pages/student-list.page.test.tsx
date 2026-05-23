@@ -38,17 +38,17 @@ function setupMocks() {
 
     http.post('*/semesters/:semesterId/classes/:classId/students', async ({ request, params }) => {
       const body = (await request.json()) as any;
-      if (!body.student_name || !body.student_name.trim()) {
+      if (!body.studentName || !body.studentName.trim()) {
         return HttpResponse.json(
-          { error: 'Request validation failed: student_name: 不能為空白' },
+          { error: 'Request validation failed: studentName: 不能為空白' },
           { status: 400 }
         );
       }
       const newStudent = {
         id: String(mockStudents.length + 1),
         classId: params.classId as string,
-        studentNumber: body.student_number || '',
-        studentName: body.student_name,
+        studentNumber: body.studentNumber || '',
+        studentName: body.studentName,
       };
       mockStudents.push(newStudent);
       return HttpResponse.json(newStudent, { status: 201 });
@@ -56,9 +56,9 @@ function setupMocks() {
 
     http.put('*/semesters/:semesterId/classes/:classId/students/:studentId', async ({ request, params }) => {
       const body = (await request.json()) as any;
-      if (!body.student_name || !body.student_name.trim()) {
+      if (!body.studentName || !body.studentName.trim()) {
         return HttpResponse.json(
-          { error: 'Request validation failed: student_name: 不能為空白' },
+          { error: 'Request validation failed: studentName: 不能為空白' },
           { status: 400 }
         );
       }
@@ -66,8 +66,8 @@ function setupMocks() {
       if (idx !== -1) {
         mockStudents[idx] = {
           ...mockStudents[idx],
-          studentNumber: body.student_number || '',
-          studentName: body.student_name,
+          studentNumber: body.studentNumber || '',
+          studentName: body.studentName,
         };
         return HttpResponse.json(mockStudents[idx]);
       }

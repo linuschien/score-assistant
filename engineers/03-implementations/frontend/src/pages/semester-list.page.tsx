@@ -23,9 +23,9 @@ registerBehavior('Create a new Semester', async (_ref, store) => {
 
   const form = (store.get('/form') as Record<string, string>) || {};
   await api.post(`${API_BASE}/semesters`, {
-    semester_name: form['modal-semester-name-field'],
-    start_date: form['modal-start-date-field'],
-    end_date: form['modal-end-date-field'],
+    semesterName: form['modal-semester-name-field'],
+    startDate: form['modal-start-date-field'],
+    endDate: form['modal-end-date-field'],
   });
   store.set('/form', {});
   store.set('/modals/semester-form-modal', false);
@@ -37,9 +37,9 @@ registerBehavior('Update a Semester', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
   const id = store.get('/selected/semesterId') as string;
   await api.put(`${API_BASE}/semesters/${id}`, {
-    semester_name: form['modal-semester-name-field'],
-    start_date: form['modal-start-date-field'],
-    end_date: form['modal-end-date-field'],
+    semesterName: form['modal-semester-name-field'],
+    startDate: form['modal-start-date-field'],
+    endDate: form['modal-end-date-field'],
   });
   store.set('/form', {});
   store.set('/modals/semester-form-modal', false);

@@ -28,8 +28,8 @@ registerBehavior('Add a Student to a Class', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
 
   await api.post(`${API_BASE}/semesters/${semesterId}/classes/${classId}/students`, {
-    student_number: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
-    student_name: form['modal-student-name-field'],
+    studentNumber: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
+    studentName: form['modal-student-name-field'],
   });
   store.set('/form', {});
   store.set('/modals/student-form-modal', false);
@@ -44,8 +44,8 @@ registerBehavior('Update a Student', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
 
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}/students/${studentId}`, {
-    student_number: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
-    student_name: form['modal-student-name-field'],
+    studentNumber: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
+    studentName: form['modal-student-name-field'],
   });
   store.set('/form', {});
   store.set('/modals/student-form-modal', false);

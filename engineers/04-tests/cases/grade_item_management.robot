@@ -31,35 +31,35 @@ Create a new GradeItem — ASSIGNMENT 100pts weight 10 should return 201
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to grade-items endpoint with name "第1次作業" type "ASSIGNMENT" max "100" weight "10"
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_item_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — REPORT 100pts weight 20 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to grade-items endpoint with name "期中報告" type "REPORT" max "100" weight "20"
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_item_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — ATTENDANCE 1pt weight 5 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to grade-items endpoint with name "10/20出席" type "ATTENDANCE" max "1" weight "5"
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_item_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — CLASSROOM_PERFORMANCE 10pts weight 5 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to grade-items endpoint with name "課堂發言" type "CLASSROOM_PERFORMANCE" max "10" weight "5"
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_item_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — OTHER 50pts weight 0 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
     When a POST request is made to grade-items endpoint with name "其他加分" type "OTHER" max "50" weight "0"
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_item_id"
+    And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — negative max_score should return 400
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
@@ -100,7 +100,7 @@ Get a GradeItem by ID
     [Documentation]    US-04-02 — Reused from: grade_item_management.feature
     When a GET request is made to grade-item detail endpoint
     Then the response code should be 200
-    And the response body should contain "grade_item_id" equal to "${GRADE_ITEM_ID}"
+    And the response body should contain "id" equal to "${GRADE_ITEM_ID}"
 
 # ---------------------------------------------------------------------------
 # US-04-03: Update GradeItem information
@@ -141,27 +141,27 @@ Initialize Grade Item Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Create Semester
     ${s_payload}=    Create Dictionary
-    ...    semester_name=AutoTest-GradeItemSuite-Semester
-    ...    start_date=2024-09-01
-    ...    end_date=2025-01-31
+    ...    semesterName=AutoTest-GradeItemSuite-Semester
+    ...    startDate=2024-09-01
+    ...    endDate=2025-01-31
     ${s_resp}=    POST On Session    score_api    /semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Create Class
-    ${c_payload}=    Create Dictionary    class_name=AutoTest-GradeItemSuite-Class
+    ${c_payload}=    Create Dictionary    className=AutoTest-GradeItemSuite-Class
     ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
-    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[class_id]
+    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
     Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
     # Step 3: Create GradeItem — used by GET/PUT and duplicate tests
     ${i_payload}=    Create Dictionary
-    ...    item_name=AutoTest-SuiteItem
-    ...    item_type=ASSIGNMENT
-    ...    max_score=100
+    ...    itemName=AutoTest-SuiteItem
+    ...    itemType=ASSIGNMENT
+    ...    maxScore=100
     ...    weight=20
     ${i_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${i_payload}
     Should Be Equal As Strings    ${i_resp.status_code}    201
-    Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[grade_item_id]
+    Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[id]
 
 Cleanup Grade Item Suite
     # Deleting Semester cascades to Class → GradeItems → GradeRecords
@@ -177,13 +177,13 @@ a Class with ID "${class_id}" exists in Semester "${semester_id}"
 
 a disposable GradeItem is created in Class "${class_id}"
     ${payload}=    Create Dictionary
-    ...    item_name=AutoTest-Disposable-Item
-    ...    item_type=OTHER
-    ...    max_score=10
+    ...    itemName=AutoTest-Disposable-Item
+    ...    itemType=OTHER
+    ...    maxScore=10
     ...    weight=0
     ${resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Test Variable    ${DISPOSABLE_ITEM_ID}    ${resp.json()}[grade_item_id]
+    Set Test Variable    ${DISPOSABLE_ITEM_ID}    ${resp.json()}[id]
 
 # ---------------------------------------------------------------------------
 # When Steps
@@ -192,7 +192,7 @@ a POST request is made to grade-items endpoint with name "${name}" type "${type}
     [Documentation]    POST /semesters/{id}/classes/{id}/grade-items
     ...    UI: create-grade-item-button → item-name-field, item-type-selection,
     ...        max-score-field, weight-field, submit-grade-item-trigger
-    ${payload}=    Create Dictionary    item_name=${name}    item_type=${type}    max_score=${max}    weight=${weight}
+    ${payload}=    Create Dictionary    itemName=${name}    itemType=${type}    maxScore=${max}    weight=${weight}
     ${resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -200,7 +200,7 @@ a GraphQL query is made for all GradeItems in Class "${class_id}"
     [Documentation]    POST /graphql
     ...    UI: grade-item-table (grade-item-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { gradeItemsByClass(classId: "${class_id}") { grade_item_id item_name item_type item_date item_description max_score weight } }
+    ...    { listGradeItems(filter: { classId: "${class_id}" }) { id itemName itemType itemDate itemDescription maxScore weight } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -214,16 +214,16 @@ a PUT request is made to grade-item detail endpoint with full payload
     ...    UI: edit-grade-item-trigger → item-name-field, item-description-field,
     ...        max-score-field, weight-field, submit-grade-item-trigger
     ${payload}=    Create Dictionary
-    ...    item_name=AutoTest-SuiteItem-修正
-    ...    item_type=ASSIGNMENT
-    ...    item_description=修正後的作業說明
-    ...    max_score=100
+    ...    itemName=AutoTest-SuiteItem-修正
+    ...    itemType=ASSIGNMENT
+    ...    itemDescription=修正後的作業說明
+    ...    maxScore=100
     ...    weight=15
     ${resp}=    PUT On Session    score_api    ${ITEMS_BASE}/${GRADE_ITEM_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to "${url}" with name "${name}" type "${type}" max "${max}"
-    ${payload}=    Create Dictionary    item_name=${name}    item_type=${type}    max_score=${max}
+    ${payload}=    Create Dictionary    itemName=${name}    itemType=${type}    maxScore=${max}
     ${resp}=    PUT On Session    score_api    ${url}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -252,5 +252,5 @@ the response body should contain "${field}" equal to "${value}"
 the response should contain a list of GradeItems
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    data
-    Dictionary Should Contain Key    ${body}[data]    gradeItemsByClass
-    Should Not Be Empty    ${body}[data][gradeItemsByClass]
+    Dictionary Should Contain Key    ${body}[data]    listGradeItems
+    Should Not Be Empty    ${body}[data][listGradeItems]

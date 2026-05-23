@@ -926,53 +926,53 @@ components:
           type: string
           format: uuid
           example: "d3b07384-d113-404c-9f8a-020524032a9a"
-        semester_name:
+        semesterName:
           type: string
           example: "2026-Fall"
-        start_date:
+        startDate:
           type: string
           format: date
           example: "2026-09-01"
-        end_date:
+        endDate:
           type: string
           format: date
           example: "2027-01-31"
       required:
         - id
-        - semester_name
-        - start_date
-        - end_date
+        - semesterName
+        - startDate
+        - endDate
 
     SemesterRequest:
       type: object
       properties:
-        semester_name:
+        semesterName:
           type: string
           example: "2026-Fall"
-        start_date:
+        startDate:
           type: string
           format: date
           example: "2026-09-01"
-        end_date:
+        endDate:
           type: string
           format: date
           example: "2027-01-31"
       required:
-        - semester_name
-        - start_date
-        - end_date
+        - semesterName
+        - startDate
+        - endDate
 
     SemesterPatchRequest:
       type: object
       properties:
-        semester_name:
+        semesterName:
           type: string
           example: "2026-Fall"
-        start_date:
+        startDate:
           type: string
           format: date
           example: "2026-09-01"
-        end_date:
+        endDate:
           type: string
           format: date
           example: "2027-01-31"
@@ -984,37 +984,37 @@ components:
           type: string
           format: uuid
           example: "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
-        class_name:
+        className:
           type: string
           example: "Computer Science 101"
-        passing_threshold:
+        passingThreshold:
           type: number
           format: double
           example: 60.0
       required:
         - id
-        - class_name
+        - className
 
     ClassRequest:
       type: object
       properties:
-        class_name:
+        className:
           type: string
           example: "Computer Science 101"
-        passing_threshold:
+        passingThreshold:
           type: number
           format: double
           example: 60.0
       required:
-        - class_name
+        - className
 
     ClassPatchRequest:
       type: object
       properties:
-        class_name:
+        className:
           type: string
           example: "Computer Science 101"
-        passing_threshold:
+        passingThreshold:
           type: number
           format: double
           example: 60.0
@@ -1026,37 +1026,37 @@ components:
           type: string
           format: uuid
           example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
-        student_number:
+        studentNumber:
           type: integer
           example: 2026001
-        student_name:
+        studentName:
           type: string
           example: "Linus Torvalds"
       required:
         - id
-        - student_number
-        - student_name
+        - studentNumber
+        - studentName
 
     StudentRequest:
       type: object
       properties:
-        student_number:
+        studentNumber:
           type: integer
           example: 2026001
-        student_name:
+        studentName:
           type: string
           example: "Linus Torvalds"
       required:
-        - student_number
-        - student_name
+        - studentNumber
+        - studentName
 
     StudentPatchRequest:
       type: object
       properties:
-        student_number:
+        studentNumber:
           type: integer
           example: 2026001
-        student_name:
+        studentName:
           type: string
           example: "Linus Torvalds"
 
@@ -1077,21 +1077,21 @@ components:
           type: string
           format: uuid
           example: "f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c"
-        item_name:
+        itemName:
           type: string
           example: "Midterm Assignment"
-        item_type:
+        itemType:
           $ref: '#/components/schemas/GradeItemType'
-        item_date:
+        itemDate:
           type: string
           format: date
           example: "2026-10-15"
           nullable: true
-        item_description:
+        itemDescription:
           type: string
           example: "Implement basic algorithms"
           nullable: true
-        max_score:
+        maxScore:
           type: number
           format: double
           example: 100.0
@@ -1101,29 +1101,29 @@ components:
           example: 0.0
       required:
         - id
-        - item_name
-        - item_type
-        - max_score
+        - itemName
+        - itemType
+        - maxScore
         - weight
 
     GradeItemRequest:
       type: object
       properties:
-        item_name:
+        itemName:
           type: string
           example: "Midterm Assignment"
-        item_type:
+        itemType:
           $ref: '#/components/schemas/GradeItemType'
-        item_date:
+        itemDate:
           type: string
           format: date
           example: "2026-10-15"
           nullable: true
-        item_description:
+        itemDescription:
           type: string
           example: "Implement basic algorithms"
           nullable: true
-        max_score:
+        maxScore:
           type: number
           format: double
           example: 100.0
@@ -1132,29 +1132,29 @@ components:
           format: double
           example: 0.0
       required:
-        - item_name
-        - item_type
-        - max_score
+        - itemName
+        - itemType
+        - maxScore
         - weight
 
     GradeItemPatchRequest:
       type: object
       properties:
-        item_name:
+        itemName:
           type: string
           example: "Midterm Assignment"
-        item_type:
+        itemType:
           $ref: '#/components/schemas/GradeItemType'
-        item_date:
+        itemDate:
           type: string
           format: date
           example: "2026-10-15"
           nullable: true
-        item_description:
+        itemDescription:
           type: string
           example: "Implement basic algorithms"
           nullable: true
-        max_score:
+        maxScore:
           type: number
           format: double
           example: 100.0
@@ -1235,62 +1235,62 @@ components:
           type: string
           format: uuid
           example: "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b"
-        file_name:
+        fileName:
           type: string
           example: "solution.pdf"
-        mime_type:
+        mimeType:
           type: string
           example: "application/pdf"
-        file_size:
+        fileSize:
           type: integer
           example: 204800
-        file_data:
+        fileData:
           type: string
           format: binary
           example: "dGVzdF9kYXRh"
-        uploaded_at:
+        uploadedAt:
           type: string
           format: date-time
           example: "2026-10-16T14:25:00Z"
       required:
         - id
-        - file_name
-        - mime_type
-        - file_size
-        - file_data
-        - uploaded_at
+        - fileName
+        - mimeType
+        - fileSize
+        - fileData
+        - uploadedAt
 
     AttachmentRequest:
       type: object
       properties:
-        file_name:
+        fileName:
           type: string
           example: "solution.pdf"
-        mime_type:
+        mimeType:
           type: string
           example: "application/pdf"
-        file_size:
+        fileSize:
           type: integer
           example: 204800
-        file_data:
+        fileData:
           type: string
           format: binary
           example: "dGVzdF9kYXRh"
-        uploaded_at:
+        uploadedAt:
           type: string
           format: date-time
           example: "2026-10-16T14:25:00Z"
       required:
-        - file_name
-        - mime_type
-        - file_size
-        - file_data
-        - uploaded_at
+        - fileName
+        - mimeType
+        - fileSize
+        - fileData
+        - uploadedAt
 
     AttachmentPatchRequest:
       type: object
       properties:
-        file_name:
+        fileName:
           type: string
           example: "solution.pdf"
 

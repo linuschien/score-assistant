@@ -32,7 +32,7 @@ Record a numeric score — ASSIGNMENT 85 should return 201
     And a Student with ID "${STUDENT_ID}" exists
     When a POST request is made to "/grade-records" with score 85
     Then the response code should be 201
-    And the response should contain a valid UUID for "grade_record_id"
+    And the response should contain a valid UUID for "id"
 
 Record a numeric score — ASSIGNMENT negative score should return 400
     [Documentation]    US-05-01 — Reused from: grade_recording.feature
@@ -78,21 +78,21 @@ Record Attendance with status PRESENT maps to score 1.0
     [Documentation]    US-05-01 AC2 — Reused from: grade_recording.feature
     ...                UI: attendance-selector → score-input (grade-entry-board.ui-manifest.json)
     Given a GradeItem with type "ATTENDANCE" is prepared for this test
-    When a POST request is made to "/grade-records" with attendance_status "PRESENT"
+    When a POST request is made to "/grade-records" with attendanceStatus "PRESENT"
     Then the response code should be 201
     And the recorded score should be 1.0
 
 Record Attendance with status ABSENT maps to score 0.0
     [Documentation]    US-05-01 AC2 — Reused from: grade_recording.feature
     Given a GradeItem with type "ATTENDANCE" is prepared for this test
-    When a POST request is made to "/grade-records" with attendance_status "ABSENT"
+    When a POST request is made to "/grade-records" with attendanceStatus "ABSENT"
     Then the response code should be 201
     And the recorded score should be 0.0
 
 Record Attendance with status EXCUSED maps to score 0.5
     [Documentation]    US-05-01 AC2 — Reused from: grade_recording.feature
     Given a GradeItem with type "ATTENDANCE" is prepared for this test
-    When a POST request is made to "/grade-records" with attendance_status "EXCUSED"
+    When a POST request is made to "/grade-records" with attendanceStatus "EXCUSED"
     Then the response code should be 201
     And the recorded score should be 0.5
 
@@ -106,7 +106,7 @@ Update an existing GradeRecord
     Given a GradeRecord with ID "${GRADE_RECORD_ID}" exists
     When a PUT request is made to "/grade-records/${GRADE_RECORD_ID}" with score 90
     Then the response code should be 200
-    And the response body should contain an updated "last_modified_at" timestamp
+    And the response body should contain an updated "lastModifiedAt" timestamp
 
 Update a non-existent GradeRecord returns 404
     [Documentation]    US-05-02 — Reused from: grade_recording.feature
@@ -122,7 +122,7 @@ Upload an Attachment for a GradeRecord
     Given a GradeRecord with ID "${GRADE_RECORD_ID}" exists
     When a POST request is made to "/grade-records/${GRADE_RECORD_ID}/attachments" with a 5MB file
     Then the response code should be 201
-    And the response should contain a valid UUID for "attachment_id"
+    And the response should contain a valid UUID for "id"
     And the Attachment should be associated with GradeRecord "${GRADE_RECORD_ID}"
 
 Reject Attachments exceeding 10MB size limit
@@ -147,31 +147,31 @@ Initialize Grade Recording Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Semester
     ${s_resp}=    POST On Session    score_api    /semesters
-    ...    json={"semester_name":"AutoTest-GradeRecSuite-Semester","start_date":"2024-09-01","end_date":"2025-01-31"}
+    ...    json={"semesterName":"AutoTest-GradeRecSuite-Semester","startDate":"2024-09-01","endDate":"2025-01-31"}
     Should Be Equal As Strings    ${s_resp.status_code}    201
-    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[semester_id]
+    Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Class
     ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes
-    ...    json={"class_name":"AutoTest-GradeRecSuite-Class"}
+    ...    json={"className":"AutoTest-GradeRecSuite-Class"}
     Should Be Equal As Strings    ${c_resp.status_code}    201
-    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[class_id]
+    Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
     Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
     Set Suite Variable    ${STUDENTS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/students
     # Step 3: Student
     ${st_resp}=    POST On Session    score_api    ${STUDENTS_BASE}
-    ...    json={"student_number":1,"student_name":"AutoTest-SuiteStudent"}
+    ...    json={"studentNumber":1,"studentName":"AutoTest-SuiteStudent"}
     Should Be Equal As Strings    ${st_resp.status_code}    201
-    Set Suite Variable    ${STUDENT_ID}    ${st_resp.json()}[student_id]
+    Set Suite Variable    ${STUDENT_ID}    ${st_resp.json()}[id]
     # Step 4: GradeItem (ASSIGNMENT, max 100) — used by main score tests and UPDATE test
     ${i_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"item_name":"AutoTest-SuiteAssignment","item_type":"ASSIGNMENT","max_score":100,"weight":20}
+    ...    json={"itemName":"AutoTest-SuiteAssignment","itemType":"ASSIGNMENT","maxScore":100,"weight":20}
     Should Be Equal As Strings    ${i_resp.status_code}    201
-    Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[grade_item_id]
+    Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[id]
     # Step 5: GradeRecord (score 80) — used by UPDATE and ATTACHMENT tests
     ${r_resp}=    POST On Session    score_api    /grade-records
-    ...    json={"grade_item_id":"${GRADE_ITEM_ID}","student_id":"${STUDENT_ID}","score":80}
+    ...    json={"gradeItemId":"${GRADE_ITEM_ID}","studentId":"${STUDENT_ID}","score":80}
     Should Be Equal As Strings    ${r_resp.status_code}    201
-    Set Suite Variable    ${GRADE_RECORD_ID}    ${r_resp.json()}[grade_record_id]
+    Set Suite Variable    ${GRADE_RECORD_ID}    ${r_resp.json()}[id]
 
 Cleanup Grade Recording Suite
     DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
@@ -196,20 +196,20 @@ a GradeItem with type "${item_type}" is prepared for this test
     [Documentation]    Creates a per-test GradeItem of the given type.
     ...    Stored as ${TEMP_ITEM_ID} for use within this test only.
     ${payload}=    Create Dictionary
-    ...    item_name=AutoTest-Temp-${item_type}
-    ...    item_type=${item_type}
-    ...    max_score=100
+    ...    itemName=AutoTest-Temp-${item_type}
+    ...    itemType=${item_type}
+    ...    maxScore=100
     ...    weight=0
     ${resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
-    Set Test Variable    ${TEMP_ITEM_ID}    ${resp.json()}[grade_item_id]
+    Set Test Variable    ${TEMP_ITEM_ID}    ${resp.json()}[id]
 
 a GradeRecord with 5 existing attachments is prepared
     [Documentation]    Creates a fresh GradeRecord and seeds it with 5 attachments.
     ${r_resp}=    POST On Session    score_api    /grade-records
-    ...    json={"grade_item_id":"${GRADE_ITEM_ID}","student_id":"${STUDENT_ID}","score":50}
+    ...    json={"gradeItemId":"${GRADE_ITEM_ID}","studentId":"${STUDENT_ID}","score":50}
     Should Be Equal As Strings    ${r_resp.status_code}    201
-    Set Test Variable    ${FULL_RECORD_ID}    ${r_resp.json()}[grade_record_id]
+    Set Test Variable    ${FULL_RECORD_ID}    ${r_resp.json()}[id]
     FOR    ${i}    IN RANGE    1    6
         ${dummy}=    Evaluate    b'x' * 1024
         ${files}=    Create Dictionary    file=${dummy}
@@ -223,8 +223,8 @@ a POST request is made to "/grade-records" with score ${score}
     [Documentation]    POST /grade-records with numeric score
     ...    UI: score-input (grade-entry-board.ui-manifest.json)
     ${payload}=    Create Dictionary
-    ...    grade_item_id=${GRADE_ITEM_ID}
-    ...    student_id=${STUDENT_ID}
+    ...    gradeItemId=${GRADE_ITEM_ID}
+    ...    studentId=${STUDENT_ID}
     ...    score=${score}
     ${resp}=    POST On Session    score_api    /grade-records    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -232,19 +232,19 @@ a POST request is made to "/grade-records" with score ${score}
 a POST request is made to "/grade-records" for ${item_type} item with score ${score}
     [Documentation]    POST /grade-records using ${TEMP_ITEM_ID} created in Given step
     ${payload}=    Create Dictionary
-    ...    grade_item_id=${TEMP_ITEM_ID}
-    ...    student_id=${STUDENT_ID}
+    ...    gradeItemId=${TEMP_ITEM_ID}
+    ...    studentId=${STUDENT_ID}
     ...    score=${score}
     ${resp}=    POST On Session    score_api    /grade-records    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to "/grade-records" with attendance_status "${status}"
-    [Documentation]    POST /grade-records with attendance_status
+    [Documentation]    POST /grade-records with attendanceStatus
     ...    UI: attendance-selector → score-input (grade-entry-board.ui-manifest.json)
     ${payload}=    Create Dictionary
-    ...    grade_item_id=${TEMP_ITEM_ID}
-    ...    student_id=${STUDENT_ID}
-    ...    attendance_status=${status}
+    ...    gradeItemId=${TEMP_ITEM_ID}
+    ...    studentId=${STUDENT_ID}
+    ...    attendanceStatus=${status}
     ${resp}=    POST On Session    score_api    /grade-records    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -252,8 +252,8 @@ a PUT request is made to "/grade-records/${record_id}" with score ${score}
     [Documentation]    PUT /grade-records/{id}
     ...    UI: score-input (grade-entry-board.ui-manifest.json)
     ${payload}=    Create Dictionary
-    ...    grade_item_id=${GRADE_ITEM_ID}
-    ...    student_id=${STUDENT_ID}
+    ...    gradeItemId=${GRADE_ITEM_ID}
+    ...    studentId=${STUDENT_ID}
     ...    score=${score}
     ${resp}=    PUT On Session    score_api    /grade-records/${record_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -306,8 +306,8 @@ the response body should contain an updated "${field}" timestamp
 
 the Attachment should be associated with GradeRecord "${record_id}"
     ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}    grade_record_id
-    Should Be Equal As Strings    ${body}[grade_record_id]    ${record_id}
+    Dictionary Should Contain Key    ${body}    gradeRecordId
+    Should Be Equal As Strings    ${body}[gradeRecordId]    ${record_id}
 
 the error message should indicate that the file exceeds the 10MB size limit
     ${body_str}=    Convert To String    ${RESPONSE.json()}
