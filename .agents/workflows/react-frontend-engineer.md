@@ -19,6 +19,7 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready flat JSON-ren
 | **Interface Contracts** | `docs/02-design-specs/uml/*_contract.puml` | GraphQL resolver method names → return type + filter input (collection reads via `<<GraphQLResolver>>`) |
 | **Hexagonal Manifest** | `docs/02-design-specs/external-integrations/*.hexagonal-service-manifest.yaml` | Service boundary & port definitions |
 | **Behavior Specs** | `docs/02-design-specs/behavior-specs/user/*.feature` | Confirms interaction intent for `behavior_ref` traceability |
+| **Frontend Coding Policy** | `.agents/skills/frontend-coding-policy/SKILL.md` | Mandatory guidelines for required fields, validation, error toasts, date formatting, and file uploads |
 
 ---
 
@@ -56,16 +57,18 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready flat JSON-ren
 > Map the manifest's component tree directly into a lightweight flat elements JSON spec tree using the resolved component keys and flat element relationships. Immediately validate all elements against their Zod definitions under `@json-render/shadcn`. Ensure all missing non-optional nullable fields are auto-populated as `null` in the schema. **The generated schema MUST statically pass Zod validation; failing this step violates the Definition of Done (DoD) and aborts the flow.**
 
 
-### Phase 4 — Component Registry Generation
-> **Invoke Skill**: Read `.agents/skills/json-render-transpiler/SKILL.md`.  
-> Emit or update `engineers/03-implementations/frontend/src/json-render/component-registry.ts`. The registry directly imports the base preset from `@json-render/shadcn` (using `shadcnComponents`) and merges any custom components. Components are strictly declarative and should not be wrapped with custom imperative hook-wiring or bind API code. This file is strictly **additive** — never remove existing keys.
+### Phase 4 — Component Registry & Custom Components Generation
+> **Invoke Skills**: Read `.agents/skills/json-render-transpiler/SKILL.md` and `.agents/skills/frontend-coding-policy/SKILL.md`.  
+> Emit or update `engineers/03-implementations/frontend/src/json-render/component-registry.ts` and individual custom components in `src/json-render/components/`. 
+> Ensure that all custom components, inputs, and wrappers strictly comply with the **Frontend Coding Policy** (e.g., automatically render red `*` next to the label for required fields, validate formats, handle dates in ISO 8601 format, and provide file uploader templates). Components are strictly declarative and should not be wrapped with custom imperative hook-wiring or bind API code. This file is strictly **additive** — never remove existing keys.
 
 ### Phase 5 — API Hook Stub Generation
 > **Invoke Skill**: Read `.agents/skills/api-hook-generator/SKILL.md`.  
 > For every unique `data_ref` in the manifest, determine its type (REST `operationId` vs. GraphQL resolver name per the skill's resolution rules) and generate the appropriate hook stub. Skip `FIXME_DATA_REF` placeholders.
 
-### Phase 6 — Page Entry Point
-Generate a completely standard, clean entry point leveraging the official library natively at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx`:
+### Phase 6 — Page Entry Point & Frontend Logic
+> **Invoke Skill**: Read `.agents/skills/frontend-coding-policy/SKILL.md`.  
+> Generate a completely standard, clean entry point leveraging the official library natively at `engineers/03-implementations/frontend/src/pages/{ui_id}.page.tsx`:
 ```tsx
 // AUTO-GENERATED — DO NOT EDIT MANUALLY
 import React from 'react';
@@ -77,6 +80,7 @@ export default function {PageName}Page() {
   return <Renderer spec={spec} registry={componentRegistry} />;
 }
 ```
+> Ensure that pre-submit form validation is in place before hitting mutating backend endpoints, and any API errors are captured and reported with descriptive messages inside toasts rather than generic error codes.
 
 ### Phase 7 — Component Flow Unit Testing (Vitest + MSW)
 > **Invoke Skill**: Read `.agents/skills/vitest-msw-tester/SKILL.md`.  
