@@ -133,7 +133,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
     const students = (useStateValue('/data/listStudents') || []) as any[];
     const gradeItems = (useStateValue('/data/listGradeItems') || []) as any[];
     const gradeRecords = (useStateValue('/data/listGradeRecords') || []) as any[];
-    const attachments = (useStateValue('/data/listAttachments') || []) as any[];
+    const attachments = (useStateValue('/data/allAttachments') || useStateValue('/data/listAttachments') || []) as any[];
 
     const handleScoreInputBlur = async (studentId: string, itemId: string, newScore: number | null) => {
       if (store) {
@@ -384,14 +384,14 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
               <th key={col.field} className="px-6 py-4">{col.label}</th>
             ))}
             {isWeightTable && <th className="px-6 py-4 text-right">權重 (%)</th>}
-            {!isWeightTable && children && <th className="px-6 py-4 text-right">操作</th>}
+            {!isWeightTable && React.Children.count(children) > 0 && <th className="px-6 py-4 text-right">操作</th>}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
               <td
-                colSpan={(columns?.length || 0) + (children || isWeightTable ? 1 : 0)}
+                colSpan={(columns?.length || 0) + ((React.Children.count(children) > 0 || isWeightTable) ? 1 : 0)}
                 className="px-6 py-8 text-center text-slate-500 font-medium"
               >
                 (沒有資料)
@@ -412,7 +412,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
                     />
                   </td>
                 )}
-                {!isWeightTable && children && (
+                {!isWeightTable && React.Children.count(children) > 0 && (
                   <td className="px-6 py-4 text-right space-x-2">
                     {React.Children.map(children, (child) => {
                       if (!React.isValidElement(child)) return child;

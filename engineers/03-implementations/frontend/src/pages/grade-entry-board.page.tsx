@@ -168,6 +168,7 @@ export default function GradeEntryBoardPage() {
   const { data: studentsData } = useListStudents(classId ? { classId } : undefined);
   const { data: gradeItemsData } = useListGradeItems(classId ? { classId } : undefined);
   const { data: gradeRecordsData } = useListGradeRecords();
+  const { data: allAttachmentsData } = useListAttachments();
   const { data: attachmentsData } = useListAttachments(selectedRecordId ? { gradeRecordId: selectedRecordId } : undefined);
 
   // Sync Semester Context
@@ -241,6 +242,15 @@ export default function GradeEntryBoardPage() {
       store.set('/data/listAttachments', nextVal);
     }
   }, [attachmentsData, store]);
+
+  // Sync All Attachments List for matrix badges
+  useEffect(() => {
+    const current = store.get('/data/allAttachments') || [];
+    const nextVal = allAttachmentsData || [];
+    if (JSON.stringify(current) !== JSON.stringify(nextVal)) {
+      store.set('/data/allAttachments', nextVal);
+    }
+  }, [allAttachmentsData, store]);
 
   return <Renderer spec={spec as any} registry={componentRegistry} />;
 }
