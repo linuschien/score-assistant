@@ -313,7 +313,50 @@
           "$bindState": "/data/listAttachments"
         }
       },
-      "children": []
+      "children": [
+        "download-attachment-trigger",
+        "delete-attachment-trigger"
+      ]
+    },
+    "download-attachment-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "download-attachment-trigger",
+        "label": "下載",
+        "variant": "outline"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Download an Attachment",
+              "id": "download-attachment-trigger"
+            }
+          }
+        ]
+      }
+    },
+    "delete-attachment-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "delete-attachment-trigger",
+        "label": "刪除",
+        "variant": "danger"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Delete an Attachment",
+              "id": "delete-attachment-trigger"
+            }
+          }
+        ]
+      }
     },
     "upload-attachment-trigger": {
       "type": "Button",

@@ -154,6 +154,57 @@ registerBehavior('Upload an Attachment for a GradeRecord', async (_ref, store) =
   return '附件上傳成功';
 });
 
+registerBehavior('Download an Attachment', async (_ref, store) => {
+  const gradeRecordId = store.get('/selected/gradeRecordId') as string;
+  const attachmentId = store.get('/selected/attachmentId') as string;
+
+  if (!gradeRecordId || !attachmentId) {
+    alert('無法取得檔案或成績紀錄 ID');
+    return '無法取得檔案或成績紀錄 ID';
+  }
+
+  const res = await api.get(`${API_BASE}/grade-records/${gradeRecordId}/attachments/${attachmentId}`) as any;
+  if (res && res.file_data) {
+    const byteCharacters = atob(res.file_data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: res.mime_type || res.mimeType || 'application/octet-stream' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = res.file_name || res.fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    return '檔案下載成功';
+  } else {
+    alert('檔案下載失敗，無內容返回');
+    return '檔案下載失敗';
+  }
+});
+
+registerBehavior('Delete an Attachment', async (_ref, store) => {
+  const gradeRecordId = store.get('/selected/gradeRecordId') as string;
+  const attachmentId = store.get('/selected/attachmentId') as string;
+
+  if (!gradeRecordId || !attachmentId) {
+    alert('無法取得檔案或成績紀錄 ID');
+    return '無法取得檔案或成績紀錄 ID';
+  }
+
+  const ok = confirm('確定要刪除此附件嗎？此操作將無法復原。');
+  if (!ok) return null;
+
+  await api.delete(`${API_BASE}/grade-records/${gradeRecordId}/attachments/${attachmentId}`);
+
+  await queryClient.invalidateQueries({ queryKey: ['listAttachments'] });
+  return '附件已刪除';
+});
+
 export default function GradeEntryBoardPage() {
   const store = useStateStore();
 

@@ -107,6 +107,25 @@
             "columns": [
               { "field": "fileName", "label": "檔案名稱", "sortable": true, "default_sort": "asc" },
               { "field": "uploadedAt", "label": "上傳時間", "sortable": true }
+            ],
+            "children": [
+              {
+                "id": "download-attachment-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "下載",
+                "behavior_ref": "Download an Attachment"
+              },
+              {
+                "id": "delete-attachment-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "destructive",
+                "label": "刪除",
+                "behavior_ref": "Delete an Attachment",
+                "feedback": {
+                  "on_success": { "type": "toast", "message_key": "success.attachment.deleted" }
+                }
+              }
             ]
           },
           {

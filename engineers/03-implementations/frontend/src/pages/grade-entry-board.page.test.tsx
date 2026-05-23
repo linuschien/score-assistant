@@ -5,7 +5,7 @@ import { componentRegistry } from '@/json-render/component-registry';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import GradeEntryBoardPage from './grade-entry-board.page';
 import { executeRegisteredBehavior } from '@/behaviors/registry';
-import { mockGradeRecords, resetMockAttachments, setMockGradeItems, setMockGradeRecords } from '@/mocks/handlers';
+import { mockGradeRecords, resetMockAttachments, setMockGradeItems, setMockGradeRecords, setMockAttachments } from '@/mocks/handlers';
 
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
@@ -192,5 +192,28 @@ describe('GradeEntryBoardPage', () => {
 
     // Dialog should open
     expect(store.get('/modals/attachment-overlay')).toBe(true);
+  });
+
+  it('verifies download and delete attachment behaviors successfully', async () => {
+    const createObjectURLMock = vi.fn(() => 'blob:mock-url');
+    const revokeObjectURLMock = vi.fn();
+    window.URL.createObjectURL = createObjectURLMock;
+    window.URL.revokeObjectURL = revokeObjectURLMock;
+
+    setMockAttachments([
+      { id: 'att-1', gradeRecordId: 'r-1', fileName: 'mock-test.pdf', mimeType: 'application/pdf', fileSize: 1024, uploadedAt: '2026-05-23T11:00:00Z' }
+    ]);
+
+    store.set('/selected/gradeRecordId', 'r-1');
+    store.set('/selected/attachmentId', 'att-1');
+
+    const downloadMsg = await executeRegisteredBehavior('Download an Attachment', store);
+    expect(downloadMsg).toBe('檔案下載成功');
+    expect(createObjectURLMock).toHaveBeenCalled();
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+    const deleteMsg = await executeRegisteredBehavior('Delete an Attachment', store);
+    expect(deleteMsg).toBe('附件已刪除');
+    expect(confirmSpy).toHaveBeenCalled();
   });
 });

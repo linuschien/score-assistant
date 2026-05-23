@@ -398,6 +398,26 @@ export const handlers = [
       return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   }),
+
+  http.get('*/grade-records/:gradeRecordId/attachments/:attachmentId', ({ params }) => {
+    const att = mockAttachments.find(a => a.id === params.attachmentId || a.attachment_id === params.attachmentId);
+    if (att) {
+      return HttpResponse.json({
+        ...att,
+        file_data: att.fileData || 'bW9jayBiYXNlNjQgZGF0YQ=='
+      });
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
+
+  http.delete('*/grade-records/:gradeRecordId/attachments/:attachmentId', ({ params }) => {
+    const idx = mockAttachments.findIndex(a => a.id === params.attachmentId || a.attachment_id === params.attachmentId);
+    if (idx !== -1) {
+      mockAttachments.splice(idx, 1);
+      return new HttpResponse(null, { status: 204 });
+    }
+    return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
+  }),
   
   // Fallback GraphQL collection mocks
   graphql.query('listSemesters', () => {
