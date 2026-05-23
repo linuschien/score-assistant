@@ -14,6 +14,11 @@ const LISTGRADERECORDS_QUERY = gql`
   query listGradeRecords($filter: GradeRecordsFilterInput) {
     listGradeRecords(filter: $filter) {
       id
+      gradeItemId
+      studentId
+      score
+      lastModifiedAt
+      version
     }
   }
 `;
