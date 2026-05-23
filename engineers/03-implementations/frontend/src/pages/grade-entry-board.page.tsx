@@ -23,12 +23,34 @@ registerBehavior('Update an existing GradeRecord', async (_ref, store) => {
   const score = store.get('/form/activeScore') as number | null;
   const recordId = store.get('/form/activeRecordId') as string | null;
 
+  let newRec: any = null;
+  const payload = {
+    gradeItemId,
+    grade_item_id: gradeItemId,
+    studentId,
+    student_id: studentId,
+    score
+  };
+
   if (recordId) {
     // PUT updates score on an existing record
-    await api.put(`${API_BASE}/grade-records/${recordId}`, { gradeItemId, studentId, score });
+    newRec = await api.put(`${API_BASE}/grade-records/${recordId}`, payload);
   } else {
     // POST creates a new record
-    await api.post(`${API_BASE}/grade-records`, { gradeItemId, studentId, score });
+    newRec = await api.post(`${API_BASE}/grade-records`, payload);
+  }
+
+  // Synchronously update the store to prevent race conditions on subsequent queries (e.g. paperclip clicks)
+  if (newRec) {
+    const currentList = (store.get('/data/listGradeRecords') || []) as any[];
+    const idx = currentList.findIndex((r: any) => r.id === newRec.id);
+    let nextList;
+    if (idx !== -1) {
+      nextList = currentList.map((r: any, i: number) => i === idx ? newRec : r);
+    } else {
+      nextList = [...currentList, newRec];
+    }
+    store.set('/data/listGradeRecords', nextList);
   }
 
   // Refetch records dynamically
@@ -43,15 +65,34 @@ registerBehavior('Record Attendance with automatic status-to-score mapping', asy
   const attendanceStatus = store.get('/form/activeAttendanceStatus') as string;
   const recordId = store.get('/form/activeRecordId') as string | null;
 
+  let newRec: any = null;
+  const payload = {
+    gradeItemId,
+    grade_item_id: gradeItemId,
+    studentId,
+    student_id: studentId,
+    score,
+    attendance_status: attendanceStatus,
+    attendanceStatus
+  };
+
   if (recordId) {
-    await api.put(`${API_BASE}/grade-records/${recordId}`, { gradeItemId, studentId, score });
+    newRec = await api.put(`${API_BASE}/grade-records/${recordId}`, payload);
   } else {
-    await api.post(`${API_BASE}/grade-records`, {
-      gradeItemId,
-      studentId,
-      score,
-      attendance_status: attendanceStatus
-    });
+    newRec = await api.post(`${API_BASE}/grade-records`, payload);
+  }
+
+  // Synchronously update the store to prevent race conditions on subsequent queries (e.g. paperclip clicks)
+  if (newRec) {
+    const currentList = (store.get('/data/listGradeRecords') || []) as any[];
+    const idx = currentList.findIndex((r: any) => r.id === newRec.id);
+    let nextList;
+    if (idx !== -1) {
+      nextList = currentList.map((r: any, i: number) => i === idx ? newRec : r);
+    } else {
+      nextList = [...currentList, newRec];
+    }
+    store.set('/data/listGradeRecords', nextList);
   }
 
   await queryClient.invalidateQueries({ queryKey: ['listGradeRecords'] });

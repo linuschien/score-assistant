@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStateStore, useStateValue } from '@json-render/react';
 import { WeightInlineInput } from './weight-inline-input';
 import { executeRegisteredBehavior } from '@/behaviors/registry';
+import { toast } from 'sonner';
 import type { ComponentType } from 'react';
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -145,7 +146,15 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
         store.set('/form/activeScore', newScore);
         store.set('/form/activeRecordId', record?.id || null);
 
-        await executeRegisteredBehavior('Update an existing GradeRecord', store);
+        const loadingId = toast.loading('正在儲存成績…');
+        try {
+          const msg = await executeRegisteredBehavior('Update an existing GradeRecord', store);
+          toast.dismiss(loadingId);
+          if (msg) toast.success(msg);
+        } catch (err: any) {
+          toast.dismiss(loadingId);
+          toast.error(err?.message || '儲存失敗，請稍後再試');
+        }
       }
     };
 
@@ -174,7 +183,15 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
         store.set('/form/activeAttendanceStatus', attendanceStatus);
         store.set('/form/activeRecordId', record?.id || null);
 
-        await executeRegisteredBehavior('Record Attendance with automatic status-to-score mapping', store);
+        const loadingId = toast.loading('正在登記出缺席…');
+        try {
+          const msg = await executeRegisteredBehavior('Record Attendance with automatic status-to-score mapping', store);
+          toast.dismiss(loadingId);
+          if (msg) toast.success(msg);
+        } catch (err: any) {
+          toast.dismiss(loadingId);
+          toast.error(err?.message || '登記失敗，請稍後再試');
+        }
       }
     };
 
@@ -190,7 +207,15 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
           store.set('/form/activeScore', 0);
           store.set('/form/activeRecordId', null);
 
-          await executeRegisteredBehavior('Update an existing GradeRecord', store);
+          const loadingId = toast.loading('正在初始化成績紀錄…');
+          try {
+            await executeRegisteredBehavior('Update an existing GradeRecord', store);
+            toast.dismiss(loadingId);
+          } catch (err: any) {
+            toast.dismiss(loadingId);
+            toast.error(err?.message || '初始化成績紀錄失敗');
+            return;
+          }
           
           const updatedRecords = store.get('/data/listGradeRecords') || [];
           record = updatedRecords.find(
@@ -203,6 +228,8 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
           store.set('/selected/studentId', studentId);
           store.set('/selected/gradeItemId', itemId);
           store.set('/modals/attachment-overlay', true);
+        } else {
+          toast.error('無法取得成績紀錄，請稍後再試');
         }
       }
     };
