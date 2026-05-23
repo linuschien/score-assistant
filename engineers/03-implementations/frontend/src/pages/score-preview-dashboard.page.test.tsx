@@ -5,6 +5,8 @@ import { componentRegistry } from '@/json-render/component-registry';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import ScorePreviewDashboardPage from './score-preview-dashboard.page';
 import { executeRegisteredBehavior } from '@/behaviors/registry';
+import { server } from '@/mocks/server';
+import { http, graphql, HttpResponse } from 'msw';
 
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
@@ -52,6 +54,71 @@ describe('ScorePreviewDashboardPage', () => {
 
   beforeEach(() => {
     queryClient = createTestQueryClient();
+
+    // MSW interceptors for isolation
+    server.use(
+      // 1. Semester details
+      http.get('*/api/v1/semesters/:id', ({ params }) => {
+        return HttpResponse.json({
+          id: params.id,
+          name: '112-1 第一學期',
+          semesterName: '112-1 第一學期'
+        });
+      }),
+
+      // 2. Class details
+      http.get('*/api/v1/semesters/:semesterId/classes/:id', ({ params }) => {
+        return HttpResponse.json({
+          id: params.id,
+          className: '資訊三甲',
+          name: '資訊三甲',
+          semesterId: params.semesterId
+        });
+      }),
+
+      // 3. listStudents GraphQL query
+      graphql.query('listStudents', () => {
+        return HttpResponse.json({
+          data: {
+            listStudents: [
+              { id: 'student-1', studentNumber: '01', studentName: '王小明' }
+            ]
+          }
+        });
+      }),
+
+      // 4. listGradeItems GraphQL query
+      graphql.query('listGradeItems', () => {
+        return HttpResponse.json({
+          data: {
+            listGradeItems: [
+              { id: 'item-1', itemName: '期中考', itemType: 'ASSIGNMENT', maxScore: 100, weight: 0.3 }
+            ]
+          }
+        });
+      }),
+
+      // 5. listGradeRecords GraphQL query
+      graphql.query('listGradeRecords', () => {
+        return HttpResponse.json({
+          data: {
+            listGradeRecords: [
+              { id: 'r-1', studentId: 'student-1', gradeItemId: 'item-1', score: 80 }
+            ]
+          }
+        });
+      }),
+
+      // 6. exportGrades POST request
+      http.post('*/api/v1/semesters/:semesterId/classes/:classId\\:exportGrades', async ({ request }) => {
+        const body = await request.json() as any;
+        if (body.format === 'EXCEL') {
+          return HttpResponse.json({ success: true });
+        }
+        return HttpResponse.json({ success: false, message: 'Invalid format' });
+      })
+    );
+
     store.set('/selected/classId', '1');
     store.set('/selected/semesterId', '1');
     store.set('/data/listStudents', [

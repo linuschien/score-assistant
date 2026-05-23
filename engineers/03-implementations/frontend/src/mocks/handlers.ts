@@ -442,7 +442,7 @@ export const handlers = [
     return HttpResponse.json({
       data: {
         listStudents: [
-          { id: '1', studentNumber: '01', name: '王小明', attendanceStatus: 'normal' }
+          { id: '1', studentNumber: '01', studentName: '王小明', name: '王小明', attendanceStatus: 'normal' }
         ]
       }
     });

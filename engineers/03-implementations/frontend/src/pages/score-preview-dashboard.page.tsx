@@ -52,7 +52,7 @@ const ScoreSummaryTable = (props: any) => {
   return (
     <div className="bg-[#0d1321]/80 backdrop-blur-sm border border-slate-800/80 rounded-xl overflow-hidden shadow-xl">
       <div className="overflow-x-auto max-w-full">
-        <table className="w-full text-left border-collapse text-slate-355 text-sm" aria-label={label}>
+        <table className="w-full text-left border-collapse text-slate-300 text-sm" aria-label={label}>
           <thead className="bg-[#090e18] text-slate-400 font-medium border-b border-slate-800">
             <tr>
               <th className="px-6 py-4 sticky left-0 bg-[#090e18] z-20 border-r border-slate-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">座號</th>
@@ -95,7 +95,7 @@ const ScoreSummaryTable = (props: any) => {
                       {st.studentNumber}
                     </td>
                     <td className="px-6 py-4 sticky left-16 bg-[#070b13] font-medium border-r border-slate-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
-                      {st.studentName}
+                      {st.studentName || st.name || st.student_name}
                     </td>
                     {gradeItems.map((gi: any) => {
                       const record = gradeRecords.find(
@@ -124,7 +124,7 @@ const ScoreSummaryTable = (props: any) => {
                       }
 
                       return (
-                        <td key={gi.id} className="px-6 py-4 border-r border-slate-800/40 font-medium text-slate-350">
+                        <td key={gi.id} className="px-6 py-4 border-r border-slate-800/40 font-medium text-slate-300">
                           {displayVal}
                         </td>
                       );
@@ -149,7 +149,7 @@ const localRegistry = {
     const id = props.element?.props?.id;
     if (id === 'weight-warning-banner') {
       const store = useStateStore();
-      const gradeItems = store.get('/data/listGradeItems') || [];
+      const gradeItems = (store.get('/data/listGradeItems') || []) as any[];
       const totalWeight = gradeItems.reduce((sum: number, item: any) => sum + (Number(item.weight) || 0), 0);
       
       // Render warning only if total weight is not equal to 1.0 (100%)
