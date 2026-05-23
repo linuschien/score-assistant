@@ -406,6 +406,27 @@ export const handlers = [
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
+
+  // Custom Actions REST endpoints
+  http.post('*/semesters/:semesterId/classes/:classId\\:exportGrades', async ({ request }) => {
+    try {
+      const body = await request.json() as any;
+      if (body.format === 'EXCEL' || body.format === 'CSV' || body.format === 'xlsx') {
+        return HttpResponse.json({ success: true, message: 'Export completed', affectedCount: 1 });
+      }
+      return HttpResponse.json({ error: 'Request validation failed: format: 不能為空白' }, { status: 400 });
+    } catch (err) {
+      return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  }),
+
+  http.post('*/semesters/:semesterId/classes/:classId\\:exportAttendance', async () => {
+    return HttpResponse.json({ success: true, message: 'Attendance export completed', affectedCount: 1 });
+  }),
+
+  http.post('*/semesters/:semesterId/classes/:classId\\:calculateWeightedScores', async () => {
+    return HttpResponse.json({ success: true, message: 'Weighted scores calculated', affectedCount: 1 });
+  }),
   
   // Fallback GraphQL collection mocks
   graphql.query('listSemesters', () => {
