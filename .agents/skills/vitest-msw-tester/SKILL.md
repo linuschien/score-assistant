@@ -70,6 +70,25 @@ beforeEach(() => {
 
 ---
 
+## 🧱 Mocking & MSW Architecture
+
+To prevent huge monolithic mock files and maintain type-safe test environments, we enforce a modular, domain-driven mock architecture:
+
+1. **Shared Fixtures (`src/mocks/fixtures.ts`)**:
+   - All global seed data arrays (e.g. `mockSemesters`, `mockClasses`, `mockGradeRecords`) must be declared here.
+   - Explicitly type these arrays as `any[]` to allow compiler-safe, flexible dynamic mutations (e.g., storing nulls, dynamically adding file data) without type-narrowing issues.
+   - Export helper functions (`resetMock...` and `setMock...`) and mutate arrays in-place using `splice(...)` to preserve the same array references across imported scopes.
+2. **Modular Domain Handlers (`src/mocks/handlers/`)**:
+   - Interceptors must be separated by domain into modular handler files (e.g. `semester-handlers.ts`, `class-handlers.ts`, `student-handlers.ts`, `grade-handlers.ts`).
+3. **Consolidated Aggregator (`src/mocks/handlers.ts`)**:
+   - `handlers.ts` serves as a clean routing entrypoint that aggregates domain handlers and re-exports all seed data and reset helpers to maintain **100% backward compatibility** with existing unit tests.
+4. **Local Overrides in Tests**:
+   - For standard workflows, rely on the global MSW setup.
+   - For edge cases (e.g., asserting empty states, validation failure dialogs), use `server.use()` dynamically inside a test block to override global handlers.
+   - Use compile-safe optional chaining (`r?.score`) when asserting on query results (e.g., `mockGradeRecords.find(...)`) to prevent `possibly 'undefined'` TypeScript compiler errors.
+
+---
+
 ## ✅ Four Mandatory Test Patterns
 
 Every page test file MUST cover all four patterns:
