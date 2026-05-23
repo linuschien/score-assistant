@@ -25,8 +25,8 @@ registerBehavior('Update an existing GradeRecord', async (_ref, store) => {
 
   let newRec: any = null;
   const payload = {
-    gradeItemId,
-    studentId,
+    grade_item_id: gradeItemId,
+    student_id: studentId,
     score
   };
 
@@ -64,8 +64,8 @@ registerBehavior('Record Attendance with automatic status-to-score mapping', asy
 
   let newRec: any = null;
   const payload = {
-    gradeItemId,
-    studentId,
+    grade_item_id: gradeItemId,
+    student_id: studentId,
     score
   };
 
