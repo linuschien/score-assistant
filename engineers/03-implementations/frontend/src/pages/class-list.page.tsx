@@ -12,7 +12,9 @@ import { api, API_BASE } from '@/lib/api-client';
 // Register Class behaviors statically
 registerBehavior('Open Class Form Modal for Create', async (_ref, store) => {
   store.set('/selected/classId', null);
-  store.set('/form', {});
+  store.set('/form', {
+    'modal-class-threshold-field': 60.0
+  });
   store.set('/modals/class-form-modal', true);
   return null;
 });
@@ -25,8 +27,10 @@ registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
 
   const semesterId = store.get('/selected/semesterId') as string;
   const form = (store.get('/form') as Record<string, string>) || {};
+  const threshold = form['modal-class-threshold-field'] ? parseFloat(String(form['modal-class-threshold-field'])) : 60.0;
   await api.post(`${API_BASE}/semesters/${semesterId}/classes`, {
     className: form['modal-class-name-field'],
+    passingThreshold: threshold,
   });
   store.set('/form', {});
   store.set('/modals/class-form-modal', false);
@@ -38,8 +42,10 @@ registerBehavior('Update a Class', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
   const classId = store.get('/selected/classId') as string;
   const semesterId = store.get('/selected/semesterId') as string;
+  const threshold = form['modal-class-threshold-field'] ? parseFloat(String(form['modal-class-threshold-field'])) : 60.0;
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}`, {
     className: form['modal-class-name-field'],
+    passingThreshold: threshold,
   });
   store.set('/form', {});
   store.set('/modals/class-form-modal', false);
@@ -106,6 +112,7 @@ export default function ClassListPage() {
           id: c.id,
           name: c.className,
           studentCount,
+          passingThreshold: c.passingThreshold ?? 60.0,
         };
       });
       const current = store.get('/data/listClasses');
@@ -123,10 +130,16 @@ export default function ClassListPage() {
   useEffect(() => {
     if (classModalOpen && selectedClassId) {
       const currentVal = store.get('/form/modal-class-name-field');
+      const currentThreshold = store.get('/form/modal-class-threshold-field');
       const classes = (store.get('/data/listClasses') as any[]) || [];
       const found = classes.find((c) => c.id === selectedClassId);
-      if (found && currentVal !== found.name) {
-        store.set('/form/modal-class-name-field', found.name);
+      if (found) {
+        if (currentVal !== found.name) {
+          store.set('/form/modal-class-name-field', found.name);
+        }
+        if (currentThreshold !== found.passingThreshold) {
+          store.set('/form/modal-class-threshold-field', found.passingThreshold ?? 60.0);
+        }
       }
     }
   }, [classModalOpen, selectedClassId]);

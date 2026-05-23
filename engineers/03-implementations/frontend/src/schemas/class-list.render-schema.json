@@ -242,6 +242,10 @@
           {
             "field": "studentCount",
             "label": "學生人數"
+          },
+          {
+            "field": "passingThreshold",
+            "label": "通過門檻"
           }
         ],
         "data": {
@@ -282,6 +286,22 @@
       },
       "children": []
     },
+    "modal-class-threshold-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-class-threshold-field",
+        "label": "通過門檻",
+        "name": "modal-class-threshold-field",
+        "type": "number",
+        "placeholder": "請輸入通過門檻分數（預設為 60）",
+        "value": {
+          "$bindState": "/form/modal-class-threshold-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": []
+    },
     "modal-submit-class-trigger": {
       "type": "Button",
       "props": {
@@ -313,6 +333,7 @@
       },
       "children": [
         "modal-class-name-field",
+        "modal-class-threshold-field",
         "modal-submit-class-trigger"
       ],
       "visible": {

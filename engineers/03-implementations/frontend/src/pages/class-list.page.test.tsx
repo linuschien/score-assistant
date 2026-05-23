@@ -105,6 +105,7 @@ describe('ClassListPage', () => {
 
       expect(await screen.findByRole('dialog')).toBeInTheDocument();
       expect(await screen.findByLabelText(/班級名稱/i)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/通過門檻/i)).toBeInTheDocument();
     });
 
     it('calls executeBehavior with "Create a new Class in a Semester" on 儲存', async () => {

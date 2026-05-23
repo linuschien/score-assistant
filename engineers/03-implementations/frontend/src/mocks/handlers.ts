@@ -5,9 +5,9 @@ let mockSemesters = [
 ];
 
 let mockClasses = [
-  { id: '1', semesterId: '1', className: '資訊三甲' },
-  { id: '2', semesterId: '1', className: '資訊三乙' },
-  { id: '3', semesterId: '2', className: '電子三甲' }
+  { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
+  { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
+  { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
 ];
 
 export function resetMockSemesters() {
@@ -15,17 +15,17 @@ export function resetMockSemesters() {
     { id: '1', semesterName: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
   ];
   mockClasses = [
-    { id: '1', semesterId: '1', className: '資訊三甲' },
-    { id: '2', semesterId: '1', className: '資訊三乙' },
-    { id: '3', semesterId: '2', className: '電子三甲' }
+    { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
+    { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
+    { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
   ];
 }
 
 export function resetMockClasses() {
   mockClasses = [
-    { id: '1', semesterId: '1', className: '資訊三甲' },
-    { id: '2', semesterId: '1', className: '資訊三乙' },
-    { id: '3', semesterId: '2', className: '電子三甲' }
+    { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
+    { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
+    { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
   ];
 }
 
@@ -193,7 +193,7 @@ export const handlers = [
   http.get('*/semesters/:semesterId/classes/:id', ({ params }) => {
     const cls = mockClasses.find(c => c.id === params.id);
     if (cls) {
-      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId });
+      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId, passingThreshold: cls.passingThreshold ?? 60.0 });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
@@ -209,9 +209,10 @@ export const handlers = [
       id: String(mockClasses.length + 1),
       semesterId: params.semesterId as string,
       className: body.className,
+      passingThreshold: body.passingThreshold ? parseFloat(body.passingThreshold) : 60.0,
     };
     mockClasses.push(newClass);
-    return HttpResponse.json({ id: newClass.id, className: newClass.className, semesterId: newClass.semesterId }, { status: 201 });
+    return HttpResponse.json({ id: newClass.id, className: newClass.className, semesterId: newClass.semesterId, passingThreshold: newClass.passingThreshold }, { status: 201 });
   }),
   http.put('*/semesters/:semesterId/classes/:id', async ({ request, params }) => {
     const body = await request.json() as any;
@@ -225,10 +226,11 @@ export const handlers = [
     if (idx !== -1) {
       mockClasses[idx] = {
         ...mockClasses[idx],
-        className: body.className
+        className: body.className,
+        passingThreshold: body.passingThreshold ? parseFloat(body.passingThreshold) : mockClasses[idx].passingThreshold
       };
       const cls = mockClasses[idx];
-      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId });
+      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId, passingThreshold: cls.passingThreshold });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),

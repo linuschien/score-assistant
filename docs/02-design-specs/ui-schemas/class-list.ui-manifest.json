@@ -53,7 +53,8 @@
             "data_ref": "listClasses",
             "columns": [
               { "field": "name", "label": "班級名稱", "sortable": true, "default_sort": "asc" },
-              { "field": "studentCount", "label": "學生人數" }
+              { "field": "studentCount", "label": "學生人數" },
+              { "field": "passingThreshold", "label": "通過門檻" }
             ],
             "children": [
               {
@@ -125,6 +126,13 @@
             "abstract_type": "Field",
             "semantic_variant": "text",
             "label": "班級名稱",
+            "behavior_ref": "Create a new Class in a Semester"
+          },
+          {
+            "id": "modal-class-threshold-field",
+            "abstract_type": "Field",
+            "semantic_variant": "number",
+            "label": "通過門檻",
             "behavior_ref": "Create a new Class in a Semester"
           },
           {

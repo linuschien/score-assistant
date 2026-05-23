@@ -16,6 +16,7 @@ const LISTCLASSES_QUERY = gql`
       id
       semesterId
       className
+      passingThreshold
     }
   }
 `;
