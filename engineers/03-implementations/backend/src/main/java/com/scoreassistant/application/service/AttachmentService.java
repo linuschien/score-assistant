@@ -4,6 +4,7 @@ import com.scoreassistant.adapter.in.web.dto.AttachmentDto.*;
 import com.scoreassistant.adapter.out.persistence.AttachmentRepository;
 import com.scoreassistant.adapter.out.persistence.GradeRecordRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
+import com.scoreassistant.domain.exception.ValidationException;
 import com.scoreassistant.domain.model.AttachmentEntity;
 import com.scoreassistant.domain.model.GradeRecordEntity;
 import org.springframework.data.domain.Example;
@@ -30,6 +31,9 @@ public class AttachmentService {
 
     @Transactional
     public Mono<AttachmentResponse> create(UUID gradeRecordId, AttachmentRequest req) {
+        if (req.file_size() <= 0) {
+            return Mono.error(new ValidationException("File size must be greater than 0"));
+        }
         var recordProbe = new GradeRecordEntity(gradeRecordId, null, null, null, null, 0, null, null, false, null);
         var matcher = ExampleMatcher.matching()
                 .withIgnorePaths("version")
@@ -58,6 +62,9 @@ public class AttachmentService {
 
     @Transactional
     public Mono<AttachmentResponse> update(UUID id, AttachmentRequest req) {
+        if (req.file_size() <= 0) {
+            return Mono.error(new ValidationException("File size must be greater than 0"));
+        }
         return attachmentRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Attachment", id)))

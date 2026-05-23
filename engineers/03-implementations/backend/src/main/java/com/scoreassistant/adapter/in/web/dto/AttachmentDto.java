@@ -1,5 +1,6 @@
 package com.scoreassistant.adapter.in.web.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,7 +14,7 @@ public sealed interface AttachmentDto permits
     record AttachmentRequest(
             @NotBlank String file_name,
             @NotBlank String mime_type,
-            @NotNull  Integer file_size,
+            @NotNull @Min(value = 1, message = "File size must be greater than 0") Integer file_size,
             @NotNull  byte[] file_data,
             @NotNull  LocalDateTime uploaded_at
     ) implements AttachmentDto {}
