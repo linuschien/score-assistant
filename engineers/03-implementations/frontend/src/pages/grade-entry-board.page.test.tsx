@@ -118,7 +118,7 @@ describe('GradeEntryBoardPage', () => {
     await waitFor(() => {
       const r = mockGradeRecords.find(x => x.gradeItemId === 'item-1');
       expect(r).toBeDefined();
-      expect(r.score).toBe(95);
+      expect(r?.score).toBe(95);
     });
   });
 
@@ -152,7 +152,7 @@ describe('GradeEntryBoardPage', () => {
     await waitFor(() => {
       const r = mockGradeRecords.find(x => x.gradeItemId === 'item-3');
       expect(r).toBeDefined();
-      expect(r.score).toBe(-5);
+      expect(r?.score).toBe(-5);
     });
   });
 
@@ -174,7 +174,7 @@ describe('GradeEntryBoardPage', () => {
     await waitFor(() => {
       const r = mockGradeRecords.find(x => x.gradeItemId === 'item-2');
       expect(r).toBeDefined();
-      expect(r.score).toBe(0.5); // 0.5 for EXCUSED status
+      expect(r?.score).toBe(0.5); // 0.5 for EXCUSED status
     });
   });
 
