@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/semesters/{semesterId}/classes/{classId}")
+@RequestMapping("/api/v1/semesters/{semesterId}/classes")
 public class GradeItemController {
 
     private final GradeItemService gradeItemService;
@@ -22,7 +22,7 @@ public class GradeItemController {
 
     // ── Grade Items ───────────────────────────────────────────────
 
-    @PostMapping("/grade-items")
+    @PostMapping("/{classId}/grade-items")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<GradeItemResponse> createGradeItem(
             @PathVariable UUID semesterId,
@@ -31,7 +31,7 @@ public class GradeItemController {
         return gradeItemService.create(classId, req);
     }
 
-    @GetMapping("/grade-items/{gradeItemId}")
+    @GetMapping("/{classId}/grade-items/{gradeItemId}")
     public Mono<GradeItemResponse> getGradeItemById(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -39,7 +39,7 @@ public class GradeItemController {
         return gradeItemService.findById(gradeItemId);
     }
 
-    @PutMapping("/grade-items/{gradeItemId}")
+    @PutMapping("/{classId}/grade-items/{gradeItemId}")
     public Mono<GradeItemResponse> updateGradeItem(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -48,7 +48,7 @@ public class GradeItemController {
         return gradeItemService.update(gradeItemId, req);
     }
 
-    @PatchMapping("/grade-items/{gradeItemId}")
+    @PatchMapping("/{classId}/grade-items/{gradeItemId}")
     public Mono<GradeItemResponse> patchGradeItem(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -57,7 +57,7 @@ public class GradeItemController {
         return gradeItemService.patch(gradeItemId, req);
     }
 
-    @DeleteMapping("/grade-items/{gradeItemId}")
+    @DeleteMapping("/{classId}/grade-items/{gradeItemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteGradeItem(
             @PathVariable UUID semesterId,
@@ -68,7 +68,7 @@ public class GradeItemController {
 
     // ── Custom Actions ────────────────────────────────────────────
 
-    @PostMapping(":exportGrades")
+    @PostMapping("/{classId}:exportGrades")
     public Mono<OperationStatusDto> exportGrades(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -76,7 +76,7 @@ public class GradeItemController {
         return gradeItemService.exportGrades(classId, req);
     }
 
-    @PostMapping(":exportAttendance")
+    @PostMapping("/{classId}:exportAttendance")
     public Mono<OperationStatusDto> exportAttendance(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -84,7 +84,7 @@ public class GradeItemController {
         return gradeItemService.exportAttendance(classId, req);
     }
 
-    @PostMapping(":calculateWeightedScores")
+    @PostMapping("/{classId}:calculateWeightedScores")
     public Mono<OperationStatusDto> calculateWeightedScores(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,

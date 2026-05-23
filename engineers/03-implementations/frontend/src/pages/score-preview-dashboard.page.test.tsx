@@ -110,7 +110,7 @@ describe('ScorePreviewDashboardPage', () => {
       }),
 
       // 6. exportGrades POST request
-      http.post('*/api/v1/semesters/:semesterId/classes/:classId\\:exportGrades', async ({ request }) => {
+      http.post(/\/api\/v1\/semesters\/[^\/]+\/classes\/[^\/]+:exportGrades$/, async ({ request }) => {
         const body = await request.json() as any;
         if (body.format === 'EXCEL') {
           return HttpResponse.json({ success: true });

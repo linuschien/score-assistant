@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/semesters/{semesterId}/classes/{classId}/students")
+@RequestMapping("/api/v1/semesters/{semesterId}/classes/{classId}")
 public class StudentController {
 
     private final StudentService studentService;
@@ -21,7 +21,7 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    @PostMapping
+    @PostMapping("/students")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<StudentResponse> createStudent(
             @PathVariable UUID semesterId,
@@ -30,7 +30,7 @@ public class StudentController {
         return studentService.create(classId, req);
     }
 
-    @GetMapping("/{studentId}")
+    @GetMapping("/students/{studentId}")
     public Mono<StudentResponse> getStudentById(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -38,7 +38,7 @@ public class StudentController {
         return studentService.findById(studentId);
     }
 
-    @PutMapping("/{studentId}")
+    @PutMapping("/students/{studentId}")
     public Mono<StudentResponse> updateStudent(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -47,7 +47,7 @@ public class StudentController {
         return studentService.update(studentId, req);
     }
 
-    @PatchMapping("/{studentId}")
+    @PatchMapping("/students/{studentId}")
     public Mono<StudentResponse> patchStudent(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
@@ -56,7 +56,7 @@ public class StudentController {
         return studentService.patch(studentId, req);
     }
 
-    @DeleteMapping("/{studentId}")
+    @DeleteMapping("/students/{studentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteStudent(
             @PathVariable UUID semesterId,
@@ -69,7 +69,7 @@ public class StudentController {
      * Custom action: import students from multipart CSV.
      * Path: POST /semesters/{semesterId}/classes/{classId}/students:importStudents
      */
-    @PostMapping(":importStudents")
+    @PostMapping("/students:importStudents")
     public Mono<OperationStatusDto> importStudents(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,

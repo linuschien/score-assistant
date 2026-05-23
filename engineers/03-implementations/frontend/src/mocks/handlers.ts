@@ -408,7 +408,7 @@ export const handlers = [
   }),
 
   // Custom Actions REST endpoints
-  http.post('*/semesters/:semesterId/classes/:classId\\:exportGrades', async ({ request }) => {
+  http.post(/\/semesters\/[^\/]+\/classes\/[^\/]+:exportGrades$/, async ({ request }) => {
     try {
       const body = await request.json() as any;
       if (body.format === 'EXCEL' || body.format === 'CSV' || body.format === 'xlsx') {
@@ -420,11 +420,11 @@ export const handlers = [
     }
   }),
 
-  http.post('*/semesters/:semesterId/classes/:classId\\:exportAttendance', async () => {
+  http.post(/\/semesters\/[^\/]+\/classes\/[^\/]+:exportAttendance$/, async () => {
     return HttpResponse.json({ success: true, message: 'Attendance export completed', affectedCount: 1 });
   }),
 
-  http.post('*/semesters/:semesterId/classes/:classId\\:calculateWeightedScores', async () => {
+  http.post(/\/semesters\/[^\/]+\/classes\/[^\/]+:calculateWeightedScores$/, async () => {
     return HttpResponse.json({ success: true, message: 'Weighted scores calculated', affectedCount: 1 });
   }),
   

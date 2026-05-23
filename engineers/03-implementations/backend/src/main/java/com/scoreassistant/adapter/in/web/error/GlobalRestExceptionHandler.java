@@ -76,8 +76,9 @@ public class GlobalRestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Mono<ProblemDetail> handleGeneric(Exception ex) {
+        ex.printStackTrace();
         var problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred");
+                "An unexpected error occurred: " + ex.getMessage());
         problem.setType(URI.create("urn:scoreassistant:error:internal"));
         problem.setTitle("Internal Server Error");
         return Mono.just(problem);
