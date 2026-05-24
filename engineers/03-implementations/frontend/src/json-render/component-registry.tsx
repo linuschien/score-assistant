@@ -153,4 +153,13 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   'div': ({ element, children }) => (
     <div className={element?.props?.className}>{children}</div>
   ),
+  'a': ({ element, children }) => (
+    <a
+      href={element?.props?.href}
+      download={element?.props?.download}
+      className={element?.props?.className}
+    >
+      {element?.props?.text || children}
+    </a>
+  ),
 };

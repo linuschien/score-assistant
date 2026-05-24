@@ -187,7 +187,49 @@
         "page-title",
         "current-context",
         "add-student-button",
-        "import-students-button"
+        "import-button-group"
+      ]
+    },
+    "import-helper-container": {
+      "type": "div",
+      "props": {
+        "id": "import-helper-container",
+        "className": "text-[10px] text-slate-500 font-medium flex items-center gap-1.5"
+      },
+      "children": [
+        "import-helper-text",
+        "import-template-download-link"
+      ]
+    },
+    "import-helper-text": {
+      "type": "Text",
+      "props": {
+        "id": "import-helper-text",
+        "text": "格式為 2 欄 CSV (座號,姓名) ─",
+        "variant": "muted"
+      },
+      "children": []
+    },
+    "import-template-download-link": {
+      "type": "a",
+      "props": {
+        "id": "import-template-download-link",
+        "href": "/templates/student-import-template.csv",
+        "download": "student-import-template.csv",
+        "text": "下載 CSV 範本",
+        "className": "text-indigo-400 hover:text-indigo-300 underline font-semibold transition-colors cursor-pointer"
+      },
+      "children": []
+    },
+    "import-button-group": {
+      "type": "div",
+      "props": {
+        "id": "import-button-group",
+        "className": "flex flex-col items-start gap-1.5"
+      },
+      "children": [
+        "import-students-button",
+        "import-helper-container"
       ]
     },
     "student-search-field": {
