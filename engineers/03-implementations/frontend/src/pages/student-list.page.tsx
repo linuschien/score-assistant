@@ -140,27 +140,11 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
         const formData = new FormData();
         formData.append('fileData', file);
 
-        const res = await fetch(
+        await api.postForm(
           `${API_BASE}/semesters/${semesterId}/classes/${classId}/students:importStudents`,
-          {
-            method: 'POST',
-            body: formData,
-          }
+          formData,
+          '匯入失敗'
         );
-
-        if (!res.ok) {
-          let detail = '';
-          try {
-            const errorData = await res.json();
-            detail = errorData?.detail || errorData?.error || errorData?.message || '';
-          } catch {
-            try {
-              detail = await res.text();
-            } catch {}
-          }
-          const finalMsg = detail ? `匯入失敗：${detail}` : `匯入失敗：${res.status}`;
-          throw new Error(finalMsg);
-        }
 
         queryClient.invalidateQueries({ queryKey: ['listStudents'] });
         handleResolve('學生資料匯入成功');

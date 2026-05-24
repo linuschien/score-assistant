@@ -31,6 +31,13 @@ export const api = {
     });
     return handleResponse<T>(res, '建立失敗');
   },
+  postForm: async <T>(url: string, formData: FormData, errorMsg: string = '建立失敗'): Promise<T> => {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+    return handleResponse<T>(res, errorMsg);
+  },
   put: async <T>(url: string, body?: any): Promise<T> => {
     const res = await fetch(url, {
       method: 'PUT',
