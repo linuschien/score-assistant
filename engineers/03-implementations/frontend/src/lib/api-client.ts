@@ -5,7 +5,7 @@ const handleResponse = async <T>(res: Response, errorMsg: string): Promise<T> =>
     let detail = '';
     try {
       const errorData = await res.json();
-      detail = errorData?.error || errorData?.message || '';
+      detail = errorData?.detail || errorData?.error || errorData?.message || '';
     } catch {
       try {
         detail = await res.text();

@@ -152,7 +152,7 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
           let detail = '';
           try {
             const errorData = await res.json();
-            detail = errorData?.error || errorData?.message || '';
+            detail = errorData?.detail || errorData?.error || errorData?.message || '';
           } catch {
             try {
               detail = await res.text();
