@@ -43,11 +43,14 @@ export const DatePicker = ({ element }: any) => {
     }
   };
 
+  const isRequired = element?.props?.required === true || (Array.isArray(element?.props?.checks) && element?.props?.checks.some((c: any) => c.type === 'required'));
+
   return (
     <div className="grid gap-1.5 text-left w-full">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium leading-none text-foreground">
+        <label htmlFor={id} className="text-sm font-medium leading-none text-foreground inline-flex items-center">
           {label}
+          {isRequired && <span className="text-red-500 ml-1 font-bold" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="relative flex items-center w-full">

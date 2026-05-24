@@ -72,6 +72,17 @@ function adapt(Comp: ComponentType<any>): ComponentType<any> {
       if (props.placeholder) props.placeholder = interpolate(props.placeholder);
     }
 
+    // Dynamic required field red asterisk injection
+    const isRequired = props.required === true || (Array.isArray(props.checks) && props.checks.some((c: any) => c.type === 'required'));
+    if (isRequired && typeof props.label === 'string' && props.label) {
+      props.label = (
+        <span className="inline-flex items-center">
+          {props.label}
+          <span className="text-red-500 ml-1 font-bold" aria-hidden="true">*</span>
+        </span>
+      );
+    }
+
     if (element?.type === 'Button') {
       const v = props.variant;
       if (v === 'primary') {

@@ -191,12 +191,12 @@ describe('GradeItemListPage', () => {
 
       const dialog = await screen.findByRole('dialog');
       expect(dialog).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^項目名稱$/)).toBeInTheDocument();
-      expect(await screen.findByText(/^項目類型$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^日期$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^說明$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^滿分$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^權重 \(%\)$/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^項目名稱/)).toBeInTheDocument();
+      expect(await screen.findByText(/^項目類型/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^日期/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^說明/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^滿分/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^權重/)).toBeInTheDocument();
     });
 
     it('calls executeBehavior with "Create a new GradeItem" on 儲存', async () => {

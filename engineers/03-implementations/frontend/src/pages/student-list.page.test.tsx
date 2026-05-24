@@ -173,8 +173,8 @@ describe('StudentListPage', () => {
 
       const dialog = await screen.findByRole('dialog');
       expect(dialog).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^座號$/)).toBeInTheDocument();
-      expect(await screen.findByLabelText(/^姓名$/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^座號/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^姓名/)).toBeInTheDocument();
     });
 
     it('calls executeBehavior with "Add a Student to a Class" on 儲存', async () => {
