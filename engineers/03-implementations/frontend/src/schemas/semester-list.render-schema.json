@@ -224,6 +224,7 @@
         "label": "起始日期",
         "name": "modal-start-date-field",
         "storePath": "/form/modal-start-date-field",
+        "placeholder": "YYYY-MM-DD",
         "disabled": null
       },
       "children": []
@@ -235,6 +236,7 @@
         "label": "結束日期",
         "name": "modal-end-date-field",
         "storePath": "/form/modal-end-date-field",
+        "placeholder": "YYYY-MM-DD",
         "disabled": null
       },
       "children": []

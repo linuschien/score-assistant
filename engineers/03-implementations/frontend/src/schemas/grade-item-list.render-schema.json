@@ -222,6 +222,7 @@
         "label": "篩選日期",
         "name": "item-date-filter",
         "storePath": "/form/item-date-filter",
+        "placeholder": "YYYY-MM-DD",
         "disabled": null
       },
       "children": []
@@ -428,6 +429,7 @@
         "label": "日期",
         "name": "modal-item-date-field",
         "storePath": "/form/modal-item-date-field",
+        "placeholder": "YYYY-MM-DD",
         "disabled": null
       },
       "children": []
