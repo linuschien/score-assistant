@@ -175,7 +175,7 @@
         "label": "分數",
         "name": "score-input",
         "type": "number",
-        "placeholder": null,
+        "placeholder": "請輸入分數（如：85）",
         "value": {
           "$bindState": "/form/score-input"
         },
@@ -202,7 +202,7 @@
         "label": "狀態",
         "name": "attendance-selector",
         "options": ["出席", "缺席", "遲到", "請假"],
-        "placeholder": null,
+        "placeholder": "請選擇出席狀態",
         "value": {
           "$bindState": "/form/attendance-selector"
         },

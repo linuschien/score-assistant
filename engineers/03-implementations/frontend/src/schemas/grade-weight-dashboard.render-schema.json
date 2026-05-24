@@ -214,7 +214,7 @@
         "label": "權重 (%)",
         "name": "weight-input",
         "type": "number",
-        "placeholder": null,
+        "placeholder": "例如：30",
         "value": {
           "$bindState": "/form/weight-input"
         },

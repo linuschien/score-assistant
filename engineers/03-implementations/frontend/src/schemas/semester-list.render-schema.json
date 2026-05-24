@@ -295,7 +295,7 @@
         "label": "請輸入學期名稱以確認刪除",
         "name": "delete-semester-keyword-input",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入欲刪除的學期名稱以確認",
         "value": {
           "$bindState": "/form/delete-semester-keyword-input"
         },

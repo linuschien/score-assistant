@@ -196,7 +196,7 @@
         "label": "篩選類型",
         "name": "item-type-filter",
         "options": ["考試", "作業", "報告", "出席", "其他"],
-        "placeholder": null,
+        "placeholder": "選擇項目類型",
         "value": {
           "$bindState": "/form/item-type-filter"
         },
@@ -374,7 +374,7 @@
         "label": "項目名稱",
         "name": "modal-item-name-field",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入項目名稱（例如：期中考）",
         "value": {
           "$bindState": "/form/modal-item-name-field"
         },
@@ -401,7 +401,7 @@
         "label": "項目類型",
         "name": "modal-item-type-selection",
         "options": ["考試", "作業", "報告", "出席", "其他"],
-        "placeholder": null,
+        "placeholder": "請選擇項目類型",
         "value": {
           "$bindState": "/form/modal-item-type-selection"
         },
@@ -439,7 +439,7 @@
         "label": "說明",
         "name": "modal-item-description-field",
         "type": null,
-        "placeholder": null,
+        "placeholder": "請輸入項目說明（選填）",
         "value": {
           "$bindState": "/form/modal-item-description-field"
         },
@@ -466,7 +466,7 @@
         "label": "滿分",
         "name": "modal-max-score-field",
         "type": "number",
-        "placeholder": null,
+        "placeholder": "請輸入滿分分數（預設為 100）",
         "value": {
           "$bindState": "/form/modal-max-score-field"
         },
@@ -493,7 +493,7 @@
         "label": "權重 (%)",
         "name": "modal-weight-field",
         "type": "number",
-        "placeholder": null,
+        "placeholder": "請輸入權重百分比（例如：20）",
         "value": {
           "$bindState": "/form/modal-weight-field"
         },
@@ -571,7 +571,7 @@
         "label": "請輸入項目名稱以確認刪除",
         "name": "delete-grade-item-keyword-input",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入欲刪除的項目名稱以確認",
         "value": {
           "$bindState": "/form/delete-grade-item-keyword-input"
         },

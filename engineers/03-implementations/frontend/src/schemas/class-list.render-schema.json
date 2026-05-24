@@ -277,7 +277,7 @@
         "label": "班級名稱",
         "name": "modal-class-name-field",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入班級名稱（例如：三年二班）",
         "value": {
           "$bindState": "/form/modal-class-name-field"
         },
@@ -357,7 +357,7 @@
         "label": "請輸入班級名稱以確認刪除",
         "name": "delete-class-keyword-input",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入欲刪除的班級名稱以確認",
         "value": {
           "$bindState": "/form/delete-class-keyword-input"
         },

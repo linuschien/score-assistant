@@ -197,7 +197,7 @@
         "label": "搜尋座號或姓名",
         "name": "student-search-field",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "搜尋座號或姓名",
         "value": {
           "$bindState": "/form/student-search-field"
         },
@@ -334,7 +334,7 @@
         "label": "座號",
         "name": "modal-student-number-field",
         "type": "number",
-        "placeholder": null,
+        "placeholder": "例如：1",
         "value": {
           "$bindState": "/form/modal-student-number-field"
         },
@@ -361,7 +361,7 @@
         "label": "姓名",
         "name": "modal-student-name-field",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "例如：王小明",
         "value": {
           "$bindState": "/form/modal-student-name-field"
         },
@@ -436,7 +436,7 @@
         "label": "請輸入學生姓名以確認移除",
         "name": "delete-student-keyword-input",
         "type": "text",
-        "placeholder": null,
+        "placeholder": "請輸入欲刪除的學生姓名以確認",
         "value": {
           "$bindState": "/form/delete-student-keyword-input"
         },
