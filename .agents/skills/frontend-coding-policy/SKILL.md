@@ -10,6 +10,25 @@ This document outlines the standard coding practices and UI guidelines for the f
 
 ---
 
+## 🏛️ Core Architectural Principles (核心開發與架構觀念)
+
+All frontend components and business logic must adhere to the following architectural concepts to maintain clean, robust, and scalable code:
+
+### A. Strongly-Typed SOLID Principles
+- **TypeScript as a Strongly-Typed OOP/Interface-Driven Language**: Although React is fundamentally functional in UI presentation, TypeScript gives us powerful Object-Oriented capabilities (interfaces, polymorphism, generic constraints). All utilities, API structures, and shared interfaces must enforce strong typing.
+- **Adherence to SOLID**:
+  - **S (Single Responsibility)**: Keep components focused on a single task. Render templates must only render UI; business behaviors belong to registered controller files.
+  - **O (Open/Closed)**: Components and helpers should be open for extension (e.g., extending the global `api` client options with `postForm`) but closed for modification.
+  - **D (Dependency Inversion)**: Depend upon abstractions, not concrete implementations (e.g., page layers communicate with APIs and state through general interfaces and registered behaviors).
+
+### B. MVC Separation of Concerns (Responsibility Boundary)
+While React is not inherently an MVC framework, our project's architecture enforces a highly clean Separation of Concerns that aligns perfectly with **MVC (Model-View-Controller)** principles:
+1. **View (`json-render`)**: The custom `json-render` components serve as pure, declarative render engines. They consume schemas (e.g., `*.render-schema.json`) and registries to render UI layouts. They are entirely decoupled from business logic and maintain zero state side-effects.
+2. **Controller (`*.page.tsx`)**: The page files act as Controllers. They register static behaviors (`registerBehavior`), validate forms, catch user interactions, trigger data changes (`store.set`), coordinate API network requests, and manage modal transitions.
+3. **Model (`React Query` & `JSONUI Store`)**: The local client-side state store and global query cache represent the Model, maintaining structural integrity, data consistency, and validation schemas.
+
+---
+
 ## 📋 Coding Policies & Rules
 
 ### 1. Required Field Indicator (必填欄位紅色星號註記)
