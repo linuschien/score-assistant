@@ -281,8 +281,13 @@
         "value": {
           "$bindState": "/form/modal-class-name-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "班級名稱為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": []
     },
@@ -297,8 +302,13 @@
         "value": {
           "$bindState": "/form/modal-class-threshold-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "通過門檻為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": []
     },

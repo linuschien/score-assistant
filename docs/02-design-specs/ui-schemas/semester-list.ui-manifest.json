@@ -105,7 +105,14 @@
             "abstract_type": "Field",
             "semantic_variant": "text",
             "label": "學期名稱",
-            "behavior_ref": "Create a new Semester"
+            "behavior_ref": "Create a new Semester",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "學期名稱為必填項目"
+              }
+            ]
           },
           {
             "id": "modal-start-date-field",
@@ -113,7 +120,14 @@
             "semantic_variant": "date-picker",
             "label": "起始日期",
             "behavior_ref": "Create a new Semester",
-            "ux_hints": { "gestalt_group": "date-range" }
+            "ux_hints": { "gestalt_group": "date-range" },
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "起始日期為必填項目"
+              }
+            ]
           },
           {
             "id": "modal-end-date-field",
@@ -121,7 +135,14 @@
             "semantic_variant": "date-picker",
             "label": "結束日期",
             "behavior_ref": "Create a new Semester",
-            "ux_hints": { "gestalt_group": "date-range" }
+            "ux_hints": { "gestalt_group": "date-range" },
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "結束日期為必填項目"
+              }
+            ]
           },
           {
             "id": "modal-submit-semester-trigger",

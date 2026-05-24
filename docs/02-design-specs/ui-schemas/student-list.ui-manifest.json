@@ -124,8 +124,34 @@
         "semantic_variant": "modal",
         "label": "新增 / 編輯學生",
         "children": [
-          { "id": "modal-student-number-field", "abstract_type": "Field", "semantic_variant": "text", "label": "座號", "behavior_ref": "Add a Student to a Class" },
-          { "id": "modal-student-name-field", "abstract_type": "Field", "semantic_variant": "text", "label": "姓名", "behavior_ref": "Add a Student to a Class" },
+          {
+            "id": "modal-student-number-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "座號",
+            "behavior_ref": "Add a Student to a Class",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "座號為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-student-name-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "姓名",
+            "behavior_ref": "Add a Student to a Class",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "姓名為必填項目"
+              }
+            ]
+          },
           {
             "id": "modal-submit-student-trigger",
             "abstract_type": "Trigger",

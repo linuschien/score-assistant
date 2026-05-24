@@ -110,12 +110,86 @@
         "semantic_variant": "modal",
         "label": "建立 / 編輯成績項目",
         "children": [
-          { "id": "modal-item-name-field", "abstract_type": "Field", "semantic_variant": "text", "label": "項目名稱", "behavior_ref": "Create a new GradeItem" },
-          { "id": "modal-item-type-selection", "abstract_type": "Selection", "semantic_variant": "dropdown", "label": "項目類型", "behavior_ref": "Create a new GradeItem", "ux_hints": { "max_visible_options": 6 } },
-          { "id": "modal-item-date-field", "abstract_type": "Field", "semantic_variant": "date-picker", "label": "日期", "behavior_ref": "Create a new GradeItem" },
-          { "id": "modal-item-description-field", "abstract_type": "Field", "semantic_variant": "textarea", "label": "說明", "behavior_ref": "Create a new GradeItem" },
-          { "id": "modal-max-score-field", "abstract_type": "Field", "semantic_variant": "number", "label": "滿分", "behavior_ref": "Create a new GradeItem", "ux_hints": { "gestalt_group": "score-config" } },
-          { "id": "modal-weight-field", "abstract_type": "Field", "semantic_variant": "number", "label": "權重 (%)", "behavior_ref": "Create a new GradeItem", "ux_hints": { "gestalt_group": "score-config" } },
+          {
+            "id": "modal-item-name-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "項目名稱",
+            "behavior_ref": "Create a new GradeItem",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "項目名稱為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-item-type-selection",
+            "abstract_type": "Selection",
+            "semantic_variant": "dropdown",
+            "label": "項目類型",
+            "behavior_ref": "Create a new GradeItem",
+            "ux_hints": { "max_visible_options": 6 },
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "項目類型為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-item-date-field",
+            "abstract_type": "Field",
+            "semantic_variant": "date-picker",
+            "label": "日期",
+            "behavior_ref": "Create a new GradeItem",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "日期為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-item-description-field",
+            "abstract_type": "Field",
+            "semantic_variant": "textarea",
+            "label": "說明",
+            "behavior_ref": "Create a new GradeItem"
+          },
+          {
+            "id": "modal-max-score-field",
+            "abstract_type": "Field",
+            "semantic_variant": "number",
+            "label": "滿分",
+            "behavior_ref": "Create a new GradeItem",
+            "ux_hints": { "gestalt_group": "score-config" },
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "滿分為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-weight-field",
+            "abstract_type": "Field",
+            "semantic_variant": "number",
+            "label": "權重 (%)",
+            "behavior_ref": "Create a new GradeItem",
+            "ux_hints": { "gestalt_group": "score-config" },
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "權重為必填項目"
+              }
+            ]
+          },
           {
             "id": "modal-submit-grade-item-trigger",
             "abstract_type": "Trigger",

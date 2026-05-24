@@ -338,8 +338,13 @@
         "value": {
           "$bindState": "/form/modal-student-number-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "座號為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {
@@ -365,8 +370,13 @@
         "value": {
           "$bindState": "/form/modal-student-name-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "姓名為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {

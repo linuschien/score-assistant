@@ -126,14 +126,28 @@
             "abstract_type": "Field",
             "semantic_variant": "text",
             "label": "班級名稱",
-            "behavior_ref": "Create a new Class in a Semester"
+            "behavior_ref": "Create a new Class in a Semester",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "班級名稱為必填項目"
+              }
+            ]
           },
           {
             "id": "modal-class-threshold-field",
             "abstract_type": "Field",
             "semantic_variant": "number",
             "label": "通過門檻",
-            "behavior_ref": "Create a new Class in a Semester"
+            "behavior_ref": "Create a new Class in a Semester",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "通過門檻為必填項目"
+              }
+            ]
           },
           {
             "id": "modal-submit-class-trigger",

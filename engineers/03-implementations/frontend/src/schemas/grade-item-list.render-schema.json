@@ -379,8 +379,13 @@
         "value": {
           "$bindState": "/form/modal-item-name-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "項目名稱為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {
@@ -406,8 +411,13 @@
         "value": {
           "$bindState": "/form/modal-item-type-selection"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "項目類型為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {
@@ -430,6 +440,13 @@
         "name": "modal-item-date-field",
         "storePath": "/form/modal-item-date-field",
         "placeholder": "YYYY-MM-DD",
+        "required": true,
+        "checks": [
+          {
+            "type": "required",
+            "message": "日期為必填項目"
+          }
+        ],
         "disabled": null
       },
       "children": []
@@ -472,8 +489,13 @@
         "value": {
           "$bindState": "/form/modal-max-score-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "滿分為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {
@@ -499,8 +521,13 @@
         "value": {
           "$bindState": "/form/modal-weight-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "權重為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": [],
       "on": {

@@ -212,8 +212,13 @@
         "value": {
           "$bindState": "/form/modal-semester-name-field"
         },
-        "checks": null,
-        "validateOn": null
+        "checks": [
+          {
+            "type": "required",
+            "message": "學期名稱為必填項目"
+          }
+        ],
+        "validateOn": "blur"
       },
       "children": []
     },
@@ -225,6 +230,13 @@
         "name": "modal-start-date-field",
         "storePath": "/form/modal-start-date-field",
         "placeholder": "YYYY-MM-DD",
+        "required": true,
+        "checks": [
+          {
+            "type": "required",
+            "message": "起始日期為必填項目"
+          }
+        ],
         "disabled": null
       },
       "children": []
@@ -237,6 +249,13 @@
         "name": "modal-end-date-field",
         "storePath": "/form/modal-end-date-field",
         "placeholder": "YYYY-MM-DD",
+        "required": true,
+        "checks": [
+          {
+            "type": "required",
+            "message": "結束日期為必填項目"
+          }
+        ],
         "disabled": null
       },
       "children": []
