@@ -217,6 +217,33 @@
                         }
                     }
                 },
+                "required": {
+                    "type": "boolean",
+                    "description": "Indicates if this field is required for validation."
+                },
+                "checks": {
+                    "type": "array",
+                    "description": "Declarative validation checks (e.g., required, formats).",
+                    "items": {
+                        "type": "object",
+                        "required": ["type", "message"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "description": "Validation type (e.g., 'required', 'min', 'max')."
+                            },
+                            "message": {
+                                "type": "string",
+                                "description": "Error message when validation fails."
+                            },
+                            "args": {
+                                "type": "object",
+                                "description": "Optional arguments for this check."
+                            }
+                        }
+                    }
+                },
                 "children": {
                     "type": "array",
                     "description": "Recursive list of nested ui_elements. Enables complex tree-based UI layouts.",
