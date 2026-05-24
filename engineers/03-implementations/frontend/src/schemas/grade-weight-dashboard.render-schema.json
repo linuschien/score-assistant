@@ -173,9 +173,7 @@
         "variant": "summary-section"
       },
       "children": [
-        "page-title",
-        "total-weight-indicator",
-        "save-weights-trigger"
+        "page-title"
       ]
     },
     "weight-distribution-chart": {
@@ -196,16 +194,6 @@
           }
         ]
       }
-    },
-    "weight-summary-section": {
-      "type": "div",
-      "props": {
-        "id": "weight-summary-section",
-        "variant": "summary-section"
-      },
-      "children": [
-        "weight-distribution-chart"
-      ]
     },
     "weight-input": {
       "type": "Input",
@@ -275,14 +263,59 @@
         ]
       }
     },
-    "weight-editor-section": {
+    "weight-editor-title": {
+      "type": "Heading",
+      "props": {
+        "id": "weight-editor-title",
+        "label": "權重配比設定",
+        "text": "權重配比設定",
+        "level": "h2",
+        "className": "text-md font-semibold text-slate-200"
+      },
+      "children": []
+    },
+    "weight-editor-header": {
       "type": "div",
       "props": {
-        "id": "weight-editor-section",
-        "variant": "list-section"
+        "id": "weight-editor-header",
+        "className": "flex justify-between items-center border-b border-slate-800 pb-3"
       },
       "children": [
+        "weight-editor-title",
+        "save-weights-trigger"
+      ]
+    },
+    "left-panel": {
+      "type": "div",
+      "props": {
+        "id": "left-panel",
+        "className": "lg:col-span-2 space-y-4 flex flex-col"
+      },
+      "children": [
+        "weight-editor-header",
         "weight-editor-table"
+      ]
+    },
+    "right-panel": {
+      "type": "div",
+      "props": {
+        "id": "right-panel",
+        "className": "space-y-6 flex flex-col"
+      },
+      "children": [
+        "total-weight-indicator",
+        "weight-distribution-chart"
+      ]
+    },
+    "main-layout": {
+      "type": "div",
+      "props": {
+        "id": "main-layout",
+        "className": "grid grid-cols-1 lg:grid-cols-3 gap-6 w-full"
+      },
+      "children": [
+        "left-panel",
+        "right-panel"
       ]
     },
     "grade-weight-page": {
@@ -294,8 +327,7 @@
       "children": [
         "page-breadcrumb",
         "header-section",
-        "weight-summary-section",
-        "weight-editor-section"
+        "main-layout"
       ]
     }
   }
