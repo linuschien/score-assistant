@@ -113,7 +113,8 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
         if (msg) toast.success(msg);
       } catch (err: any) {
         toast.dismiss(loadingId);
-        toast.error(err?.message || '操作失敗，請稍後再試');
+        const msg = err?.message || '操作失敗，請稍後再試';
+        toast.error(<div className="whitespace-pre-line text-left">{msg}</div>);
       }
     },
     []
