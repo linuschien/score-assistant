@@ -77,6 +77,21 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
   const [activePage, setActivePage] = useState<PageKey>('home');
   const localQueryClient = customQueryClient || queryClient;
 
+  const [systemTime, setSystemTime] = useState<string>(() => {
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const pad = (n: number) => n < 10 ? '0' + n : n;
+      const d = new Date();
+      setSystemTime(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -170,7 +185,7 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
 
             <div className="flex items-center space-x-6">
               <span className="text-xs text-slate-500 font-mono hidden md:inline-block">
-                System Time: {new Date().toLocaleDateString('zh-TW')}
+                System Time: {systemTime}
               </span>
               <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
                 <div className="text-right hidden sm:block">
@@ -178,8 +193,11 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
                   <p className="text-[10px] text-slate-500">Superintendent Teacher</p>
                 </div>
                 <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-md text-sm">
-                    T
+                  <div
+                    className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-md text-xl"
+                    style={{ fontFamily: "'UnifrakturMaguntia', 'Cloister Black', 'Old English Text MT', serif" }}
+                  >
+                    L
                   </div>
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0d131f]" />
                 </div>
