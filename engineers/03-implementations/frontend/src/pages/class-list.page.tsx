@@ -19,11 +19,36 @@ registerBehavior('Open Class Form Modal for Create', async (_ref, store) => {
   return null;
 });
 
+function validateClassForm(store: any): void {
+  const form = (store.get('/form') as Record<string, string>) || {};
+  const className = (form['modal-class-name-field'] || '').trim();
+  const thresholdVal = form['modal-class-threshold-field'];
+
+  const errors: string[] = [];
+  if (!className) errors.push('請輸入班級名稱');
+  if (thresholdVal === undefined || thresholdVal === null || String(thresholdVal).trim() === '') {
+    errors.push('請輸入通過門檻');
+  } else {
+    const parsed = parseFloat(String(thresholdVal));
+    if (isNaN(parsed)) {
+      errors.push('通過門檻必須為有效數字');
+    } else if (parsed < 0 || parsed > 100) {
+      errors.push('通過門檻必須在 0 到 100 之間');
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error('請修正以下欄位：\n' + errors.map(e => `• ${e}`).join('\n'));
+  }
+}
+
 registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
   const selectedClassId = store.get('/selected/classId');
   if (selectedClassId) {
     return executeRegisteredBehavior('Update a Class', store);
   }
+
+  validateClassForm(store);
 
   const semesterId = store.get('/selected/semesterId') as string;
   const form = (store.get('/form') as Record<string, string>) || {};
@@ -39,6 +64,8 @@ registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
 });
 
 registerBehavior('Update a Class', async (_ref, store) => {
+  validateClassForm(store);
+
   const form = (store.get('/form') as Record<string, string>) || {};
   const classId = store.get('/selected/classId') as string;
   const semesterId = store.get('/selected/semesterId') as string;

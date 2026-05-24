@@ -1,7 +1,19 @@
 export const API_BASE = '/api/v1';
 
 const handleResponse = async <T>(res: Response, errorMsg: string): Promise<T> => {
-  if (!res.ok) throw new Error(`${errorMsg}：${res.status}`);
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const errorData = await res.json();
+      detail = errorData?.error || errorData?.message || '';
+    } catch {
+      try {
+        detail = await res.text();
+      } catch {}
+    }
+    const finalMsg = detail ? `${errorMsg}：${detail}` : `${errorMsg}：${res.status}`;
+    throw new Error(finalMsg);
+  }
   const text = await res.text();
   return text ? JSON.parse(text) : ({} as T);
 };

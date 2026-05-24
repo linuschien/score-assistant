@@ -115,6 +115,7 @@ describe('ClassListPage', () => {
 
       act(() => {
         store.set('/form/modal-class-name-field', '資訊三甲');
+        store.set('/form/modal-class-threshold-field', 60.0);
       });
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
@@ -131,6 +132,7 @@ describe('ClassListPage', () => {
 
       act(() => {
         store.set('/form/modal-class-name-field', '資訊三甲');
+        store.set('/form/modal-class-threshold-field', 60.0);
       });
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
@@ -143,11 +145,12 @@ describe('ClassListPage', () => {
     it('shows validation error when saving empty class name', async () => {
       store.set('/modals/class-form-modal', true);
       store.set('/form/modal-class-name-field', '');
+      store.set('/form/modal-class-threshold-field', 60.0);
       renderPage();
 
       await expect(
         executeRegisteredBehavior('Create a new Class in a Semester', store)
-      ).rejects.toThrow('建立失敗：400');
+      ).rejects.toThrow(/請修正以下欄位/);
 
       expect(store.get('/modals/class-form-modal')).toBe(true);
     });

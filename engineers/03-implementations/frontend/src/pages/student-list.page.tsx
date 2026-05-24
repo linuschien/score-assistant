@@ -17,11 +17,27 @@ registerBehavior('Open Student Form Modal for Create', async (_ref, store) => {
   return null;
 });
 
+function validateStudentForm(store: any): void {
+  const form = (store.get('/form') as Record<string, string>) || {};
+  const num = (form['modal-student-number-field'] || '').trim();
+  const name = (form['modal-student-name-field'] || '').trim();
+
+  const errors: string[] = [];
+  if (!num) errors.push('請輸入座號');
+  if (!name) errors.push('請輸入姓名');
+
+  if (errors.length > 0) {
+    throw new Error('請修正以下欄位：\n' + errors.map(e => `• ${e}`).join('\n'));
+  }
+}
+
 registerBehavior('Add a Student to a Class', async (_ref, store) => {
   const selectedStudentId = store.get('/selected/studentId');
   if (selectedStudentId) {
     return executeRegisteredBehavior('Update a Student', store);
   }
+
+  validateStudentForm(store);
 
   const semesterId = store.get('/selected/semesterId') as string;
   const classId = store.get('/selected/classId') as string;
@@ -38,6 +54,8 @@ registerBehavior('Add a Student to a Class', async (_ref, store) => {
 });
 
 registerBehavior('Update a Student', async (_ref, store) => {
+  validateStudentForm(store);
+
   const semesterId = store.get('/selected/semesterId') as string;
   const classId = store.get('/selected/classId') as string;
   const studentId = store.get('/selected/studentId') as string;
@@ -131,7 +149,17 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
         );
 
         if (!res.ok) {
-          throw new Error(`匯入失敗：${res.status}`);
+          let detail = '';
+          try {
+            const errorData = await res.json();
+            detail = errorData?.error || errorData?.message || '';
+          } catch {
+            try {
+              detail = await res.text();
+            } catch {}
+          }
+          const finalMsg = detail ? `匯入失敗：${detail}` : `匯入失敗：${res.status}`;
+          throw new Error(finalMsg);
         }
 
         queryClient.invalidateQueries({ queryKey: ['listStudents'] });

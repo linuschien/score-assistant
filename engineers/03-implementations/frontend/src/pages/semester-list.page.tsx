@@ -16,11 +16,41 @@ registerBehavior('Open Semester Form Modal for Create', async (_ref, store) => {
   return null;
 });
 
+function validateSemesterForm(store: any): void {
+  const form = (store.get('/form') as Record<string, string>) || {};
+  const name = (form['modal-semester-name-field'] || '').trim();
+  const start = (form['modal-start-date-field'] || '').trim();
+  const end = (form['modal-end-date-field'] || '').trim();
+
+  const errors: string[] = [];
+  if (!name) errors.push('請輸入學期名稱');
+  if (!start) errors.push('請選擇起始日期');
+  if (!end) errors.push('請選擇結束日期');
+
+  if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) {
+    errors.push('起始日期格式必須為 YYYY-MM-DD');
+  }
+  if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+    errors.push('結束日期格式必須為 YYYY-MM-DD');
+  }
+  if (start && end && /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end)) {
+    if (new Date(start) > new Date(end)) {
+      errors.push('結束日期不能早於起始日期');
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error('請修正以下欄位：\n' + errors.map(e => `• ${e}`).join('\n'));
+  }
+}
+
 registerBehavior('Create a new Semester', async (_ref, store) => {
   const selectedId = store.get('/selected/semesterId');
   if (selectedId) {
     return executeRegisteredBehavior('Update a Semester', store);
   }
+
+  validateSemesterForm(store);
 
   const form = (store.get('/form') as Record<string, string>) || {};
   await api.post(`${API_BASE}/semesters`, {
@@ -35,6 +65,8 @@ registerBehavior('Create a new Semester', async (_ref, store) => {
 });
 
 registerBehavior('Update a Semester', async (_ref, store) => {
+  validateSemesterForm(store);
+
   const form = (store.get('/form') as Record<string, string>) || {};
   const id = store.get('/selected/semesterId') as string;
   await api.put(`${API_BASE}/semesters/${id}`, {

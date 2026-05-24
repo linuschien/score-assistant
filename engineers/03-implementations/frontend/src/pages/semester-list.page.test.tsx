@@ -129,6 +129,11 @@ describe('SemesterListPage', () => {
     it('calls executeBehavior with "Create a new Semester" on 儲存', async () => {
       const user = userEvent.setup();
       store.set('/modals/semester-form-modal', true);
+      store.set('/form', {
+        'modal-semester-name-field': '112-1 第一學期',
+        'modal-start-date-field': '2023-09-01',
+        'modal-end-date-field': '2024-01-31'
+      });
       renderPage();
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
@@ -141,6 +146,11 @@ describe('SemesterListPage', () => {
     it('closes form modal after 儲存 is clicked', async () => {
       const user = userEvent.setup();
       store.set('/modals/semester-form-modal', true);
+      store.set('/form', {
+        'modal-semester-name-field': '112-1 第一學期',
+        'modal-start-date-field': '2023-09-01',
+        'modal-end-date-field': '2024-01-31'
+      });
       renderPage();
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));

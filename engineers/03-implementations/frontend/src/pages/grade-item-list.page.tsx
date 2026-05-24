@@ -50,21 +50,57 @@ registerBehavior('Clear Grade Item Filters', async (_ref, store) => {
   return null;
 });
 
+function validateGradeItemForm(store: any): void {
+  const form = (store.get('/form') as Record<string, any>) || {};
+  const name = (form['modal-item-name-field'] || '').trim();
+  const type = (form['modal-item-type-selection'] || '').trim();
+  const maxScoreVal = form['modal-max-score-field'];
+  const weightVal = form['modal-weight-field'];
+
+  const errors: string[] = [];
+  if (!name) errors.push('請輸入項目名稱');
+  if (!type) errors.push('請選擇項目類型');
+
+  if (maxScoreVal === undefined || maxScoreVal === null || String(maxScoreVal).trim() === '') {
+    errors.push('請輸入滿分分數');
+  } else {
+    const parsedMax = parseFloat(String(maxScoreVal));
+    if (isNaN(parsedMax)) {
+      errors.push('滿分分數必須為有效數字');
+    } else if (parsedMax <= 0) {
+      errors.push('滿分分數必須大於 0');
+    }
+  }
+
+  if (weightVal === undefined || weightVal === null || String(weightVal).trim() === '') {
+    errors.push('請輸入權重百分比');
+  } else {
+    const parsedWeight = parseFloat(String(weightVal));
+    if (isNaN(parsedWeight)) {
+      errors.push('權重百分比必須為有效數字');
+    } else if (parsedWeight < 0 || parsedWeight > 100) {
+      errors.push('權重百分比必須在 0 到 100 之間');
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error('請修正以下欄位：\n' + errors.map(e => `• ${e}`).join('\n'));
+  }
+}
+
 registerBehavior('Create a new GradeItem', async (_ref, store) => {
   const selectedGradeItemId = store.get('/selected/gradeItemId');
   if (selectedGradeItemId) {
     return executeRegisteredBehavior('Update a GradeItem', store);
   }
 
+  validateGradeItemForm(store);
+
   const semesterId = store.get('/selected/semesterId') as string;
   const classId = store.get('/selected/classId') as string;
   const form = (store.get('/form') as Record<string, any>) || {};
 
   const itemName = form['modal-item-name-field'];
-  if (!itemName || !itemName.trim()) {
-    throw new Error('項目名稱不能為空白');
-  }
-
   const rawType = form['modal-item-type-selection'] || '其他';
   const backendType = TYPE_TO_BACKEND[rawType] || 'OTHER';
 
@@ -87,16 +123,14 @@ registerBehavior('Create a new GradeItem', async (_ref, store) => {
 });
 
 registerBehavior('Update a GradeItem', async (_ref, store) => {
+  validateGradeItemForm(store);
+
   const semesterId = store.get('/selected/semesterId') as string;
   const classId = store.get('/selected/classId') as string;
   const gradeItemId = store.get('/selected/gradeItemId') as string;
   const form = (store.get('/form') as Record<string, any>) || {};
 
   const itemName = form['modal-item-name-field'];
-  if (!itemName || !itemName.trim()) {
-    throw new Error('項目名稱不能為空白');
-  }
-
   const rawType = form['modal-item-type-selection'] || '其他';
   const backendType = TYPE_TO_BACKEND[rawType] || 'OTHER';
 

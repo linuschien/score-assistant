@@ -187,8 +187,9 @@ describe('StudentListPage', () => {
       // Wait for the dialog to fully render, ensuring all mounting effects are complete
       expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
-      // Now seed the name safely
+      // Now seed the name and number safely
       act(() => {
+        store.set('/form/modal-student-number-field', '02');
         store.set('/form/modal-student-name-field', '李小美');
       });
 
