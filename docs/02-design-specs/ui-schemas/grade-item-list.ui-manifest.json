@@ -144,14 +144,7 @@
             "abstract_type": "Field",
             "semantic_variant": "date-picker",
             "label": "日期",
-            "behavior_ref": "Create a new GradeItem",
-            "required": true,
-            "checks": [
-              {
-                "type": "required",
-                "message": "日期為必填項目"
-              }
-            ]
+            "behavior_ref": "Create a new GradeItem"
           },
           {
             "id": "modal-item-description-field",

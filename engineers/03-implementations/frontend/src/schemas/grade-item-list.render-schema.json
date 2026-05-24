@@ -440,13 +440,6 @@
         "name": "modal-item-date-field",
         "storePath": "/form/modal-item-date-field",
         "placeholder": "YYYY-MM-DD",
-        "required": true,
-        "checks": [
-          {
-            "type": "required",
-            "message": "日期為必填項目"
-          }
-        ],
         "disabled": null
       },
       "children": []
