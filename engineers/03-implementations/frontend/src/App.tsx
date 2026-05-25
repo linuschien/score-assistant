@@ -191,7 +191,7 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
               <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-200 leading-tight">Linus Chien</p>
-                  <p className="text-[10px] text-slate-500">Superintendent Teacher</p>
+                  <p className="text-[10px] text-slate-500">Administrator</p>
                 </div>
                 <div className="relative">
                   <div
