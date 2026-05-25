@@ -8,14 +8,17 @@ CREATE TYPE IF NOT EXISTS grade_item_type AS ENUM (
 
 CREATE TABLE IF NOT EXISTS semester (
     id            UUID        PRIMARY KEY,
-    semester_name VARCHAR(255) NOT NULL UNIQUE,
+    semester_name VARCHAR(255) NOT NULL,
     start_date    DATE        NOT NULL,
     end_date      DATE        NOT NULL,
     created_at    TIMESTAMP,
     updated_at    TIMESTAMP,
     deleted       BOOLEAN     DEFAULT FALSE NOT NULL,
-    deleted_at    TIMESTAMP
+    deleted_at    TIMESTAMP,
+    active_status VARCHAR(36) AS (CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE CAST(id AS VARCHAR(36)) END)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_semester_name_active ON semester(semester_name, active_status);
 
 CREATE TABLE IF NOT EXISTS class (
     id                UUID          PRIMARY KEY,
@@ -26,9 +29,11 @@ CREATE TABLE IF NOT EXISTS class (
     updated_at        TIMESTAMP,
     deleted           BOOLEAN       DEFAULT FALSE NOT NULL,
     deleted_at        TIMESTAMP,
-    CONSTRAINT uq_class_semester_name UNIQUE (semester_id, class_name),
+    active_status     VARCHAR(36)   AS (CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE CAST(id AS VARCHAR(36)) END),
     FOREIGN KEY (semester_id) REFERENCES semester(id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_class_semester_name_active ON class(semester_id, class_name, active_status);
 
 CREATE TABLE IF NOT EXISTS student (
     id             UUID         PRIMARY KEY,
@@ -39,9 +44,11 @@ CREATE TABLE IF NOT EXISTS student (
     updated_at     TIMESTAMP,
     deleted        BOOLEAN      DEFAULT FALSE NOT NULL,
     deleted_at     TIMESTAMP,
-    CONSTRAINT uq_student_class_number UNIQUE (class_id, student_number),
+    active_status  VARCHAR(36)  AS (CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE CAST(id AS VARCHAR(36)) END),
     FOREIGN KEY (class_id) REFERENCES class(id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_student_class_number_active ON student(class_id, student_number, active_status);
 
 CREATE TABLE IF NOT EXISTS grade_item (
     id               UUID          PRIMARY KEY,
@@ -70,10 +77,12 @@ CREATE TABLE IF NOT EXISTS grade_record (
     updated_at       TIMESTAMP,
     deleted          BOOLEAN       DEFAULT FALSE NOT NULL,
     deleted_at       TIMESTAMP,
-    CONSTRAINT uq_grade_record_item_student UNIQUE (grade_item_id, student_id),
+    active_status    VARCHAR(36)   AS (CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE CAST(id AS VARCHAR(36)) END),
     FOREIGN KEY (grade_item_id) REFERENCES grade_item(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id)    REFERENCES student(id)    ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_grade_record_item_student_active ON grade_record(grade_item_id, student_id, active_status);
 
 CREATE TABLE IF NOT EXISTS attachment (
     id              UUID         PRIMARY KEY,
