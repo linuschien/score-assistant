@@ -22,13 +22,19 @@ enum attendance_status {
 // ── Tables ───────────────────────────────────────────────────
 
 Table semester {
-    id           uuid      [pk]
-    semester_name varchar  [unique, not null]
-    start_date   date      [not null]
-    end_date     date      [not null]
-    created_at   timestamp
-    updated_at   timestamp
-    deleted_at   timestamp
+    id            uuid      [pk]
+    semester_name varchar   [not null]
+    start_date    date      [not null]
+    end_date      date      [not null]
+    created_at    timestamp
+    updated_at    timestamp
+    deleted       boolean   [default: false, not null]
+    deleted_at    timestamp
+    active_status varchar   [note: "Computed column: CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE id END"]
+
+    indexes {
+        (semester_name, active_status) [unique]
+    }
 }
 
 Table class {
@@ -38,10 +44,12 @@ Table class {
     passing_threshold decimal [default: 60]
     created_at        timestamp
     updated_at        timestamp
+    deleted           boolean [default: false, not null]
     deleted_at        timestamp
+    active_status     varchar [note: "Computed column: CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE id END"]
 
     indexes {
-        (semester_id, class_name) [unique]
+        (semester_id, class_name, active_status) [unique]
     }
 }
 
@@ -52,10 +60,12 @@ Table student {
     student_name   varchar [not null]
     created_at     timestamp
     updated_at     timestamp
+    deleted        boolean [default: false, not null]
     deleted_at     timestamp
+    active_status  varchar [note: "Computed column: CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE id END"]
 
     indexes {
-        (class_id, student_number) [unique]
+        (class_id, student_number, active_status) [unique]
     }
 }
 
@@ -70,6 +80,7 @@ Table grade_item {
     weight           decimal         [default: 0, not null]
     created_at       timestamp
     updated_at       timestamp
+    deleted          boolean         [default: false, not null]
     deleted_at       timestamp
 }
 
@@ -82,10 +93,12 @@ Table grade_record {
     version          integer [default: 1, not null]
     created_at       timestamp
     updated_at       timestamp
+    deleted          boolean [default: false, not null]
     deleted_at       timestamp
+    active_status    varchar [note: "Computed column: CASE WHEN deleted = FALSE THEN 'ACTIVE' ELSE id END"]
 
     indexes {
-        (grade_item_id, student_id) [unique]
+        (grade_item_id, student_id, active_status) [unique]
     }
 }
 
@@ -99,6 +112,7 @@ Table attachment {
     uploaded_at     timestamp
     created_at      timestamp
     updated_at      timestamp
+    deleted         boolean [default: false, not null]
     deleted_at      timestamp
 }
 
