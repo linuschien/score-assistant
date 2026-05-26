@@ -1,9 +1,9 @@
 # 1. Base Runtime Image - Use alpine-based JRE for smallest footprint
 FROM eclipse-temurin:25-jre-alpine
 
-# 2. Security & Setup - Combined into a single layer to minimize image size and layers
-RUN addgroup -S appgroup && \
-    adduser -S appuser -G appgroup && \
+# 2. Security & Setup - Statically assign secure UID/GID 10001 to prevent permission drift
+RUN addgroup -g 10001 -S appgroup && \
+    adduser -u 10001 -S appuser -G appgroup && \
     mkdir -p /app/data && \
     chown -R appuser:appgroup /app
 
