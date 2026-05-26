@@ -1,18 +1,20 @@
 # 1. Base Runtime Image - Use alpine-based JRE for smallest footprint
 FROM eclipse-temurin:25-jre-alpine
 
-# 2. Security - Create a dedicated non-root user/group to prevent container escape
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# 2. Security & Setup - Combined into a single layer to minimize image size and layers
+RUN addgroup -S appgroup && \
+    adduser -S appuser -G appgroup && \
+    mkdir -p /app/data && \
+    chown -R appuser:appgroup /app
 
 WORKDIR /app
 
-# 3. Code Injection - Only copy the pre-built single JAR to keep context size < 100MB
-COPY *.jar app.jar
+# 3. Code Injection - Set ownership directly during COPY to eliminate extra chown layer
+COPY --chown=appuser:appgroup *.jar app.jar
 
-# 4. Ownership & Permissions
-RUN chown -R appuser:appgroup /app
+# 4. Environment & Security
+ENV SPRING_PROFILES_ACTIVE=docker
 
-# 5. Least Privilege Execution - Switch away from root
 USER appuser
 
 EXPOSE 8080
