@@ -18,6 +18,7 @@ public class ClassBeforeConvertCallback implements BeforeConvertCallback<ClassEn
                     UUID.randomUUID(),
                     entity.semesterId(),
                     entity.className(),
+                    entity.classGroup(),
                     entity.passingThreshold(),
                     entity.createdAt(),
                     entity.updatedAt(),

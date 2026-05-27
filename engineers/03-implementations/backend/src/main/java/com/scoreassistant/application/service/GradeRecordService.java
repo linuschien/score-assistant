@@ -37,7 +37,7 @@ public class GradeRecordService {
 
     private Mono<Void> validateParentExistence(UUID gradeItemId, UUID studentId) {
         var itemProbe = new GradeItemEntity(gradeItemId, null, null, null, null, null, null, null, null, null, false, null);
-        var studentProbe = new StudentEntity(studentId, null, 0, null, null, null, false, null);
+        var studentProbe = new StudentEntity(studentId, null, null, 0, null, null, null, null, false, null);
         var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
 
         return Mono.zip(

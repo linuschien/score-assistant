@@ -11,8 +11,10 @@ import java.util.UUID;
 public record StudentEntity(
         @Id @Column("id") UUID id,
         @Column("class_id")       UUID classId,
+        @Column("student_id")     String studentId,
         @Column("student_number") int studentNumber,
         @Column("student_name")   String studentName,
+        @Column("email")          String email,
         @Column("created_at")     LocalDateTime createdAt,
         @Column("updated_at")     LocalDateTime updatedAt,
         @Column("deleted")        boolean deleted,

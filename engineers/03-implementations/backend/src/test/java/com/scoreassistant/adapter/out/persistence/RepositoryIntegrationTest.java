@@ -69,6 +69,7 @@ class RepositoryIntegrationTest {
                 null, // Passing null ID to trigger BeforeConvertCallback
                 savedSemester.id(),
                 "CS-202",
+                null, // classGroup
                 BigDecimal.valueOf(60.0),
                 now, now, false, null
         );
@@ -98,7 +99,7 @@ class RepositoryIntegrationTest {
 
         // 2. Create Class
         var clazz = new ClassEntity(
-                null, savedSemester.id(), "CS-303", BigDecimal.valueOf(60.0),
+                null, savedSemester.id(), "CS-303", null, BigDecimal.valueOf(60.0),
                 now, now, false, null
         );
         var savedClass = classRepository.save(clazz).block();
@@ -106,7 +107,7 @@ class RepositoryIntegrationTest {
 
         // 3. Create Student
         var student = new StudentEntity(
-                null, savedClass.id(), 20260909, "Integration Bob",
+                null, savedClass.id(), "S303", 20260909, "Integration Bob", "bob@gmail.com",
                 now, now, false, null
         );
         var savedStudent = studentRepository.save(student).block();

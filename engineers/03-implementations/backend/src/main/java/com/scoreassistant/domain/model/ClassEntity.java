@@ -13,6 +13,7 @@ public record ClassEntity(
         @Id @Column("id") UUID id,
         @Column("semester_id")       UUID semesterId,
         @Column("class_name")        String className,
+        @Column("class_group")       String classGroup,
         @Column("passing_threshold") BigDecimal passingThreshold,
         @Column("created_at")        LocalDateTime createdAt,
         @Column("updated_at")        LocalDateTime updatedAt,

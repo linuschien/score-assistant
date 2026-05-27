@@ -5,6 +5,7 @@ import com.scoreassistant.adapter.in.web.dto.StudentDto.*;
 import com.scoreassistant.adapter.out.persistence.ClassRepository;
 import com.scoreassistant.adapter.out.persistence.StudentRepository;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
+import com.scoreassistant.domain.exception.ValidationException;
 import com.scoreassistant.domain.model.ClassEntity;
 import com.scoreassistant.domain.model.StudentEntity;
 import org.springframework.data.domain.Example;
@@ -21,6 +22,12 @@ import java.util.UUID;
 @Service
 public class StudentService {
 
+    private static final StudentEntity NONE = new StudentEntity(
+            UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            UUID.fromString("00000000-0000-0000-0000-000000000000"),
+            "", 0, "", "", null, null, false, null
+    );
+
     private final StudentRepository studentRepository;
     private final ClassRepository classRepository;
 
@@ -31,18 +38,39 @@ public class StudentService {
 
     @Transactional
     public Mono<StudentResponse> create(UUID classId, StudentRequest req) {
-        var classProbe = new ClassEntity(classId, null, null, null, null, null, false, null);
+        var classProbe = new ClassEntity(classId, null, null, null, null, null, null, false, null);
         return classRepository.exists(Example.of(classProbe))
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
-                    var now = LocalDateTime.now();
-                    var entity = new StudentEntity(
-                            null, classId,
-                            req.studentNumber(), req.studentName(),
-                            now, now, false, null
-                    );
-                    return studentRepository.save(entity);
+                    var numProbe = new StudentEntity(null, classId, null, req.studentNumber(), null, null, null, null, false, null);
+                    var numMatcher = ExampleMatcher.matching().withIgnoreNullValues();
+
+                    var idProbe = new StudentEntity(null, null, req.studentId(), 0, null, null, null, null, false, null);
+                    var idMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    var emailProbe = new StudentEntity(null, null, null, 0, null, req.email(), null, null, false, null);
+                    var emailMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    return studentRepository.exists(Example.of(numProbe, numMatcher))
+                            .flatMap(existsNum -> {
+                                if (existsNum) return Mono.error(new ValidationException("Student number already exists in this class"));
+                                return studentRepository.exists(Example.of(idProbe, idMatcher));
+                            })
+                            .flatMap(existsId -> {
+                                if (existsId) return Mono.error(new ValidationException("Student ID already exists"));
+                                return studentRepository.exists(Example.of(emailProbe, emailMatcher));
+                            })
+                            .flatMap(existsEmail -> {
+                                if (existsEmail) return Mono.error(new ValidationException("Email already exists"));
+                                var now = LocalDateTime.now();
+                                var entity = new StudentEntity(
+                                        null, classId,
+                                        req.studentId(), req.studentNumber(), req.studentName(), req.email(),
+                                        now, now, false, null
+                                );
+                                return studentRepository.save(entity);
+                            });
                 })
                 .map(this::toResponse);
     }
@@ -59,10 +87,30 @@ public class StudentService {
         return studentRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
-                .flatMap(e -> studentRepository.save(new StudentEntity(
-                        e.id(), e.classId(),
-                        req.studentNumber(), req.studentName(),
-                        e.createdAt(), LocalDateTime.now(), false, null)))
+                .flatMap(e -> {
+                    var numProbe = new StudentEntity(null, e.classId(), null, req.studentNumber(), null, null, null, null, false, null);
+                    var numMatcher = ExampleMatcher.matching().withIgnoreNullValues();
+
+                    var idProbe = new StudentEntity(null, null, req.studentId(), 0, null, null, null, null, false, null);
+                    var idMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    var emailProbe = new StudentEntity(null, null, null, 0, null, req.email(), null, null, false, null);
+                    var emailMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    return studentRepository.findOne(Example.of(numProbe, numMatcher))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Student number already exists in this class")))
+                            .then(studentRepository.findOne(Example.of(idProbe, idMatcher)))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Student ID already exists")))
+                            .then(studentRepository.findOne(Example.of(emailProbe, emailMatcher)))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Email already exists")))
+                            .then(Mono.defer(() -> studentRepository.save(new StudentEntity(
+                                    e.id(), e.classId(), req.studentId(), req.studentNumber(), req.studentName(), req.email(),
+                                    e.createdAt(), LocalDateTime.now(), false, null
+                            ))));
+                })
                 .map(this::toResponse);
     }
 
@@ -71,11 +119,35 @@ public class StudentService {
         return studentRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
-                .flatMap(e -> studentRepository.save(new StudentEntity(
-                        e.id(), e.classId(),
-                        req.studentNumber() != null ? req.studentNumber() : e.studentNumber(),
-                        req.studentName() != null ? req.studentName() : e.studentName(),
-                        e.createdAt(), LocalDateTime.now(), false, null)))
+                .flatMap(e -> {
+                    int studentNumber = req.studentNumber() != null ? req.studentNumber() : e.studentNumber();
+                    String studentId = req.studentId() != null ? req.studentId() : e.studentId();
+                    String studentName = req.studentName() != null ? req.studentName() : e.studentName();
+                    String email = req.email() != null ? req.email() : e.email();
+
+                    var numProbe = new StudentEntity(null, e.classId(), null, studentNumber, null, null, null, null, false, null);
+                    var numMatcher = ExampleMatcher.matching().withIgnoreNullValues();
+
+                    var idProbe = new StudentEntity(null, null, studentId, 0, null, null, null, null, false, null);
+                    var idMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    var emailProbe = new StudentEntity(null, null, null, 0, null, email, null, null, false, null);
+                    var emailMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+                    return studentRepository.findOne(Example.of(numProbe, numMatcher))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Student number already exists in this class")))
+                            .then(studentRepository.findOne(Example.of(idProbe, idMatcher)))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Student ID already exists")))
+                            .then(studentRepository.findOne(Example.of(emailProbe, emailMatcher)))
+                            .filter(conflict -> !conflict.id().equals(id))
+                            .flatMap(conflict -> Mono.error(new ValidationException("Email already exists")))
+                            .then(Mono.defer(() -> studentRepository.save(new StudentEntity(
+                                    e.id(), e.classId(), studentId, studentNumber, studentName, email,
+                                    e.createdAt(), LocalDateTime.now(), false, null
+                            ))));
+                })
                 .map(this::toResponse);
     }
 
@@ -85,7 +157,7 @@ public class StudentService {
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
                 .flatMap(e -> studentRepository.save(new StudentEntity(
-                        e.id(), e.classId(), e.studentNumber(), e.studentName(),
+                        e.id(), e.classId(), e.studentId(), e.studentNumber(), e.studentName(), e.email(),
                         e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
@@ -94,7 +166,7 @@ public class StudentService {
         var probe = new StudentEntity(
                 null,
                 classId,
-                0, null, null, null, false, null
+                null, 0, null, null, null, null, false, null
         );
         var matcher = ExampleMatcher.matching()
                 .withIgnorePaths("studentNumber")
@@ -102,39 +174,114 @@ public class StudentService {
         return studentRepository.findAll(Example.of(probe, matcher), Sort.by("studentNumber")).map(this::toResponse);
     }
 
-    /**
-     * Batch import students from CSV lines.
-     * Each line: student_number,student_name
-     */
     @Transactional
     public Mono<OperationStatusDto> importStudents(UUID classId, byte[] csvBytes) {
-        var classProbe = new ClassEntity(classId, null, null, null, null, null, false, null);
+        return importStudents(classId, csvBytes, "SKIP");
+    }
+
+    @Transactional
+    public Mono<OperationStatusDto> importStudents(UUID classId, byte[] csvBytes, String strategy) {
+        var classProbe = new ClassEntity(classId, null, null, null, null, null, null, false, null);
         return classRepository.exists(Example.of(classProbe))
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
-                .flatMapMany(exists -> {
+                .flatMap(exists -> {
                     var lines = new String(csvBytes).lines()
-                             .filter(l -> !l.isBlank() && !l.startsWith("student_number"))
+                             .filter(l -> !l.isBlank() && !l.toLowerCase().startsWith("student_id") && !l.toLowerCase().startsWith("student_number"))
                              .toList();
-                     return Flux.fromIterable(lines)
-                             .flatMap(line -> {
-                                 var parts = line.split(",");
-                                 if (parts.length < 2) return Flux.empty();
-                                 var now = LocalDateTime.now();
-                                 var entity = new StudentEntity(
-                                         null, classId,
-                                         Integer.parseInt(parts[0].trim()),
-                                         parts[1].trim(),
-                                         now, now, false, null
-                                 );
-                                 return studentRepository.save(entity);
-                             });
-                 })
-                 .count()
-                 .map(count -> new OperationStatusDto(true, "Import completed", count.intValue()));
-     }
+
+                    return Flux.fromIterable(lines)
+                            .flatMap(line -> {
+                                var parts = line.split(",");
+                                if (parts.length < 4) return Mono.just(new ImportResult(false, false));
+                                String studentId = parts[0].trim();
+                                int studentNumber;
+                                try {
+                                    studentNumber = Integer.parseInt(parts[1].trim());
+                                } catch (NumberFormatException e) {
+                                    return Mono.just(new ImportResult(false, false));
+                                }
+                                String studentName = parts[2].trim();
+                                String email = parts[3].trim();
+
+                                return processCsvRow(classId, studentId, studentNumber, studentName, email, strategy);
+                            })
+                            .collectList()
+                            .map(results -> {
+                                int success = 0;
+                                int failure = 0;
+                                for (var res : results) {
+                                    if (res.success()) {
+                                        success++;
+                                    } else {
+                                        failure++;
+                                    }
+                                }
+                                return new OperationStatusDto(true, "Import completed", success, success, failure);
+                            });
+                });
+    }
+
+    private Mono<ImportResult> processCsvRow(UUID classId, String studentId, int studentNumber, String studentName, String email, String strategy) {
+        var idProbe = new StudentEntity(null, null, studentId, 0, null, null, null, null, false, null);
+        var idMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        var emailProbe = new StudentEntity(null, null, null, 0, null, email, null, null, false, null);
+        var emailMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+
+        var numProbe = new StudentEntity(null, classId, null, studentNumber, null, null, null, null, false, null);
+        var numMatcher = ExampleMatcher.matching().withIgnoreNullValues();
+
+        return Mono.zip(
+                studentRepository.findOne(Example.of(idProbe, idMatcher)).defaultIfEmpty(NONE),
+                studentRepository.findOne(Example.of(emailProbe, emailMatcher)).defaultIfEmpty(NONE),
+                studentRepository.findOne(Example.of(numProbe, numMatcher)).defaultIfEmpty(NONE)
+        ).flatMap(tuple -> {
+            var byId = tuple.getT1();
+            var byEmail = tuple.getT2();
+            var byNum = tuple.getT3();
+
+            boolean hasIdConflict = byId != NONE && !byId.classId().equals(classId);
+            boolean hasEmailConflict = byEmail != NONE && !byEmail.classId().equals(classId);
+
+            if (hasIdConflict || hasEmailConflict) {
+                return Mono.just(new ImportResult(false, false));
+            }
+
+            if (byId != NONE && byId.studentNumber() != studentNumber) {
+                return Mono.just(new ImportResult(false, false));
+            }
+            if (byEmail != NONE && byEmail.studentNumber() != studentNumber) {
+                return Mono.just(new ImportResult(false, false));
+            }
+
+            if (byNum != NONE) {
+                if ("SKIP".equalsIgnoreCase(strategy)) {
+                    return Mono.just(new ImportResult(false, false));
+                } else if ("OVERWRITE".equalsIgnoreCase(strategy)) {
+                    var now = LocalDateTime.now();
+                    var updated = new StudentEntity(
+                            byNum.id(), classId, studentId, studentNumber, studentName, email,
+                            byNum.createdAt(), now, false, null
+                    );
+                    return studentRepository.save(updated).map(saved -> new ImportResult(true, true));
+                } else {
+                    return Mono.just(new ImportResult(false, false));
+                }
+            }
+
+            var now = LocalDateTime.now();
+            var newStudent = new StudentEntity(
+                    null, classId, studentId, studentNumber, studentName, email,
+                    now, now, false, null
+            );
+            return studentRepository.save(newStudent).map(saved -> new ImportResult(true, false));
+        });
+    }
 
     private StudentResponse toResponse(StudentEntity e) {
-        return new StudentResponse(e.id().toString(), e.classId().toString(), e.studentNumber(), e.studentName());
+        return new StudentResponse(e.id().toString(), e.classId().toString(), e.studentId(), e.studentNumber(), e.studentName(), e.email());
     }
+
+    private record ImportResult(boolean success, boolean isUpdate) {}
 }

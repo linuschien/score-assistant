@@ -40,5 +40,15 @@ public class StudentGraphQLResolver {
         return student.studentName();
     }
 
+    @SchemaMapping(typeName = "Student", field = "studentId")
+    public String studentId(StudentResponse student) {
+        return student.studentId();
+    }
+
+    @SchemaMapping(typeName = "Student", field = "email")
+    public String email(StudentResponse student) {
+        return student.email();
+    }
+
     public record StudentFilterInput(String classId) {}
 }

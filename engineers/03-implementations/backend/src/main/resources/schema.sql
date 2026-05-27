@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS class (
     id                UUID          PRIMARY KEY,
     semester_id       UUID          NOT NULL,
     class_name        VARCHAR(255)  NOT NULL,
+    class_group       VARCHAR(255),
     passing_threshold DECIMAL(10,2) DEFAULT 60.0,
     created_at        TIMESTAMP,
     updated_at        TIMESTAMP,
@@ -38,8 +39,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_class_semester_name_active ON class(semeste
 CREATE TABLE IF NOT EXISTS student (
     id             UUID         PRIMARY KEY,
     class_id       UUID         NOT NULL,
+    student_id     VARCHAR(255) NOT NULL,
     student_number INT          NOT NULL,
     student_name   VARCHAR(255) NOT NULL,
+    email          VARCHAR(255) NOT NULL,
     created_at     TIMESTAMP,
     updated_at     TIMESTAMP,
     deleted        BOOLEAN      DEFAULT FALSE NOT NULL,
@@ -49,6 +52,8 @@ CREATE TABLE IF NOT EXISTS student (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_student_class_number_active ON student(class_id, student_number, active_status);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_student_id_active ON student(student_id, active_status);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_student_email_active ON student(email, active_status);
 
 CREATE TABLE IF NOT EXISTS grade_item (
     id               UUID          PRIMARY KEY,

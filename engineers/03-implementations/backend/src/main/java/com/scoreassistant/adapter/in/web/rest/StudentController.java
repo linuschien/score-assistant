@@ -3,6 +3,7 @@ package com.scoreassistant.adapter.in.web.rest;
 import com.scoreassistant.adapter.in.web.dto.OperationStatusDto;
 import com.scoreassistant.adapter.in.web.dto.StudentDto.*;
 import com.scoreassistant.application.service.StudentService;
+import com.scoreassistant.domain.exception.ValidationException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.multipart.FilePart;
@@ -73,7 +74,15 @@ public class StudentController {
     public Mono<OperationStatusDto> importStudents(
             @PathVariable UUID semesterId,
             @PathVariable UUID classId,
-            @RequestPart("fileData") FilePart filePart) {
+            @RequestParam(value = "conflictResolution", required = false, defaultValue = "SKIP") String conflictResolution,
+            @RequestPart(value = "fileData", required = false) FilePart filePartData,
+            @RequestPart(value = "file", required = false) FilePart filePartFile) {
+        
+        FilePart filePart = filePartData != null ? filePartData : filePartFile;
+        if (filePart == null) {
+            return Mono.error(new ValidationException("Missing CSV file part 'fileData' or 'file'"));
+        }
+        
         return filePart.content()
                 .reduce(new byte[0], (acc, buf) -> {
                     byte[] bytes = new byte[buf.readableByteCount()];
@@ -83,6 +92,6 @@ public class StudentController {
                     System.arraycopy(bytes, 0, combined, acc.length, bytes.length);
                     return combined;
                 })
-                .flatMap(bytes -> studentService.importStudents(classId, bytes));
+                .flatMap(bytes -> studentService.importStudents(classId, bytes, conflictResolution));
     }
 }

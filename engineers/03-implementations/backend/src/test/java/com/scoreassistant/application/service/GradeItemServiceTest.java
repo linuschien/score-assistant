@@ -47,7 +47,7 @@ class GradeItemServiceTest {
     void setUp() {
         classId = UUID.randomUUID();
         itemId = UUID.randomUUID();
-        classEntity = new ClassEntity(classId, UUID.randomUUID(), "CS-101",
+        classEntity = new ClassEntity(classId, UUID.randomUUID(), "CS-101", null,
                 BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), false, null);
         gradeItemEntity = new GradeItemEntity(itemId, classId, "Midterm Exam", "ASSIGNMENT",
                 LocalDate.now(), "Midterm exam", BigDecimal.valueOf(100.0), BigDecimal.valueOf(0.3),
@@ -102,7 +102,7 @@ class GradeItemServiceTest {
     @DisplayName("exportGrades() should build export spreadsheet")
     void exportGrades_shouldBuildSpreadsheet() {
         var studentId = UUID.randomUUID();
-        var student = new StudentEntity(studentId, classId, 2026001, "Alice",
+        var student = new StudentEntity(studentId, classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
                 BigDecimal.valueOf(95.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
@@ -119,7 +119,7 @@ class GradeItemServiceTest {
     @Test
     @DisplayName("exportAttendance() should succeed")
     void exportAttendance_shouldSucceed() {
-        var student = new StudentEntity(UUID.randomUUID(), classId, 2026001, "Alice",
+        var student = new StudentEntity(UUID.randomUUID(), classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.empty());
         when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
@@ -134,7 +134,7 @@ class GradeItemServiceTest {
     @DisplayName("calculateWeightedScores() should perform calculations")
     void calculateWeightedScores_shouldCalculate() {
         var studentId = UUID.randomUUID();
-        var student = new StudentEntity(studentId, classId, 2026001, "Alice",
+        var student = new StudentEntity(studentId, classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
                 BigDecimal.valueOf(90.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);

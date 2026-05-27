@@ -46,7 +46,7 @@ class ClassServiceTest {
         semesterEntity = new SemesterEntity(semesterId, "2026-Fall",
                 LocalDate.of(2026, 9, 1), LocalDate.of(2027, 1, 31),
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
-        classEntity = new ClassEntity(classId, semesterId, "CS-101",
+        classEntity = new ClassEntity(classId, semesterId, "CS-101", null,
                 BigDecimal.valueOf(60.0), LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
@@ -56,7 +56,7 @@ class ClassServiceTest {
         when(semesterRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
         when(classRepository.save(any())).thenReturn(Mono.just(classEntity));
 
-        var req = new ClassRequest("CS-101", BigDecimal.valueOf(60.0));
+        var req = new ClassRequest("CS-101", null, BigDecimal.valueOf(60.0));
 
         StepVerifier.create(classService.create(semesterId, req))
                 .expectNextMatches(r -> r.className().equals("CS-101"))
@@ -68,7 +68,7 @@ class ClassServiceTest {
     void create_shouldFailWhenSemesterMissing() {
         when(semesterRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
 
-        var req = new ClassRequest("CS-101", null);
+        var req = new ClassRequest("CS-101", null, null);
 
         StepVerifier.create(classService.create(semesterId, req))
                 .expectError(ResourceNotFoundException.class)

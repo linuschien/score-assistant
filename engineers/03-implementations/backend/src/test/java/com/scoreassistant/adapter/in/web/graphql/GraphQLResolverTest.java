@@ -59,7 +59,7 @@ class GraphQLResolverTest {
         var resolver = new ClassGraphQLResolver(classService);
         var classId = UUID.randomUUID().toString();
         var semId = UUID.randomUUID().toString();
-        var response = new ClassResponse(classId, semId, "CS-101", BigDecimal.valueOf(60.0));
+        var response = new ClassResponse(classId, semId, "CS-101", null, BigDecimal.valueOf(60.0));
         when(classService.listAll(any(), any())).thenReturn(Flux.just(response));
 
         var result = resolver.listClasses(new ClassGraphQLResolver.ClassFilterInput(semId, "CS-101"));
@@ -69,6 +69,7 @@ class GraphQLResolverTest {
 
         assertEquals(semId, resolver.semesterId(response));
         assertEquals("CS-101", resolver.className(response));
+        assertNull(resolver.classGroup(response));
         assertEquals(BigDecimal.valueOf(60.0), resolver.passingThreshold(response));
     }
 
@@ -78,7 +79,7 @@ class GraphQLResolverTest {
         var resolver = new StudentGraphQLResolver(studentService);
         var studentId = UUID.randomUUID().toString();
         var classId = UUID.randomUUID().toString();
-        var response = new StudentResponse(studentId, classId, 101, "Alice");
+        var response = new StudentResponse(studentId, classId, "S101", 101, "Alice", "alice@gmail.com");
         when(studentService.listAll(any())).thenReturn(Flux.just(response));
 
         var result = resolver.listStudents(new StudentGraphQLResolver.StudentFilterInput(classId));
@@ -87,8 +88,10 @@ class GraphQLResolverTest {
                 .verifyComplete();
 
         assertEquals(classId, resolver.classId(response));
+        assertEquals("S101", resolver.studentId(response));
         assertEquals(101, resolver.studentNumber(response));
         assertEquals("Alice", resolver.studentName(response));
+        assertEquals("alice@gmail.com", resolver.email(response));
     }
 
     @Test

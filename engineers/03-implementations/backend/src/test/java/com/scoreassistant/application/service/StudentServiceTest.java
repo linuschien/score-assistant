@@ -43,9 +43,9 @@ class StudentServiceTest {
     void setUp() {
         classId   = UUID.randomUUID();
         studentId = UUID.randomUUID();
-        classEntity   = new ClassEntity(classId, UUID.randomUUID(), "CS-101",
+        classEntity   = new ClassEntity(classId, UUID.randomUUID(), "CS-101", null,
                 BigDecimal.valueOf(60), LocalDateTime.now(), LocalDateTime.now(), false, null);
-        studentEntity = new StudentEntity(studentId, classId, 2026001, "Alice",
+        studentEntity = new StudentEntity(studentId, classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
     }
 
@@ -53,9 +53,10 @@ class StudentServiceTest {
     @DisplayName("create() should create student under valid class")
     void create_shouldSaveUnderValidClass() {
         when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
         when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
 
-        var req = new StudentRequest(2026001, "Alice");
+        var req = new StudentRequest("S101", 2026001, "Alice", "alice@gmail.com");
 
         StepVerifier.create(studentService.create(classId, req))
                 .expectNextMatches(r -> r.studentName().equals("Alice"))
@@ -67,7 +68,7 @@ class StudentServiceTest {
     void create_shouldThrowWhenClassMissing() {
         when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
 
-        StepVerifier.create(studentService.create(classId, new StudentRequest(1, "Bob")))
+        StepVerifier.create(studentService.create(classId, new StudentRequest("S102", 1, "Bob", "bob@gmail.com")))
                 .expectError(ResourceNotFoundException.class)
                 .verify();
     }
@@ -116,9 +117,10 @@ class StudentServiceTest {
     @DisplayName("importStudents() should parse CSV and save students")
     void importStudents_shouldParseCsvAndSave() {
         when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
         when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
 
-        var csv = "student_number,student_name\n2026001,Alice\n2026002,Bob\n".getBytes();
+        var csv = "student_id,student_number,student_name,email\nS101,2026001,Alice,alice@gmail.com\nS102,2026002,Bob,bob@gmail.com\n".getBytes();
 
         StepVerifier.create(studentService.importStudents(classId, csv))
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 2)

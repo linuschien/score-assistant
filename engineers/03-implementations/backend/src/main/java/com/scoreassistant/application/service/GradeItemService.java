@@ -45,7 +45,7 @@ public class GradeItemService {
 
     @Transactional
     public Mono<GradeItemResponse> create(UUID classId, GradeItemRequest req) {
-        var classProbe = new ClassEntity(classId, null, null, null, null, null, false, null);
+        var classProbe = new ClassEntity(classId, null, null, null, null, null, null, false, null);
         return classRepository.exists(Example.of(classProbe))
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
@@ -129,7 +129,7 @@ public class GradeItemService {
 
     public Mono<OperationStatusDto> exportGrades(UUID classId, ExportGradesRequestDto req) {
         var itemProbe = new GradeItemEntity(null, classId, null, null, null, null, null, null, null, null, false, null);
-        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, null, 0, null, null, null, null, false, null);
         var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
 
         return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
@@ -183,7 +183,7 @@ public class GradeItemService {
 
     public Mono<OperationStatusDto> exportAttendance(UUID classId, ExportAttendanceRequestDto req) {
         var itemProbe = new GradeItemEntity(null, classId, null, "ATTENDANCE", null, null, null, null, null, null, false, null);
-        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, null, 0, null, null, null, null, false, null);
         var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
 
         return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
@@ -250,7 +250,7 @@ public class GradeItemService {
 
     public Mono<OperationStatusDto> calculateWeightedScores(UUID classId, CalculateWeightedScoresRequestDto req) {
         var itemProbe = new GradeItemEntity(null, classId, null, null, null, null, null, null, null, null, false, null);
-        var studentProbe = new StudentEntity(null, classId, 0, null, null, null, false, null);
+        var studentProbe = new StudentEntity(null, classId, null, 0, null, null, null, null, false, null);
         var studentMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
 
         return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))

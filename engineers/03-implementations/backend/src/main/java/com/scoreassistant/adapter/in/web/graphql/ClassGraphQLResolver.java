@@ -42,5 +42,10 @@ public class ClassGraphQLResolver {
         return cls.passingThreshold();
     }
 
+    @SchemaMapping(typeName = "Class", field = "classGroup")
+    public String classGroup(ClassResponse cls) {
+        return cls.classGroup();
+    }
+
     public record ClassFilterInput(String semesterId, String className) {}
 }

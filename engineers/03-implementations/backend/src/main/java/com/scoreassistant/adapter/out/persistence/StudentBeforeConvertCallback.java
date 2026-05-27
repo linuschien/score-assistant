@@ -17,8 +17,10 @@ public class StudentBeforeConvertCallback implements BeforeConvertCallback<Stude
             return Mono.just(new StudentEntity(
                     UUID.randomUUID(),
                     entity.classId(),
+                    entity.studentId(),
                     entity.studentNumber(),
                     entity.studentName(),
+                    entity.email(),
                     entity.createdAt(),
                     entity.updatedAt(),
                     entity.deleted(),

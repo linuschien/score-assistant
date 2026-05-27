@@ -26,6 +26,7 @@ type Class {
     id:               ID!
     semesterId:       ID!
     className:        String!
+    classGroup:       String
     passingThreshold: Float
 }
 
@@ -39,8 +40,10 @@ input ClassFilterInput {
 type Student {
     id:            ID!
     classId:       ID!
+    studentId:     String!
     studentNumber: Int!
     studentName:   String!
+    email:         String!
 }
 
 input StudentFilterInput {

@@ -11,11 +11,13 @@ public sealed interface ClassDto permits
 
     record ClassRequest(
             @NotBlank String className,
+            String classGroup,
             BigDecimal passingThreshold
     ) implements ClassDto {}
 
     record ClassPatchRequest(
             String className,
+            String classGroup,
             BigDecimal passingThreshold
     ) implements ClassDto {}
 
@@ -23,6 +25,7 @@ public sealed interface ClassDto permits
             String id,
             String semesterId,
             String className,
+            String classGroup,
             BigDecimal passingThreshold
     ) implements ClassDto {}
 }

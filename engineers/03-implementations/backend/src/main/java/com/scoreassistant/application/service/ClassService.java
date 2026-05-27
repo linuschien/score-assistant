@@ -38,7 +38,7 @@ public class ClassService {
                     var now = LocalDateTime.now();
                     var entity = new ClassEntity(
                             null, semesterId,
-                            req.className(), req.passingThreshold() != null ? req.passingThreshold() : BigDecimal.valueOf(60.0),
+                            req.className(), req.classGroup(), req.passingThreshold() != null ? req.passingThreshold() : BigDecimal.valueOf(60.0),
                             now, now, false, null
                     );
                     return classRepository.save(entity);
@@ -60,7 +60,7 @@ public class ClassService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
-                        req.className(), req.passingThreshold() != null ? req.passingThreshold() : existing.passingThreshold(),
+                        req.className(), req.classGroup(), req.passingThreshold() != null ? req.passingThreshold() : existing.passingThreshold(),
                         existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
     }
@@ -73,6 +73,7 @@ public class ClassService {
                 .flatMap(existing -> classRepository.save(new ClassEntity(
                         existing.id(), existing.semesterId(),
                         req.className() != null ? req.className() : existing.className(),
+                        req.classGroup() != null ? req.classGroup() : existing.classGroup(),
                         req.passingThreshold() != null ? req.passingThreshold() : existing.passingThreshold(),
                         existing.createdAt(), LocalDateTime.now(), false, null)))
                 .map(this::toResponse);
@@ -84,7 +85,7 @@ public class ClassService {
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", id)))
                 .flatMap(e -> classRepository.save(new ClassEntity(
-                        e.id(), e.semesterId(), e.className(), e.passingThreshold(),
+                        e.id(), e.semesterId(), e.className(), e.classGroup(), e.passingThreshold(),
                         e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
                 .then();
     }
@@ -94,6 +95,7 @@ public class ClassService {
                 null,
                 semesterId,
                 (className != null && !className.isBlank()) ? className : null,
+                null,
                 null, null, null, false, null
         );
         var matcher = ExampleMatcher.matching()
@@ -103,6 +105,6 @@ public class ClassService {
     }
 
     private ClassResponse toResponse(ClassEntity e) {
-        return new ClassResponse(e.id().toString(), e.semesterId().toString(), e.className(), e.passingThreshold());
+        return new ClassResponse(e.id().toString(), e.semesterId().toString(), e.className(), e.classGroup(), e.passingThreshold());
     }
 }
