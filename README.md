@@ -42,6 +42,7 @@
 ### 03-implementations/ (產出：具體實作)
 **職責**：將 02 的設計契約嚴格轉化為可執行的系統程式碼。
 - **backend/**：Spring Boot 響應式後端微服務實作（嚴守六角架構）。
+- **devops/**：容器化與部署設定（包含 Dockerfile，負責將前端與後端打包為安全、極小化的運行映像檔）。
 - **frontend/**：React 前端實作（負責處理 UI Manifest 與 JSON-render 轉譯）。
 
 ### 04-tests/ (驗證：自動化稽核)
