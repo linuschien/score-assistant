@@ -109,8 +109,8 @@ Feature: Student Management
       | S003       | 3              | 張大強       | daqiang@gmail.com   |
     When a POST request is made to "/semesters/d3b07384-d113-404c-9f8a-020524032a9a/classes/c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a/students:importStudents" with the CSV file as multipart/form-data
     Then the response code should be 200
-    And the response body should contain "success_count" equal to 3
-    And the response body should contain "failure_count" equal to 0
+    And the response body should contain "successCount" equal to 3
+    And the response body should contain "failureCount" equal to 0
 
   # US-03-01 AC4: 匯入時發生座號衝突
   Scenario Outline: Import Students from CSV with conflicts
@@ -120,13 +120,13 @@ Feature: Student Management
       | S001       | 1              | 趙六         | xiaoming@gmail.com  |
     When a POST request is made to "/semesters/d3b07384-d113-404c-9f8a-020524032a9a/classes/c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a/students:importStudents" with conflict_resolution set to "<strategy>"
     Then the response code should be 200
-    And the response body should contain "failure_count" equal to <failure_count>
-    And the response body should contain "success_count" equal to <success_count>
+    And the response body should contain "failureCount" equal to <failureCount>
+    And the response body should contain "successCount" equal to <successCount>
 
     Examples:
-      | strategy  | failure_count | success_count |
-      | SKIP      | 1             | 0             |
-      | OVERWRITE | 0             | 1             |
+      | strategy  | failureCount | successCount |
+      | SKIP      | 1            | 0            |
+      | OVERWRITE | 0            | 1            |
 
   # US-03-01 AC4: 匯入時發生全域學號或電子信箱重複衝突
   Scenario: Import Students from CSV with global student_id or email conflict
@@ -137,5 +137,5 @@ Feature: Student Management
       | S99543022  | 2              | 新學生二     | linus@torvalds.org |
     When a POST request is made to "/semesters/d3b07384-d113-404c-9f8a-020524032a9a/classes/c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a/students:importStudents"
     Then the response code should be 200
-    And the response body should contain "failure_count" equal to 2
-    And the response body should contain "success_count" equal to 0
+    And the response body should contain "failureCount" equal to 2
+    And the response body should contain "successCount" equal to 0
