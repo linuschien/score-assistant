@@ -52,7 +52,8 @@
             "label": "班級資料表",
             "data_ref": "listClasses",
             "columns": [
-              { "field": "name", "label": "班級名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "className", "label": "班級名稱", "sortable": true, "default_sort": "asc" },
+              { "field": "classGroup", "label": "班群", "sortable": true },
               { "field": "studentCount", "label": "學生人數" },
               { "field": "passingThreshold", "label": "通過門檻" }
             ],
@@ -134,6 +135,14 @@
                 "message": "班級名稱為必填項目"
               }
             ]
+          },
+          {
+            "id": "modal-class-group-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "班群",
+            "behavior_ref": "Create a new Class in a Semester",
+            "required": false
           },
           {
             "id": "modal-class-threshold-field",

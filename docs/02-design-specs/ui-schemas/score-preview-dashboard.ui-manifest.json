@@ -86,8 +86,9 @@
             "label": "成績總表",
             "data_ref": "listGradeRecords",
             "columns": [
+              { "field": "studentId", "label": "學號", "sortable": true },
               { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
-              { "field": "name", "label": "姓名", "sortable": true },
+              { "field": "studentName", "label": "姓名", "sortable": true },
               { "field": "weightedTotal", "label": "加權總分", "sortable": true }
             ]
           }

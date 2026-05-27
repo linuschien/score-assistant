@@ -86,8 +86,10 @@
             "label": "學生資料表",
             "data_ref": "listStudents",
             "columns": [
+              { "field": "studentId", "label": "學號", "sortable": true },
               { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
-              { "field": "name", "label": "姓名", "sortable": true }
+              { "field": "studentName", "label": "姓名", "sortable": true },
+              { "field": "email", "label": "電子信箱", "sortable": true }
             ],
             "children": [
               {
@@ -125,6 +127,20 @@
         "label": "新增 / 編輯學生",
         "children": [
           {
+            "id": "modal-student-id-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "學號",
+            "behavior_ref": "Add a Student to a Class",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "學號為必填項目"
+              }
+            ]
+          },
+          {
             "id": "modal-student-number-field",
             "abstract_type": "Field",
             "semantic_variant": "text",
@@ -149,6 +165,24 @@
               {
                 "type": "required",
                 "message": "姓名為必填項目"
+              }
+            ]
+          },
+          {
+            "id": "modal-student-email-field",
+            "abstract_type": "Field",
+            "semantic_variant": "text",
+            "label": "電子信箱",
+            "behavior_ref": "Add a Student to a Class",
+            "required": true,
+            "checks": [
+              {
+                "type": "required",
+                "message": "電子信箱為必填項目"
+              },
+              {
+                "type": "email",
+                "message": "電子信箱格式不正確"
               }
             ]
           },

@@ -46,8 +46,9 @@
             "label": "成績登記矩陣",
             "data_ref": "listGradeRecords",
             "columns": [
+              { "field": "studentId", "label": "學號", "sortable": true },
               { "field": "studentNumber", "label": "座號", "sortable": true, "default_sort": "asc" },
-              { "field": "name", "label": "姓名", "sortable": true }
+              { "field": "studentName", "label": "姓名", "sortable": true }
             ],
             "children": [
               {
