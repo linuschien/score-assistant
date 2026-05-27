@@ -1,0 +1,109 @@
+@startuml user-student-import
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應契約: student_contract.puml ──────────────────────────────────────────
+' ── 對應 BDD: student_management.feature (Import Students from CSV) ───────────
+
+actor "Teacher" as U
+participant "StudentRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "StudentCommandService" as CS <<DomainService>>
+participant "StudentRepositoryAdapter" as SA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+U -> PA : importStudents(req: ImportStudentsRequest)\n[multipart CSV file, conflict_resolution]
+activate PA
+
+PA -> CS : importStudents(req: ImportStudentsRequest)
+activate CS
+
+note over CS
+  解析 CSV 檔案內容。
+  針對每一行資料 (studentId, studentNumber, studentName, email) 執行迴圈。
+end note
+
+loop 處理每一行 CSV 資料 (For each row in CSV)
+
+    ' 1. Check studentId global unique constraint
+    CS -> SA : findByExample(example: Example<Student>)\n[studentId filter]
+    activate SA
+    SA -> DB : SELECT * FROM students WHERE student_id = ?
+    activate DB
+    DB --> SA : existing student list
+    deactivate DB
+    SA --> CS : List<Student>
+    deactivate SA
+
+    ' 2. Check email global unique constraint
+    CS -> SA : findByExample(example: Example<Student>)\n[email filter]
+    activate SA
+    SA -> DB : SELECT * FROM students WHERE email = ?
+    activate DB
+    DB --> SA : existing student list
+    deactivate DB
+    SA --> CS : List<Student>
+    deactivate SA
+
+    ' 3. Check studentNumber class unique constraint
+    CS -> SA : findByExample(example: Example<Student>)\n[classId & studentNumber filter]
+    activate SA
+    SA -> DB : SELECT * FROM students WHERE class_id = ? AND student_number = ?
+    activate DB
+    DB --> SA : existing student list in class
+    deactivate DB
+    SA --> CS : List<Student>
+    deactivate SA
+
+    alt 發生全域學號(studentId)或電子信箱(email)重複衝突 (Global studentId or email conflict exists)
+        note over CS #FFCCCC
+          全域限制衝突：一律跳過該筆資料。
+          Increment failure_count
+        end note
+    else 發生班級內座號(studentNumber)重複衝突 (Class studentNumber conflict exists)
+        alt 衝突處理策略為 SKIP (strategy == SKIP)
+            note over CS #FFCCCC
+              跳過重複座號：
+              Increment failure_count
+            end note
+        else 衝突處理策略為 OVERWRITE (strategy == OVERWRITE)
+            CS -> SA : save(entity: Student)\n[overwrite existing student fields]
+            activate SA
+            SA -> DB : UPDATE students SET student_id = ?, student_name = ?, email = ? WHERE class_id = ? AND student_number = ?
+            activate DB
+            DB --> SA : success
+            deactivate DB
+            SA --> CS : Student
+            deactivate SA
+            note over CS #CCFFCC
+              覆寫現有學生：
+              Increment success_count
+            end note
+        end
+    else 無任何衝突 (No conflict exists)
+        CS -> SA : save(entity: Student)\n[create new student]
+        activate SA
+        SA -> DB : INSERT INTO students (id, student_id, student_number, student_name, email, class_id)
+        activate DB
+        DB --> SA : success
+        deactivate DB
+        SA --> CS : Student (with UUID)
+        deactivate SA
+        note over CS #CCFFCC
+          成功新增學生：
+          Increment success_count
+        end note
+    end
+
+end
+
+CS --> PA : OperationStatus\n[affectedCount=success_count, message]
+deactivate CS
+
+PA --> U : ResponseEntity<OperationStatus>\n200 OK [success_count, failure_count]
+deactivate PA
+
+@enduml

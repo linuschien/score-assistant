@@ -1,0 +1,143 @@
+@startuml user-grade-export
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ParticipantPadding 20
+    MessageAlign center
+}
+
+' ── 對應契約: grade_item_contract.puml ──────────────────────────────────────
+' ── 對應 BDD: grade_export.feature ──────────────────────────────────────────
+
+actor "Teacher" as U
+participant "GradeItemRestControllerAdapter" as PA <<PrimaryAdapter>>
+participant "GradeItemCommandService" as CS <<DomainService>>
+participant "ClassRepositoryAdapter" as CRA <<SecondaryAdapter>>
+participant "StudentRepositoryAdapter" as STRA <<SecondaryAdapter>>
+participant "GradeItemRepositoryAdapter" as GIRA <<SecondaryAdapter>>
+participant "GradeRecordRepositoryAdapter" as GRRA <<SecondaryAdapter>>
+database "H2 Database" as DB
+
+== Export Grades (Excel / CSV) ==
+U -> PA : exportGrades(req: ExportGradesRequest)\n[format = EXCEL/CSV]
+activate PA
+
+PA -> CS : exportGrades(req: ExportGradesRequest)
+activate CS
+
+' 1. Check if class exists
+CS -> CRA : findById(classId: UUID)
+activate CRA
+CRA -> DB : SELECT * FROM classes WHERE id = ?
+activate DB
+DB --> CRA : class entity or empty
+deactivate DB
+CRA --> CS : Optional<Class>
+deactivate CRA
+
+alt 班級不存在 (Class does not exist)
+    CS --> PA : throw NotFoundException
+    PA --> U : ResponseEntity<OperationStatus>\n404 Not Found
+else 班級存在 (Class exists)
+
+    ' 2. Fetch all students in the class
+    CS -> STRA : findByExample(example: Example<Student>)\n[classId filter]
+    activate STRA
+    STRA -> DB : SELECT * FROM students WHERE class_id = ?
+    activate DB
+    DB --> STRA : list of students
+    deactivate DB
+    STRA --> CS : List<Student>\n[studentId, studentNumber, studentName, email]
+    deactivate STRA
+
+    ' 3. Fetch all grade items in the class
+    CS -> GIRA : findByExample(example: Example<GradeItem>)\n[classId filter]
+    activate GIRA
+    GIRA -> DB : SELECT * FROM grade_items WHERE class_id = ?
+    activate DB
+    DB --> GIRA : list of grade items
+    deactivate DB
+    GIRA --> CS : List<GradeItem>\n[id, itemName, itemType, maxScore, weight]
+    deactivate GIRA
+
+    ' 4. Fetch all grade records for the class/students
+    CS -> GRRA : findByExample(example: Example<GradeRecord>)\n[class students filter]
+    activate GRRA
+    GRRA -> DB : SELECT * FROM grade_records WHERE student_id IN (...)
+    activate DB
+    DB --> GRRA : list of grade records
+    deactivate DB
+    GRRA --> CS : List<GradeRecord>\n[score, lastModifiedAt]
+    deactivate GRRA
+
+    note over CS
+      在記憶體中進行加權成績計算：
+      - 未登記成績 (null) 以 0 分計入
+      - 計算 weighted_total_score = Σ(score / max_score × weight)
+      - 若 Σweight ≠ 100% 則標記警告
+      - 依座號 (studentNumber) 升冪排序
+      - 將 student_id, student_number, student_name, email 寫入對應欄位
+    end note
+
+    CS --> PA : OperationStatus\n[success=true, fileName, fileData]
+    deactivate CS
+
+    PA --> U : ResponseEntity<OperationStatus>\n200 OK
+end
+deactivate PA
+
+== Export Attendance Report ==
+U -> PA : exportAttendance(req: ExportAttendanceRequest)\n[format = EXCEL]
+activate PA
+
+PA -> CS : exportAttendance(req: ExportAttendanceRequest)
+activate CS
+
+' Check Class exist
+CS -> CRA : findById(classId: UUID)
+activate CRA
+CRA --> CS : Optional<Class>
+deactivate CRA
+
+alt 班級不存在 (Class does not exist)
+    CS --> PA : throw NotFoundException
+    PA --> U : ResponseEntity<OperationStatus>\n404 Not Found
+else 班級存在 (Class exists)
+
+    ' Fetch students
+    CS -> STRA : findByExample(example: Example<Student>)\n[classId filter]
+    activate STRA
+    STRA --> CS : List<Student>\n[studentId, studentNumber, studentName, email]
+    deactivate STRA
+
+    ' Fetch only ATTENDANCE grade items
+    CS -> GIRA : findByExample(example: Example<GradeItem>)\n[classId & itemType=ATTENDANCE filter]
+    activate GIRA
+    GIRA -> DB : SELECT * FROM grade_items WHERE class_id = ? AND item_type = 'ATTENDANCE'
+    activate DB
+    DB --> GIRA : list of attendance grade items
+    deactivate DB
+    GIRA --> CS : List<GradeItem>
+    deactivate GIRA
+
+    ' Fetch records
+    CS -> GRRA : findByExample(example: Example<GradeRecord>)
+    activate GRRA
+    GRRA --> CS : List<GradeRecord>
+    deactivate GRRA
+
+    note over CS
+      在記憶體中生成出缺席報表：
+      - 僅納入 ATTENDANCE 類型的成績項目
+      - 計算出缺席統計：出席 (PRESENT)、病公假 (EXCUSED)、缺席 (ABSENT)
+      - 報表包含 student_id, student_number, student_name, email, 各日期狀態及加總數
+    end note
+
+    CS --> PA : OperationStatus\n[success=true, fileName, fileData]
+    deactivate CS
+
+    PA --> U : ResponseEntity<OperationStatus>\n200 OK
+end
+deactivate PA
+
+@enduml

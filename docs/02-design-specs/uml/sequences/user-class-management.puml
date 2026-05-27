@@ -6,37 +6,77 @@ skinparam sequence {
     MessageAlign center
 }
 
+' ── 對應契約: class_contract.puml ──────────────────────────────────────────
+' ── 對應 BDD: class_management.feature ──────────────────────────────────────
+
 actor "Teacher" as U
 participant "ClassRestControllerAdapter" as PA <<PrimaryAdapter>>
 participant "ClassRepositoryAdapter" as SA <<SecondaryAdapter>>
 database "H2 Database" as DB
 
 == Create Class ==
-U -> PA : POST /semesters/{id}/classes (ClassRequest)
+U -> PA : createClass(req: ClassRequest)\n[className, classGroup, passingThreshold]
 activate PA
-PA -> SA : save(entity: Class)
+
+note right of PA
+  驗證 class_name 在同學期內不重複。
+  呼叫 findByExample 以比對現有班級。
+end note
+
+PA -> SA : findByExample(example: Example<Class>)
 activate SA
-SA -> DB : INSERT INTO classes
+SA -> DB : SELECT * FROM classes WHERE semester_id = ? AND class_name = ?
 activate DB
-DB --> SA : success
+DB --> SA : list of existing classes
 deactivate DB
-SA --> PA : Class
+SA --> PA : List<Class>
 deactivate SA
-PA --> U : 201 Created
+
+alt 重複班級名稱 (Duplicate class_name exists in Semester)
+    PA --> U : ResponseEntity<ClassResponse>\n400 Bad Request
+else 班級名稱唯一 (Unique class_name)
+    PA -> SA : save(entity: Class)
+    activate SA
+    SA -> DB : INSERT INTO classes (id, class_name, class_group, passing_threshold)
+    activate DB
+    DB --> SA : success
+    deactivate DB
+    SA --> PA : Class (with id)
+    deactivate SA
+    PA --> U : ResponseEntity<ClassResponse>\n201 Created
+end
 deactivate PA
 
 == Update Class ==
-U -> PA : PUT /semesters/{sid}/classes/{cid} (ClassRequest)
+U -> PA : updateClass(id: UUID, req: ClassRequest)\n[className, classGroup, passingThreshold]
 activate PA
-PA -> SA : save(entity: Class)
+
+note right of PA
+  若修改了 class_name，亦須進行同名驗證
+end note
+
+PA -> SA : findByExample(example: Example<Class>)
 activate SA
-SA -> DB : UPDATE classes
+SA -> DB : SELECT * FROM classes WHERE semester_id = ? AND class_name = ? AND id != ?
 activate DB
-DB --> SA : success
+DB --> SA : list of conflicting classes
 deactivate DB
-SA --> PA : Class
+SA --> PA : List<Class>
 deactivate SA
-PA --> U : 200 OK
+
+alt 重複班級名稱 (Duplicate class_name exists)
+    PA --> U : ResponseEntity<ClassResponse>\n400 Bad Request
+else 班級名稱唯一 (Unique class_name)
+    PA -> SA : save(entity: Class)
+    activate SA
+    SA -> DB : UPDATE classes SET class_name = ?, class_group = ?, passing_threshold = ? WHERE id = ?
+    activate DB
+    DB --> SA : success
+    deactivate DB
+    SA --> PA : Class
+    deactivate SA
+    PA --> U : ResponseEntity<ClassResponse>\n200 OK
+end
 deactivate PA
 
 @enduml

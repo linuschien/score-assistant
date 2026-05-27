@@ -7,8 +7,7 @@ skinparam sequence {
 }
 
 ' ── 對應契約: student_contract.puml ──────────────────────────────────────────
-' RestController → CommandService/QueryService → Repository
-' Primary Adapter 不得直接呼叫 Secondary Adapter (Hexagonal Integrity)
+' ── 對應 BDD: student_management.feature ────────────────────────────────────
 
 actor "Teacher" as U
 participant "StudentRestControllerAdapter" as PA <<PrimaryAdapter>>
@@ -17,47 +16,106 @@ participant "StudentRepositoryAdapter" as SA <<SecondaryAdapter>>
 database "H2 Database" as DB
 
 == Add Student ==
-U -> PA : createStudent(req: StudentRequest)
+U -> PA : createStudent(req: StudentRequest)\n[studentId, studentNumber, studentName, email]
 activate PA
 
 PA -> CS : createStudent(req: StudentRequest)
 activate CS
 
-CS -> SA : save(entity: Student)
+note over CS
+  驗證限制：
+  1. studentId 全域唯一
+  2. email 全域唯一
+  3. studentNumber 班級內唯一
+end note
+
+' 1. studentId global unique check
+CS -> SA : findByExample(example: Example<Student>)\n[studentId filter]
 activate SA
-SA -> DB : INSERT INTO students
+SA -> DB : SELECT * FROM students WHERE student_id = ?
 activate DB
-DB --> SA : success
+DB --> SA : list of students with studentId
 deactivate DB
-SA --> CS : Student (with UUID)
+SA --> CS : List<Student>
 deactivate SA
 
-CS --> PA : Student
-deactivate CS
+' 2. email global unique check
+CS -> SA : findByExample(example: Example<Student>)\n[email filter]
+activate SA
+SA -> DB : SELECT * FROM students WHERE email = ?
+activate DB
+DB --> SA : list of students with email
+deactivate DB
+SA --> CS : List<Student>
+deactivate SA
 
-PA --> U : ResponseEntity<StudentResponse>\n201 Created
+' 3. studentNumber class unique check
+CS -> SA : findByExample(example: Example<Student>)\n[classId & studentNumber filter]
+activate SA
+SA -> DB : SELECT * FROM students WHERE class_id = ? AND student_number = ?
+activate DB
+DB --> SA : list of students in class with studentNumber
+deactivate DB
+SA --> CS : List<Student>
+deactivate SA
+
+alt 任一驗證衝突 (Duplicate studentId / email / studentNumber found)
+    CS --> PA : throw DuplicateConflictException
+    PA --> U : ResponseEntity<StudentResponse>\n400 Bad Request
+else 驗證皆通過 (All validations passed)
+    CS -> SA : save(entity: Student)
+    activate SA
+    SA -> DB : INSERT INTO students (id, student_id, student_number, student_name, email, class_id)
+    activate DB
+    DB --> SA : success
+    deactivate DB
+    SA --> CS : Student (with UUID)
+    deactivate SA
+    CS --> PA : Student
+    PA --> U : ResponseEntity<StudentResponse>\n201 Created
+end
+deactivate CS
 deactivate PA
 
 == Update Student ==
-U -> PA : updateStudent(id: UUID, req: StudentRequest)
+U -> PA : updateStudent(id: UUID, req: StudentRequest)\n[studentId, studentNumber, studentName, email]
 activate PA
 
 PA -> CS : updateStudent(id: UUID, req: StudentRequest)
 activate CS
 
-CS -> SA : save(entity: Student)
+note over CS
+  驗證限制（排除自身 id）：
+  1. studentId 全域唯一
+  2. email 全域唯一
+  3. studentNumber 班級內唯一
+end note
+
+CS -> SA : findByExample(example: Example<Student>)
 activate SA
-SA -> DB : UPDATE students SET ... WHERE id = ?
+SA -> DB : SELECT * FROM students WHERE ... AND id != ?
 activate DB
-DB --> SA : success
+DB --> SA : list of conflicting students
 deactivate DB
-SA --> CS : Student
+SA --> CS : List<Student>
 deactivate SA
 
-CS --> PA : Student
+alt 驗證衝突 (Conflict found)
+    CS --> PA : throw DuplicateConflictException
+    PA --> U : ResponseEntity<StudentResponse>\n400 Bad Request
+else 驗證通過 (Passed)
+    CS -> SA : save(entity: Student)
+    activate SA
+    SA -> DB : UPDATE students SET student_id = ?, student_number = ?, student_name = ?, email = ? WHERE id = ?
+    activate DB
+    DB --> SA : success
+    deactivate DB
+    SA --> CS : Student
+    deactivate SA
+    CS --> PA : Student
+    PA --> U : ResponseEntity<StudentResponse>\n200 OK
+end
 deactivate CS
-
-PA --> U : ResponseEntity<StudentResponse>\n200 OK
 deactivate PA
 
 == Delete Student ==
