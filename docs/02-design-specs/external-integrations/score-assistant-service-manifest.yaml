@@ -1,7 +1,11 @@
+# score-assistant-service-manifest.yaml
+# Specification Version: 2026.Q2
+# Governance: Strict Architectural Compliance
+
 service_name: "score-assistant"
 architecture: "Hexagonal"
 adapters:
-  # ── Primary — REST ────────────────────────────────────────────
+  # ── Primary — REST (adapter.in.web.rest) ───────────────────────
   - name: "SemesterRestControllerAdapter"
     type: "Primary"
     tech: "Spring WebFlux + Reactor Netty"
@@ -50,7 +54,7 @@ adapters:
       interface: "AttachmentRestController"
       layer: "domain.ports.input"
 
-  # ── Primary — GraphQL ─────────────────────────────────────────
+  # ── Primary — GraphQL (adapter.in.web.graphql) ──────────────────
   - name: "SemesterGraphQLResolverAdapter"
     type: "Primary"
     tech: "Spring for GraphQL + Reactor Netty"
@@ -99,7 +103,7 @@ adapters:
       interface: "AttachmentGraphQLResolver"
       layer: "domain.ports.input"
 
-  # ── Primary — Application Services (application.port.in) ─────
+  # ── Primary — Application Services (application.port.in) ────────
   - name: "StudentCommandServiceAdapter"
     type: "Primary"
     tech: "Project Reactor"
@@ -132,7 +136,7 @@ adapters:
       interface: "GradeItemQueryService"
       layer: "domain.ports.input"
 
-  # ── Secondary — Persistence ───────────────────────────────────
+  # ── Secondary — Persistence (adapter.out.persistence) ───────────
   - name: "SemesterRepositoryAdapter"
     type: "Secondary"
     tech: "Spring Data R2DBC (H2)"
