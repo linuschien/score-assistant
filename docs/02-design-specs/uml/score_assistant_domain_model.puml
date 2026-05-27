@@ -1,6 +1,6 @@
 @startuml score_assistant_domain_model
 skinparam style strictuml
-title Domain Model - Score Assistant (v1.2 — Reviewed)
+title Domain Model - Score Assistant (v1.3 — Updated)
 
 package "Core Domain" {
 
@@ -14,13 +14,16 @@ package "Core Domain" {
     class Class <<Entity>> {
         +String id
         +String class_name
+        +String class_group
         +Decimal passing_threshold
     }
 
     class Student <<Entity>> {
         +String id
+        +String student_id
         +Integer student_number
         +String student_name
+        +String email
     }
 
     class GradeItem <<Entity>> {
@@ -124,12 +127,15 @@ end note
 
 note right of Class
   class_name MUST be unique within a Semester.
+  class_group is OPTIONAL (nullable).
   passing_threshold defaults to 60; teacher-adjustable.
 end note
 
 note right of Student
+  student_id MUST be unique system-wide (Global Unique).
   student_number MUST be unique within a Class.
   Used for display ordering (ascending).
+  email MUST be unique system-wide (Global Unique) and follow standard email format.
 end note
 
 note bottom of GradeItem
