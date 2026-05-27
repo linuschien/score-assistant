@@ -16,6 +16,7 @@ ${GRAPHQL_ENDPOINT}     /graphql
 # Populated dynamically in Suite Setup — never hardcoded
 ${SEMESTER_ID}          ${EMPTY}
 ${CLASS_ID}             ${EMPTY}
+${OTHER_CLASS_ID}       ${EMPTY}
 ${STUDENT_ID}           ${EMPTY}
 ${STUDENTS_BASE}        ${EMPTY}
 
@@ -28,21 +29,42 @@ Add a Student — 王小明 seat 1 should return 201
     [Documentation]    US-03-02 — Reused from: student_management.feature
     ...                UI: add-student-button → student-number-field, student-name-field, submit-student-trigger
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to students endpoint with number "1" and name "王小明"
+    When a POST request is made to students endpoint with student_id "S99543021", student_number "1", student_name "王小明", and email "xiaoming@gmail.com"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Add a Student — 李小華 seat 2 should return 201
     [Documentation]    US-03-02 — Reused from: student_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to students endpoint with number "2" and name "李小華"
+    When a POST request is made to students endpoint with student_id "S99543022", student_number "2", student_name "李小華", and email "xiaohua@gmail.com"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Add a Student — seat 0 should return 400
     [Documentation]    US-03-02 — Reused from: student_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to students endpoint with number "0" and name "錯誤"
+    When a POST request is made to students endpoint with student_id "S99543023", student_number "0", student_name "錯誤", and email "error@gmail.com"
+    Then the response code should be 400
+
+# ---------------------------------------------------------------------------
+# US-03-02 validations from student_management.feature
+# ---------------------------------------------------------------------------
+Add a Student — missing student_id should return 400
+    [Documentation]    US-03-02 — Reused from: student_management.feature
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to students endpoint with student_id "", student_number "3", student_name "張大強", and email "daqiang@gmail.com"
+    Then the response code should be 400
+
+Add a Student — invalid email should return 400
+    [Documentation]    US-03-02 — Reused from: student_management.feature
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to students endpoint with student_id "S99543024", student_number "4", student_name "趙六", and email "invalid-email"
+    Then the response code should be 400
+
+Add a Student — empty email should return 400
+    [Documentation]    US-03-02 — Reused from: student_management.feature
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to students endpoint with student_id "S99543025", student_number "5", student_name "錢七", and email ""
     Then the response code should be 400
 
 # ---------------------------------------------------------------------------
@@ -53,7 +75,26 @@ Prevent duplicate student_number in the same Class
     [Documentation]    US-03-02 AC3 — Reused from: student_management.feature
     ...                Suite Setup pre-creates student with number 99; this test attempts to duplicate it
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to students endpoint with number "99" and name "重複"
+    When a POST request is made to students endpoint with student_id "S99543026", student_number "99", student_name "重複", and email "dup@gmail.com"
+    Then the response code should be 400
+
+# ---------------------------------------------------------------------------
+# US-03-02 AC3: 學號與電子信箱必須為全域唯一
+# ---------------------------------------------------------------------------
+Prevent duplicate student_id across different Classes or Semesters
+    [Documentation]    US-03-02 AC3 — Reused from: student_management.feature
+    ...                Suite Setup pre-creates student with studentId "S99543099" in CLASS_ID.
+    ...                This test tries to create another student with the same studentId in OTHER_CLASS_ID.
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to students endpoint for other class with student_id "S99543099", student_number "1", student_name "新學生", and email "newstud@gmail.com"
+    Then the response code should be 400
+
+Prevent duplicate email across different Classes or Semesters
+    [Documentation]    US-03-02 AC3 — Reused from: student_management.feature
+    ...                Suite Setup pre-creates student with email "suite99@gmail.com" in CLASS_ID.
+    ...                This test tries to create another student with the same email in OTHER_CLASS_ID.
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to students endpoint for other class with student_id "S99543022", student_number "1", student_name "新學生", and email "suite99@gmail.com"
     Then the response code should be 400
 
 # ---------------------------------------------------------------------------
@@ -81,12 +122,12 @@ Get a Student by ID
 Update Student information
     [Documentation]    US-03-04 — Reused from: student_management.feature
     ...                UI: edit-student-trigger → student-number-field, student-name-field, submit-student-trigger
-    When a PUT request is made to student detail endpoint with number "99" and name "王大明"
+    When a PUT request is made to student detail endpoint with student_id "S99543099", student_number "10", student_name "王大明", and email "bigwang@gmail.com"
     Then the response code should be 200
 
 Update a non-existent Student returns 404
     [Documentation]    US-03-04 — Reused from: student_management.feature
-    When a PUT request is made to "${STUDENTS_BASE}/00000000-0000-0000-0000-000000000000" with number "88" and name "不存在"
+    When a PUT request is made to "${STUDENTS_BASE}/00000000-0000-0000-0000-000000000000" with student_id "S99543099", student_number "88", student_name "不存在", and email "noexist@gmail.com"
     Then the response code should be 404
 
 # ---------------------------------------------------------------------------
@@ -137,6 +178,19 @@ Import Students from CSV with conflicts — OVERWRITE strategy
     And the response body should contain "success" equal to "True"
     And the response body should contain "affectedCount" equal to "1"
 
+# ---------------------------------------------------------------------------
+# US-03-01 AC4: 匯入時發生全域學號或電子信箱重複衝突
+# ---------------------------------------------------------------------------
+Import Students from CSV with global student_id or email conflict
+    [Documentation]    US-03-01 AC4 — Reused from: student_management.feature
+    ...                Suite Setup pre-creates student with studentId "S99543099" and email "suite99@gmail.com".
+    ...                This test tries to import a CSV into OTHER_CLASS_ID containing global studentId or email conflict.
+    Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
+    When a POST request is made to import students endpoint for other class with conflicting CSV content
+    Then the response code should be 200
+    And the response body should contain "success" equal to "True"
+    And the response body should contain "affectedCount" equal to "0"
+
 *** Keywords ***
 # ---------------------------------------------------------------------------
 # Suite Lifecycle
@@ -157,8 +211,13 @@ Initialize Student Suite
     Should Be Equal As Strings    ${c_resp.status_code}    201
     Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
     Set Suite Variable    ${STUDENTS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/students
-    # Step 3: Create Student (seat 99) — used by GET/PUT and duplicate/import conflict tests
-    ${st_payload}=    Create Dictionary    studentNumber=99    studentName=AutoTest-SuiteStudent
+    # Step 3: Create Other Class (used for global uniqueness tests)
+    ${other_c_payload}=    Create Dictionary    className=AutoTest-StudentSuite-OtherClass
+    ${other_c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${other_c_payload}
+    Should Be Equal As Strings    ${other_c_resp.status_code}    201
+    Set Suite Variable    ${OTHER_CLASS_ID}    ${other_c_resp.json()}[id]
+    # Step 4: Create Student (seat 99) — used by GET/PUT and duplicate/import conflict tests
+    ${st_payload}=    Create Dictionary    studentId=S99543099    studentNumber=99    studentName=AutoTest-SuiteStudent    email=suite99@gmail.com
     ${st_resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${st_payload}
     Should Be Equal As Strings    ${st_resp.status_code}    201
     Set Suite Variable    ${STUDENT_ID}    ${st_resp.json()}[id]
@@ -177,7 +236,7 @@ a Class with ID "${class_id}" exists in Semester "${semester_id}"
 
 a disposable Student is created in Class "${class_id}"
     [Documentation]    Creates a temporary student for DELETE test — uses seat 50 (not conflicting with suite seat 99).
-    ${payload}=    Create Dictionary    studentNumber=50    studentName=AutoTest-Disposable-Student
+    ${payload}=    Create Dictionary    studentId=S99543050    studentNumber=50    studentName=AutoTest-Disposable-Student    email=disposable50@gmail.com
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
     Set Test Variable    ${DISPOSABLE_STUDENT_ID}    ${resp.json()}[id]
@@ -185,18 +244,40 @@ a disposable Student is created in Class "${class_id}"
 # ---------------------------------------------------------------------------
 # When Steps
 # ---------------------------------------------------------------------------
-a POST request is made to students endpoint with number "${number}" and name "${name}"
+a POST request is made to students endpoint with student_id "${st_id}", student_number "${number}", student_name "${name}", and email "${email}"
     [Documentation]    POST /semesters/{id}/classes/{id}/students
     ...    UI: add-student-button → student-number-field, student-name-field, submit-student-trigger
-    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
+    ${payload}=    Create Dictionary
+    Run Keyword If    '${st_id}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentId=${st_id}
+    IF    '${number}' != '${EMPTY}'
+        ${is_digit}=    Evaluate    str('${number}').isdigit()
+        ${number_val}=    Run Keyword If    ${is_digit}    Convert To Integer    ${number}    ELSE    Set Variable    ${number}
+        Set To Dictionary    ${payload}    studentNumber=${number_val}
+    END
+    Run Keyword If    '${name}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentName=${name}
+    Run Keyword If    '${email}' != '${EMPTY}'    Set To Dictionary    ${payload}    email=${email}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${payload}    expected_status=any
+    Set Test Variable    ${RESPONSE}    ${resp}
+
+a POST request is made to students endpoint for other class with student_id "${st_id}", student_number "${number}", student_name "${name}", and email "${email}"
+    [Documentation]    POST /semesters/{id}/classes/{other_id}/students
+    ${payload}=    Create Dictionary
+    Run Keyword If    '${st_id}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentId=${st_id}
+    IF    '${number}' != '${EMPTY}'
+        ${is_digit}=    Evaluate    str('${number}').isdigit()
+        ${number_val}=    Run Keyword If    ${is_digit}    Convert To Integer    ${number}    ELSE    Set Variable    ${number}
+        Set To Dictionary    ${payload}    studentNumber=${number_val}
+    END
+    Run Keyword If    '${name}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentName=${name}
+    Run Keyword If    '${email}' != '${EMPTY}'    Set To Dictionary    ${payload}    email=${email}
+    ${resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes/${OTHER_CLASS_ID}/students    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GraphQL query is made for all Students in Class "${class_id}"
     [Documentation]    POST /graphql — students ordered by studentNumber ASC
     ...    UI: student-table (student-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { listStudents(filter: { classId: "${class_id}" }) { id studentNumber studentName } }
+    ...    { listStudents(filter: { classId: "${class_id}" }) { id studentId studentNumber studentName email } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
@@ -205,15 +286,31 @@ a GET request is made to student detail endpoint
     ${resp}=    GET On Session    score_api    ${STUDENTS_BASE}/${STUDENT_ID}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a PUT request is made to student detail endpoint with number "${number}" and name "${name}"
+a PUT request is made to student detail endpoint with student_id "${st_id}", student_number "${number}", student_name "${name}", and email "${email}"
     [Documentation]    PUT /semesters/{id}/classes/{id}/students/{id}
     ...    UI: edit-student-trigger → student-number-field, student-name-field, submit-student-trigger
-    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
+    ${payload}=    Create Dictionary
+    Run Keyword If    '${st_id}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentId=${st_id}
+    IF    '${number}' != '${EMPTY}'
+        ${is_digit}=    Evaluate    str('${number}').isdigit()
+        ${number_val}=    Run Keyword If    ${is_digit}    Convert To Integer    ${number}    ELSE    Set Variable    ${number}
+        Set To Dictionary    ${payload}    studentNumber=${number_val}
+    END
+    Run Keyword If    '${name}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentName=${name}
+    Run Keyword If    '${email}' != '${EMPTY}'    Set To Dictionary    ${payload}    email=${email}
     ${resp}=    PUT On Session    score_api    ${STUDENTS_BASE}/${STUDENT_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a PUT request is made to "${url}" with number "${number}" and name "${name}"
-    ${payload}=    Create Dictionary    studentNumber=${number}    studentName=${name}
+a PUT request is made to "${url}" with student_id "${st_id}", student_number "${number}", student_name "${name}", and email "${email}"
+    ${payload}=    Create Dictionary
+    Run Keyword If    '${st_id}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentId=${st_id}
+    IF    '${number}' != '${EMPTY}'
+        ${is_digit}=    Evaluate    str('${number}').isdigit()
+        ${number_val}=    Run Keyword If    ${is_digit}    Convert To Integer    ${number}    ELSE    Set Variable    ${number}
+        Set To Dictionary    ${payload}    studentNumber=${number_val}
+    END
+    Run Keyword If    '${name}' != '${EMPTY}'    Set To Dictionary    ${payload}    studentName=${name}
+    Run Keyword If    '${email}' != '${EMPTY}'    Set To Dictionary    ${payload}    email=${email}
     ${resp}=    PUT On Session    score_api    ${url}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -226,18 +323,26 @@ a DELETE request is made to "${url}"
 a POST request is made to import students endpoint with CSV content and no conflicts
     [Documentation]    POST /semesters/{id}/classes/{id}/students:importStudents
     ...    UI: import-students-button (student-list.ui-manifest.json)
-    ${csv_content}=    Set Variable    number,name\n10,匯入甲\n11,匯入乙\n12,匯入丙
+    ${csv_content}=    Set Variable    student_id,student_number,student_name,email\nS001,10,匯入甲,xiaoming@gmail.com\nS002,11,匯入乙,xiaohua@gmail.com\nS003,12,匯入丙,daqiang@gmail.com
     ${files}=    Create Dictionary    file=${csv_content.encode()}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}:importStudents    files=${files}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a POST request is made to import students endpoint with conflict_resolution "${strategy}"
+a POST request is made to import students endpoint with conflictResolution "${strategy}"
     [Documentation]    POST /semesters/{id}/classes/{id}/students:importStudents?conflictResolution={strategy}
     ...                CSV contains seat 99, which already exists (${STUDENT_ID} from Suite Setup)
-    ${csv_content}=    Set Variable    number,name\n99,衝突學生
+    ${csv_content}=    Set Variable    student_id,student_number,student_name,email\nS99543099,99,衝突學生,suite99@gmail.com
     ${files}=    Create Dictionary    file=${csv_content.encode()}
     ${params}=    Create Dictionary    conflictResolution=${strategy}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}:importStudents    files=${files}    params=${params}    expected_status=any
+    Set Test Variable    ${RESPONSE}    ${resp}
+
+a POST request is made to import students endpoint for other class with conflicting CSV content
+    [Documentation]    POST /semesters/{id}/classes/{other_id}/students:importStudents
+    ...                CSV contains studentId and email that conflicts globally with CLASS_ID pre-creates.
+    ${csv_content}=    Set Variable    student_id,student_number,student_name,email\nS99543099,1,衝突學生一,new1@gmail.com\nS004,2,衝突學生二,suite99@gmail.com
+    ${files}=    Create Dictionary    file=${csv_content.encode()}
+    ${resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes/${OTHER_CLASS_ID}/students:importStudents    files=${files}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 # ---------------------------------------------------------------------------
