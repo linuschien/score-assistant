@@ -10,9 +10,11 @@ Feature: Grade Export and Reporting
   # US-08-00: 預覽全班成績總表 (GraphQL Primary Port)
   Scenario: Preview class Grade Summary matrix via GraphQL
     When a GraphQL query is made for the Grade Summary of Class "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a" with the following fields:
+      | id                     |
       | student_id             |
       | student_number         |
       | student_name           |
+      | email                  |
       | grade_records          |
       | weighted_total_score   |
     Then the response should contain a matrix of all Students and their scores for each GradeItem
@@ -64,4 +66,4 @@ Feature: Grade Export and Reporting
     When a POST request is made to "/semesters/d3b07384-d113-404c-9f8a-020524032a9a/classes/c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a:exportAttendance" with the following data:
       | format | EXCEL |
     Then the response code should be 200
-    And the response body should indicate the export includes columns: student_number, student_name, attendance dates, present_count, absent_count, excused_count
+    And the response body should indicate the export includes columns: student_id, student_number, student_name, email, attendance dates, present_count, absent_count, excused_count
