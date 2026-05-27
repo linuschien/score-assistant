@@ -987,6 +987,10 @@ components:
         className:
           type: string
           example: "Computer Science 101"
+        classGroup:
+          type: string
+          example: "Group A"
+          nullable: true
         passingThreshold:
           type: number
           format: double
@@ -1001,6 +1005,10 @@ components:
         className:
           type: string
           example: "Computer Science 101"
+        classGroup:
+          type: string
+          example: "Group A"
+          nullable: true
         passingThreshold:
           type: number
           format: double
@@ -1014,6 +1022,10 @@ components:
         className:
           type: string
           example: "Computer Science 101"
+        classGroup:
+          type: string
+          example: "Group A"
+          nullable: true
         passingThreshold:
           type: number
           format: double
@@ -1026,39 +1038,64 @@ components:
           type: string
           format: uuid
           example: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+        studentId:
+          type: string
+          example: "S99543021"
         studentNumber:
           type: integer
           example: 2026001
         studentName:
           type: string
           example: "Linus Torvalds"
+        email:
+          type: string
+          format: email
+          example: "linus@torvalds.org"
       required:
         - id
+        - studentId
         - studentNumber
         - studentName
+        - email
 
     StudentRequest:
       type: object
       properties:
+        studentId:
+          type: string
+          example: "S99543021"
         studentNumber:
           type: integer
           example: 2026001
         studentName:
           type: string
           example: "Linus Torvalds"
+        email:
+          type: string
+          format: email
+          example: "linus@torvalds.org"
       required:
+        - studentId
         - studentNumber
         - studentName
+        - email
 
     StudentPatchRequest:
       type: object
       properties:
+        studentId:
+          type: string
+          example: "S99543021"
         studentNumber:
           type: integer
           example: 2026001
         studentName:
           type: string
           example: "Linus Torvalds"
+        email:
+          type: string
+          format: email
+          example: "linus@torvalds.org"
 
     GradeItemType:
       type: string

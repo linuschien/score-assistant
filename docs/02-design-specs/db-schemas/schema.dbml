@@ -41,6 +41,7 @@ Table class {
     id                uuid    [pk]
     semester_id       uuid    [not null]
     class_name        varchar [not null]
+    class_group       varchar [note: "Optional class group classification"]
     passing_threshold decimal [default: 60]
     created_at        timestamp
     updated_at        timestamp
@@ -56,8 +57,10 @@ Table class {
 Table student {
     id             uuid    [pk]
     class_id       uuid    [not null]
+    student_id     varchar [not null]
     student_number integer [not null]
     student_name   varchar [not null]
+    email          varchar [not null]
     created_at     timestamp
     updated_at     timestamp
     deleted        boolean [default: false, not null]
@@ -66,6 +69,8 @@ Table student {
 
     indexes {
         (class_id, student_number, active_status) [unique]
+        (student_id, active_status) [unique]
+        (email, active_status) [unique]
     }
 }
 
