@@ -15,8 +15,10 @@ const LISTSTUDENTS_QUERY = gql`
     listStudents(filter: $filter) {
       id
       classId
+      studentId
       studentNumber
       studentName
+      email
     }
   }
 `;
