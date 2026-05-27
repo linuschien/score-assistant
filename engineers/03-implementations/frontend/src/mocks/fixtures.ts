@@ -5,9 +5,9 @@ export const mockSemesters: any[] = [
 ];
 
 export const mockClasses: any[] = [
-  { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
-  { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
-  { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
+  { id: '1', semesterId: '1', className: '資訊三甲', classGroup: '資訊班群', passingThreshold: 60.0 },
+  { id: '2', semesterId: '1', className: '資訊三乙', classGroup: '資訊班群', passingThreshold: 60.0 },
+  { id: '3', semesterId: '2', className: '電子三甲', classGroup: '電機班群', passingThreshold: 60.0 }
 ];
 
 export const mockGradeItems: any[] = [
@@ -32,7 +32,7 @@ export const mockAttachments: any[] = [
 ];
 
 export const mockStudents: any[] = [
-  { id: '1', classId: '1', studentNumber: '01', studentName: '王小明', name: '王小明', attendanceStatus: 'normal' }
+  { id: '1', classId: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', name: '王小明', email: 'xiaoming@school.edu.tw', attendanceStatus: 'normal' }
 ];
 
 // Helper functions for state reset and initialization
@@ -42,17 +42,17 @@ export function resetMockSemesters() {
     { id: '1', semesterName: '112-1 第一學期', startDate: '2023-09-01', endDate: '2024-01-31', classCount: 3 }
   );
   mockClasses.splice(0, mockClasses.length,
-    { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
-    { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
-    { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
+    { id: '1', semesterId: '1', className: '資訊三甲', classGroup: '資訊班群', passingThreshold: 60.0 },
+    { id: '2', semesterId: '1', className: '資訊三乙', classGroup: '資訊班群', passingThreshold: 60.0 },
+    { id: '3', semesterId: '2', className: '電子三甲', classGroup: '電機班群', passingThreshold: 60.0 }
   );
 }
 
 export function resetMockClasses() {
   mockClasses.splice(0, mockClasses.length,
-    { id: '1', semesterId: '1', className: '資訊三甲', passingThreshold: 60.0 },
-    { id: '2', semesterId: '1', className: '資訊三乙', passingThreshold: 60.0 },
-    { id: '3', semesterId: '2', className: '電子三甲', passingThreshold: 60.0 }
+    { id: '1', semesterId: '1', className: '資訊三甲', classGroup: '資訊班群', passingThreshold: 60.0 },
+    { id: '2', semesterId: '1', className: '資訊三乙', classGroup: '資訊班群', passingThreshold: 60.0 },
+    { id: '3', semesterId: '2', className: '電子三甲', classGroup: '電機班群', passingThreshold: 60.0 }
   );
 }
 

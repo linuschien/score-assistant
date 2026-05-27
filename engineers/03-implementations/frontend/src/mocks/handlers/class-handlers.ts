@@ -6,7 +6,7 @@ export const classHandlers = [
   http.get('*/semesters/:semesterId/classes/:id', ({ params }) => {
     const cls = mockClasses.find(c => c.id === params.id);
     if (cls) {
-      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId, passingThreshold: cls.passingThreshold ?? 60.0 });
+      return HttpResponse.json({ id: cls.id, className: cls.className, classGroup: cls.classGroup ?? '', semesterId: cls.semesterId, passingThreshold: cls.passingThreshold ?? 60.0 });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),
@@ -22,10 +22,11 @@ export const classHandlers = [
       id: String(mockClasses.length + 1),
       semesterId: params.semesterId as string,
       className: body.className,
+      classGroup: body.classGroup || '',
       passingThreshold: body.passingThreshold ? parseFloat(body.passingThreshold) : 60.0,
     };
     mockClasses.push(newClass);
-    return HttpResponse.json({ id: newClass.id, className: newClass.className, semesterId: newClass.semesterId, passingThreshold: newClass.passingThreshold }, { status: 201 });
+    return HttpResponse.json({ id: newClass.id, className: newClass.className, classGroup: newClass.classGroup, semesterId: newClass.semesterId, passingThreshold: newClass.passingThreshold }, { status: 201 });
   }),
   http.put('*/semesters/:semesterId/classes/:id', async ({ request, params }) => {
     const body = await request.json() as any;
@@ -40,10 +41,11 @@ export const classHandlers = [
       mockClasses[idx] = {
         ...mockClasses[idx],
         className: body.className,
+        classGroup: body.classGroup || '',
         passingThreshold: body.passingThreshold ? parseFloat(body.passingThreshold) : mockClasses[idx].passingThreshold
       };
       const cls = mockClasses[idx];
-      return HttpResponse.json({ id: cls.id, className: cls.className, semesterId: cls.semesterId, passingThreshold: cls.passingThreshold });
+      return HttpResponse.json({ id: cls.id, className: cls.className, classGroup: cls.classGroup, semesterId: cls.semesterId, passingThreshold: cls.passingThreshold });
     }
     return HttpResponse.json({ error: 'Not Found' }, { status: 404 });
   }),

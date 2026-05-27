@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSONUIProvider, createStateStore } from '@json-render/react';
@@ -13,7 +13,7 @@ import { graphql, HttpResponse } from 'msw';
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const MOCK_CLASSES = [
-  { id: '1', name: '資訊三甲', studentCount: 38 },
+  { id: '1', className: '資訊三甲', classGroup: '資訊班群', studentCount: 38 },
 ];
 
 // ── Test Harness ──────────────────────────────────────────────────────────────
@@ -105,6 +105,7 @@ describe('ClassListPage', () => {
 
       expect(await screen.findByRole('dialog')).toBeInTheDocument();
       expect(await screen.findByLabelText(/班級名稱/i)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/班群/i)).toBeInTheDocument();
       expect(await screen.findByLabelText(/通過門檻/i)).toBeInTheDocument();
     });
 
@@ -115,6 +116,7 @@ describe('ClassListPage', () => {
 
       act(() => {
         store.set('/form/modal-class-name-field', '資訊三甲');
+        store.set('/form/modal-class-group-field', '資訊班群');
         store.set('/form/modal-class-threshold-field', 60.0);
       });
 
@@ -132,6 +134,7 @@ describe('ClassListPage', () => {
 
       act(() => {
         store.set('/form/modal-class-name-field', '資訊三甲');
+        store.set('/form/modal-class-group-field', '資訊班群');
         store.set('/form/modal-class-threshold-field', 60.0);
       });
 
@@ -164,7 +167,9 @@ describe('ClassListPage', () => {
       renderPage();
 
       await screen.findByText('資訊三甲');
-      await user.click(screen.getByRole('button', { name: /編輯/i }));
+      await screen.findByText('資訊班群');
+      const row = screen.getByRole('row', { name: /資訊三甲/ });
+      await user.click(within(row).getByRole('button', { name: /編輯/i }));
 
       expect(openModal).toHaveBeenCalledWith(expect.objectContaining({ id: 'class-form-modal' }));
       expect(store.get('/modals/class-form-modal')).toBe(true);
@@ -172,6 +177,7 @@ describe('ClassListPage', () => {
       // Wait for page-level dynamic observer to run form sync:
       await waitFor(() => {
         expect(store.get('/form/modal-class-name-field')).toBe('資訊三甲');
+        expect(store.get('/form/modal-class-group-field')).toBe('資訊班群');
       });
     });
   });
@@ -184,7 +190,8 @@ describe('ClassListPage', () => {
       renderPage();
 
       await screen.findByText('資訊三甲');
-      await user.click(screen.getByRole('button', { name: /刪除/i }));
+      const row = screen.getByRole('row', { name: /資訊三甲/ });
+      await user.click(within(row).getByRole('button', { name: /刪除/i }));
 
       expect(openModal).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'delete-class-confirm-dialog' })

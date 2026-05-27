@@ -339,14 +339,24 @@
         "dataRef": "listStudents",
         "columns": [
           {
+            "field": "studentId",
+            "label": "學號",
+            "sortable": true
+          },
+          {
             "field": "studentNumber",
             "label": "座號",
             "sortable": true,
             "default_sort": "asc"
           },
           {
-            "field": "name",
+            "field": "studentName",
             "label": "姓名",
+            "sortable": true
+          },
+          {
+            "field": "email",
+            "label": "電子信箱",
             "sortable": true
           }
         ],
@@ -368,6 +378,38 @@
       "children": [
         "student-table"
       ]
+    },
+    "modal-student-id-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-student-id-field",
+        "label": "學號",
+        "name": "modal-student-id-field",
+        "type": "text",
+        "placeholder": "例如：S1120001",
+        "value": {
+          "$bindState": "/form/modal-student-id-field"
+        },
+        "checks": [
+          {
+            "type": "required",
+            "message": "學號為必填項目"
+          }
+        ],
+        "validateOn": "blur"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Add a Student to a Class",
+              "id": "modal-student-id-field"
+            }
+          }
+        ]
+      }
     },
     "modal-student-number-field": {
       "type": "Input",
@@ -433,6 +475,38 @@
         ]
       }
     },
+    "modal-student-email-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-student-email-field",
+        "label": "電子信箱",
+        "name": "modal-student-email-field",
+        "type": "text",
+        "placeholder": "例如：student@school.edu.tw",
+        "value": {
+          "$bindState": "/form/modal-student-email-field"
+        },
+        "checks": [
+          {
+            "type": "required",
+            "message": "電子信箱為必填項目"
+          }
+        ],
+        "validateOn": "blur"
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "executeBehavior",
+            "params": {
+              "ref": "Add a Student to a Class",
+              "id": "modal-student-email-field"
+            }
+          }
+        ]
+      }
+    },
     "modal-submit-student-trigger": {
       "type": "Button",
       "props": {
@@ -463,8 +537,10 @@
         "openPath": "/modals/student-form-modal"
       },
       "children": [
+        "modal-student-id-field",
         "modal-student-number-field",
         "modal-student-name-field",
+        "modal-student-email-field",
         "modal-submit-student-trigger"
       ],
       "visible": {

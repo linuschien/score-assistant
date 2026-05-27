@@ -234,10 +234,15 @@
         "dataRef": "listClasses",
         "columns": [
           {
-            "field": "name",
+            "field": "className",
             "label": "班級名稱",
             "sortable": true,
             "default_sort": "asc"
+          },
+          {
+            "field": "classGroup",
+            "label": "班群",
+            "sortable": true
           },
           {
             "field": "studentCount",
@@ -312,6 +317,22 @@
       },
       "children": []
     },
+    "modal-class-group-field": {
+      "type": "Input",
+      "props": {
+        "id": "modal-class-group-field",
+        "label": "班群",
+        "name": "modal-class-group-field",
+        "type": "text",
+        "placeholder": "例如：資訊班群 (選填)",
+        "value": {
+          "$bindState": "/form/modal-class-group-field"
+        },
+        "checks": null,
+        "validateOn": null
+      },
+      "children": []
+    },
     "modal-submit-class-trigger": {
       "type": "Button",
       "props": {
@@ -343,6 +364,7 @@
       },
       "children": [
         "modal-class-name-field",
+        "modal-class-group-field",
         "modal-class-threshold-field",
         "modal-submit-class-trigger"
       ],

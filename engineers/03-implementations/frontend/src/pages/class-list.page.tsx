@@ -55,6 +55,7 @@ registerBehavior('Create a new Class in a Semester', async (_ref, store) => {
   const threshold = form['modal-class-threshold-field'] ? parseFloat(String(form['modal-class-threshold-field'])) : 60.0;
   await api.post(`${API_BASE}/semesters/${semesterId}/classes`, {
     className: form['modal-class-name-field'],
+    classGroup: form['modal-class-group-field'] || '',
     passingThreshold: threshold,
   });
   store.set('/form', {});
@@ -72,6 +73,7 @@ registerBehavior('Update a Class', async (_ref, store) => {
   const threshold = form['modal-class-threshold-field'] ? parseFloat(String(form['modal-class-threshold-field'])) : 60.0;
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}`, {
     className: form['modal-class-name-field'],
+    classGroup: form['modal-class-group-field'] || '',
     passingThreshold: threshold,
   });
   store.set('/form', {});
@@ -88,7 +90,7 @@ registerBehavior('Delete a Class', async (_ref, store) => {
 
   const classes = (store.get('/data/listClasses') as any[]) || [];
   const foundClass = classes.find((c) => c.id === classId);
-  if (foundClass && foundClass.name !== inputKeyword) {
+  if (foundClass && foundClass.className !== inputKeyword) {
     throw new Error('輸入的班級名稱不相符，無法刪除');
   }
 
@@ -137,7 +139,8 @@ export default function ClassListPage() {
           : 0;
         return {
           id: c.id,
-          name: c.className,
+          className: c.className,
+          classGroup: c.classGroup ?? '',
           studentCount,
           passingThreshold: c.passingThreshold ?? 60.0,
         };
@@ -157,12 +160,16 @@ export default function ClassListPage() {
   useEffect(() => {
     if (classModalOpen && selectedClassId) {
       const currentVal = store.get('/form/modal-class-name-field');
+      const currentGroup = store.get('/form/modal-class-group-field');
       const currentThreshold = store.get('/form/modal-class-threshold-field');
       const classes = (store.get('/data/listClasses') as any[]) || [];
       const found = classes.find((c) => c.id === selectedClassId);
       if (found) {
-        if (currentVal !== found.name) {
-          store.set('/form/modal-class-name-field', found.name);
+        if (currentVal !== found.className) {
+          store.set('/form/modal-class-name-field', found.className);
+        }
+        if (currentGroup !== found.classGroup) {
+          store.set('/form/modal-class-group-field', found.classGroup ?? '');
         }
         if (currentThreshold !== found.passingThreshold) {
           store.set('/form/modal-class-threshold-field', found.passingThreshold ?? 60.0);

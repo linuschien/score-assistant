@@ -19,12 +19,20 @@ registerBehavior('Open Student Form Modal for Create', async (_ref, store) => {
 
 function validateStudentForm(store: any): void {
   const form = (store.get('/form') as Record<string, string>) || {};
+  const id = (form['modal-student-id-field'] || '').trim();
   const num = (form['modal-student-number-field'] || '').trim();
   const name = (form['modal-student-name-field'] || '').trim();
+  const email = (form['modal-student-email-field'] || '').trim();
 
   const errors: string[] = [];
+  if (!id) errors.push('請輸入學號');
   if (!num) errors.push('請輸入座號');
   if (!name) errors.push('請輸入姓名');
+  if (!email) {
+    errors.push('請輸入電子信箱');
+  } else if (!/\S+@\S+\.\S+/.test(email)) {
+    errors.push('電子信箱格式不正確');
+  }
 
   if (errors.length > 0) {
     throw new Error('請修正以下欄位：\n' + errors.map(e => `• ${e}`).join('\n'));
@@ -44,8 +52,10 @@ registerBehavior('Add a Student to a Class', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
 
   await api.post(`${API_BASE}/semesters/${semesterId}/classes/${classId}/students`, {
+    studentId: form['modal-student-id-field'],
     studentNumber: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
     studentName: form['modal-student-name-field'],
+    email: form['modal-student-email-field'],
   });
   store.set('/form', {});
   store.set('/modals/student-form-modal', false);
@@ -62,8 +72,10 @@ registerBehavior('Update a Student', async (_ref, store) => {
   const form = (store.get('/form') as Record<string, string>) || {};
 
   await api.put(`${API_BASE}/semesters/${semesterId}/classes/${classId}/students/${studentId}`, {
+    studentId: form['modal-student-id-field'],
     studentNumber: form['modal-student-number-field'] ? String(form['modal-student-number-field']) : '',
     studentName: form['modal-student-name-field'],
+    email: form['modal-student-email-field'],
   });
   store.set('/form', {});
   store.set('/modals/student-form-modal', false);
@@ -80,7 +92,7 @@ registerBehavior('Delete a Student', async (_ref, store) => {
 
   const students = (store.get('/data/listStudents') as any[]) || [];
   const found = students.find((s) => s.id === studentId);
-  if (found && found.name !== inputKeyword) {
+  if (found && found.studentName !== inputKeyword) {
     throw new Error('輸入的學生姓名不相符，無法刪除');
   }
 
@@ -229,13 +241,17 @@ export default function StudentListPage() {
       const keyword = searchQuery.trim().toLowerCase();
       let mapped = data.map((s: any) => ({
         id: s.id,
+        studentId: s.studentId,
         studentNumber: String(s.studentNumber),
-        name: s.studentName,
+        studentName: s.studentName || s.name,
+        email: s.email || '',
       }));
       if (keyword) {
         mapped = mapped.filter((s: any) =>
+          s.studentId.toLowerCase().includes(keyword) ||
           s.studentNumber.toLowerCase().includes(keyword) ||
-          s.name.toLowerCase().includes(keyword)
+          s.studentName.toLowerCase().includes(keyword) ||
+          s.email.toLowerCase().includes(keyword)
         );
       }
       const current = store.get('/data/listStudents');
@@ -252,13 +268,17 @@ export default function StudentListPage() {
 
   useEffect(() => {
     if (studentModalOpen && selectedStudentId) {
+      const currentId = store.get('/form/modal-student-id-field') || '';
       const currentNumber = store.get('/form/modal-student-number-field') || '';
       const currentName = store.get('/form/modal-student-name-field') || '';
+      const currentEmail = store.get('/form/modal-student-email-field') || '';
       const students = (store.get('/data/listStudents') as any[]) || [];
       const found = students.find((s) => s.id === selectedStudentId);
       if (found) {
+        if (currentId !== found.studentId) store.set('/form/modal-student-id-field', found.studentId);
         if (currentNumber !== found.studentNumber) store.set('/form/modal-student-number-field', found.studentNumber);
-        if (currentName !== found.name) store.set('/form/modal-student-name-field', found.name);
+        if (currentName !== found.studentName) store.set('/form/modal-student-name-field', found.studentName);
+        if (currentEmail !== found.email) store.set('/form/modal-student-email-field', found.email);
       }
     }
   }, [studentModalOpen, selectedStudentId]);

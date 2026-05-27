@@ -12,7 +12,7 @@ import { http, graphql, HttpResponse } from 'msw';
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const MOCK_STUDENTS_INITIAL = [
-  { id: '1', classId: '1', studentNumber: '01', studentName: '王小明' },
+  { id: '1', classId: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', email: 'xiaoming@school.edu.tw' },
 ];
 
 let mockStudents = [...MOCK_STUDENTS_INITIAL];
@@ -29,8 +29,10 @@ function setupMocks() {
           listStudents: filtered.map((s) => ({
             id: s.id,
             classId: s.classId,
+            studentId: s.studentId,
             studentNumber: s.studentNumber,
             studentName: s.studentName,
+            email: s.email,
           })),
         },
       });
@@ -44,11 +46,19 @@ function setupMocks() {
           { status: 400 }
         );
       }
+      if (!body.studentId || !body.studentId.trim()) {
+        return HttpResponse.json(
+          { error: 'Request validation failed: studentId: 不能為空白' },
+          { status: 400 }
+        );
+      }
       const newStudent = {
         id: String(mockStudents.length + 1),
         classId: params.classId as string,
+        studentId: body.studentId,
         studentNumber: body.studentNumber || '',
         studentName: body.studentName,
+        email: body.email || '',
       };
       mockStudents.push(newStudent);
       return HttpResponse.json(newStudent, { status: 201 });
@@ -66,8 +76,10 @@ function setupMocks() {
       if (idx !== -1) {
         mockStudents[idx] = {
           ...mockStudents[idx],
+          studentId: body.studentId || mockStudents[idx].studentId,
           studentNumber: body.studentNumber || '',
           studentName: body.studentName,
+          email: body.email || '',
         };
         return HttpResponse.json(mockStudents[idx]);
       }
@@ -83,8 +95,10 @@ function setupMocks() {
       const newStudent = {
         id: String(mockStudents.length + 1),
         classId: params.classId as string,
+        studentId: 'S1120002',
         studentNumber: '02',
         studentName: '李小美',
+        email: 'xiaomei@school.edu.tw',
       };
       mockStudents.push(newStudent);
       return HttpResponse.json({ success: true });
@@ -142,8 +156,10 @@ describe('StudentListPage', () => {
 
     it('renders student rows from synced listStudents data', async () => {
       renderPage();
-      expect(await screen.findByText('王小明')).toBeInTheDocument();
+      expect(await screen.findByText('S1120001')).toBeInTheDocument();
       expect(await screen.findByText('01')).toBeInTheDocument();
+      expect(await screen.findByText('王小明')).toBeInTheDocument();
+      expect(await screen.findByText('xiaoming@school.edu.tw')).toBeInTheDocument();
     });
 
     it('shows empty state when no students are present', async () => {
@@ -173,8 +189,10 @@ describe('StudentListPage', () => {
 
       const dialog = await screen.findByRole('dialog');
       expect(dialog).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^學號/)).toBeInTheDocument();
       expect(await screen.findByLabelText(/^座號/)).toBeInTheDocument();
       expect(await screen.findByLabelText(/^姓名/)).toBeInTheDocument();
+      expect(await screen.findByLabelText(/^電子信箱/)).toBeInTheDocument();
     });
 
     it('calls executeBehavior with "Add a Student to a Class" on 儲存', async () => {
@@ -189,8 +207,10 @@ describe('StudentListPage', () => {
 
       // Now seed the name and number safely
       act(() => {
+        store.set('/form/modal-student-id-field', 'S1120002');
         store.set('/form/modal-student-number-field', '02');
         store.set('/form/modal-student-name-field', '李小美');
+        store.set('/form/modal-student-email-field', 'xiaomei@school.edu.tw');
       });
 
       await user.click(await screen.findByRole('button', { name: /儲存/i }));
@@ -210,13 +230,15 @@ describe('StudentListPage', () => {
 
     it('successfully adds student via Add a Student to a Class behavior', async () => {
       store.set('/modals/student-form-modal', true);
+      store.set('/form/modal-student-id-field', 'S1120002');
       store.set('/form/modal-student-number-field', '02');
       store.set('/form/modal-student-name-field', '李小美');
+      store.set('/form/modal-student-email-field', 'xiaomei@school.edu.tw');
 
       const result = await executeRegisteredBehavior('Add a Student to a Class', store);
       expect(result).toBe('學生已新增');
       expect(mockStudents).toContainEqual(
-        expect.objectContaining({ studentNumber: '02', studentName: '李小美' })
+        expect.objectContaining({ studentId: 'S1120002', studentNumber: '02', studentName: '李小美', email: 'xiaomei@school.edu.tw' })
       );
       expect(store.get('/modals/student-form-modal')).toBe(false);
     });
@@ -238,16 +260,20 @@ describe('StudentListPage', () => {
 
       // Verify that the page-level effect has reactive synchronized values loaded
       await waitFor(() => {
+        expect(store.get('/form/modal-student-id-field')).toBe('S1120001');
         expect(store.get('/form/modal-student-number-field')).toBe('01');
         expect(store.get('/form/modal-student-name-field')).toBe('王小明');
+        expect(store.get('/form/modal-student-email-field')).toBe('xiaoming@school.edu.tw');
       });
     });
 
     it('successfully updates student name and number via behavior', async () => {
       store.set('/selected/studentId', '1');
       store.set('/modals/student-form-modal', true);
+      store.set('/form/modal-student-id-field', 'S1120001');
       store.set('/form/modal-student-number-field', '99');
       store.set('/form/modal-student-name-field', '王大明');
+      store.set('/form/modal-student-email-field', 'xiaoming@school.edu.tw');
 
       const result = await executeRegisteredBehavior('Add a Student to a Class', store);
       expect(result).toBe('學生已更新');
@@ -287,7 +313,7 @@ describe('StudentListPage', () => {
     it('throws validation error when delete keyword does not match student name', async () => {
       store.set('/selected/studentId', '1');
       store.set('/data/listStudents', [
-        { id: '1', studentNumber: '01', name: '王小明' }
+        { id: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', email: 'xiaoming@school.edu.tw' }
       ]);
       store.set('/modals/delete-student-confirm-dialog', true);
       store.set('/form/delete-student-keyword-input', '不相符的名字');
@@ -302,7 +328,7 @@ describe('StudentListPage', () => {
     it('successfully deletes student when confirmation matches name', async () => {
       store.set('/selected/studentId', '1');
       store.set('/data/listStudents', [
-        { id: '1', studentNumber: '01', name: '王小明' }
+        { id: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', email: 'xiaoming@school.edu.tw' }
       ]);
       store.set('/modals/delete-student-confirm-dialog', true);
       store.set('/form/delete-student-keyword-input', '王小明');
@@ -358,7 +384,7 @@ describe('StudentListPage', () => {
       const result = await behaviorPromise;
       expect(result).toBe('學生資料匯入成功');
       expect(mockStudents).toContainEqual(
-        expect.objectContaining({ studentNumber: '02', studentName: '李小美' })
+        expect.objectContaining({ studentId: 'S1120002', studentNumber: '02', studentName: '李小美', email: 'xiaomei@school.edu.tw' })
       );
 
       createElementSpy.mockRestore();
@@ -384,8 +410,8 @@ describe('StudentListPage', () => {
 
     it('filters student list by name or seat number', async () => {
       mockStudents = [
-        { id: '1', classId: '1', studentNumber: '01', studentName: '王小明' },
-        { id: '2', classId: '1', studentNumber: '02', studentName: '李小美' }
+        { id: '1', classId: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', email: 'xiaoming@school.edu.tw' },
+        { id: '2', classId: '1', studentId: 'S1120002', studentNumber: '02', studentName: '李小美', email: 'xiaomei@school.edu.tw' }
       ];
 
       renderPage();
