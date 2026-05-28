@@ -10,3 +10,7 @@ logging:
   structured:
     format:
       console: logstash
+    json:
+      rename:
+        level: severity
+        "[@timestamp]": timestamp
