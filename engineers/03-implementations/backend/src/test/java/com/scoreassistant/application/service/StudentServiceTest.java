@@ -114,20 +114,6 @@ class StudentServiceTest {
     }
 
     @Test
-    @DisplayName("importStudents() should parse CSV and save students")
-    void importStudents_shouldParseCsvAndSave() {
-        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
-        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
-        when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
-
-        var csv = "student_id,student_number,student_name,email\nS101,2026001,Alice,alice@gmail.com\nS102,2026002,Bob,bob@gmail.com\n".getBytes();
-
-        StepVerifier.create(studentService.importStudents(classId, csv))
-                .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
-                .verifyComplete();
-    }
-
-    @Test
     @DisplayName("importStudents() should parse CSV and save students with Chinese headers")
     void importStudents_shouldParseCsvAndSaveWithChineseHeaders() {
         when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
@@ -139,5 +125,34 @@ class StudentServiceTest {
         StepVerifier.create(studentService.importStudents(classId, csv))
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("importStudents() should parse CSV with shuffled Chinese headers")
+    void importStudents_shouldParseCsvWithShuffledChineseHeaders() {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
+        when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
+
+        // Column order: 信箱, 姓名, 座號, 學號
+        var csv = "信箱,姓名,座號,學號\nalice@gmail.com,Alice,2026001,S101\nbob@gmail.com,Bob,2026002,S102\n".getBytes();
+
+        StepVerifier.create(studentService.importStudents(classId, csv))
+                .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("importStudents() should throw ValidationException when headers are missing")
+    void importStudents_shouldThrowWhenHeadersAreMissing() {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+
+        // Missing 學號
+        var csv = "座號,姓名,信箱\n2026001,Alice,alice@gmail.com\n".getBytes();
+
+        StepVerifier.create(studentService.importStudents(classId, csv))
+                .expectErrorMatches(throwable -> throwable instanceof com.scoreassistant.domain.exception.ValidationException
+                        && throwable.getMessage().contains("Missing required columns: 學號"))
+                .verify();
     }
 }

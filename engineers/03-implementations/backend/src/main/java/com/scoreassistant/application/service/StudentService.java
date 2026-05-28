@@ -187,22 +187,63 @@ public class StudentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
                     var lines = new String(csvBytes).lines()
-                             .filter(l -> !l.isBlank() && !l.toLowerCase().startsWith("student_id") && !l.toLowerCase().startsWith("student_number") && !l.startsWith("學號"))
+                             .filter(l -> !l.isBlank())
                              .toList();
 
-                    return Flux.fromIterable(lines)
+                    if (lines.isEmpty()) {
+                        return Mono.error(new ValidationException("CSV file is empty"));
+                    }
+
+                    String[] headers = lines.get(0).split(",");
+                    int studentIdIndex = -1;
+                    int studentNumberIndex = -1;
+                    int studentNameIndex = -1;
+                    int emailIndex = -1;
+
+                    for (int i = 0; i < headers.length; i++) {
+                        String h = headers[i].trim();
+                        if ("學號".equals(h)) {
+                            studentIdIndex = i;
+                        } else if ("座號".equals(h)) {
+                            studentNumberIndex = i;
+                        } else if ("姓名".equals(h)) {
+                            studentNameIndex = i;
+                        } else if ("信箱".equals(h)) {
+                            emailIndex = i;
+                        }
+                    }
+
+                    java.util.List<String> missing = new java.util.ArrayList<>();
+                    if (studentIdIndex == -1) missing.add("學號");
+                    if (studentNumberIndex == -1) missing.add("座號");
+                    if (studentNameIndex == -1) missing.add("姓名");
+                    if (emailIndex == -1) missing.add("信箱");
+
+                    if (!missing.isEmpty()) {
+                        return Mono.error(new ValidationException("Missing required columns: " + String.join(", ", missing)));
+                    }
+
+                    final int idIdx = studentIdIndex;
+                    final int numIdx = studentNumberIndex;
+                    final int nameIdx = studentNameIndex;
+                    final int emailIdx = emailIndex;
+                    final int maxIdx = Math.max(Math.max(idIdx, numIdx), Math.max(nameIdx, emailIdx));
+
+                    var dataLines = lines.subList(1, lines.size());
+
+                    return Flux.fromIterable(dataLines)
                             .flatMap(line -> {
                                 var parts = line.split(",");
-                                if (parts.length < 4) return Mono.just(new ImportResult(false, false));
-                                String studentId = parts[0].trim();
+                                if (parts.length <= maxIdx) return Mono.just(new ImportResult(false, false));
+                                String studentId = parts[idIdx].trim();
                                 int studentNumber;
                                 try {
-                                    studentNumber = Integer.parseInt(parts[1].trim());
+                                    studentNumber = Integer.parseInt(parts[numIdx].trim());
                                 } catch (NumberFormatException e) {
                                     return Mono.just(new ImportResult(false, false));
                                 }
-                                String studentName = parts[2].trim();
-                                String email = parts[3].trim();
+                                String studentName = parts[nameIdx].trim();
+                                String email = parts[emailIdx].trim();
 
                                 return processCsvRow(classId, studentId, studentNumber, studentName, email, strategy);
                             })
