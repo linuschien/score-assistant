@@ -18,6 +18,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.scoreassistant.application.service.parser.TableParser;
+import com.scoreassistant.application.service.parser.CsvTableParser;
 
 @Service
 public class StudentService {
@@ -186,19 +188,19 @@ public class StudentService {
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
-                    var csvStr = new String(csvBytes);
-                    if (csvStr.startsWith("\uFEFF")) {
-                        csvStr = csvStr.substring(1);
+                    TableParser parser = new CsvTableParser();
+                    java.util.List<String[]> rows;
+                    try {
+                        rows = parser.parse(csvBytes);
+                    } catch (Exception e) {
+                        return Mono.error(new ValidationException("Failed to parse CSV file: " + e.getMessage()));
                     }
-                    var lines = csvStr.lines()
-                             .filter(l -> !l.isBlank())
-                             .toList();
 
-                    if (lines.isEmpty()) {
+                    if (rows.isEmpty()) {
                         return Mono.error(new ValidationException("CSV file is empty"));
                     }
 
-                    String[] headers = lines.get(0).split(",");
+                    String[] headers = rows.get(0);
                     int studentIdIndex = -1;
                     int studentNumberIndex = -1;
                     int studentNameIndex = -1;
@@ -233,11 +235,10 @@ public class StudentService {
                     final int emailIdx = emailIndex;
                     final int maxIdx = Math.max(Math.max(idIdx, numIdx), Math.max(nameIdx, emailIdx));
 
-                    var dataLines = lines.subList(1, lines.size());
+                    var dataRows = rows.subList(1, rows.size());
 
-                    return Flux.fromIterable(dataLines)
-                            .flatMap(line -> {
-                                var parts = line.split(",");
+                    return Flux.fromIterable(dataRows)
+                            .flatMap(parts -> {
                                 if (parts.length <= maxIdx) return Mono.just(new ImportResult(false, false));
                                 String studentId = parts[idIdx].trim();
                                 int studentNumber;
