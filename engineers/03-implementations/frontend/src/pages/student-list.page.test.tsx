@@ -159,7 +159,10 @@ describe('StudentListPage', () => {
       expect(await screen.findByText('S1120001')).toBeInTheDocument();
       expect(await screen.findByText('01')).toBeInTheDocument();
       expect(await screen.findByText('王小明')).toBeInTheDocument();
-      expect(await screen.findByText('xiaoming@school.edu.tw')).toBeInTheDocument();
+      
+      const emailLink = await screen.findByRole('link', { name: 'xiaoming@school.edu.tw' });
+      expect(emailLink).toBeInTheDocument();
+      expect(emailLink).toHaveAttribute('href', 'mailto:xiaoming@school.edu.tw');
     });
 
     it('shows empty state when no students are present', async () => {

@@ -401,7 +401,18 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
             rows.map((row: any, idx: number) => (
               <tr key={row.id || idx} className="border-b border-slate-800/40 hover:bg-slate-900/30 transition-colors">
                 {columns?.map((col: any) => (
-                  <td key={col.field} className="px-6 py-4">{String(row[col.field] ?? '')}</td>
+                  <td key={col.field} className="px-6 py-4">
+                    {col.field === 'email' && row[col.field] ? (
+                      <a
+                        href={`mailto:${row[col.field]}`}
+                        className="text-indigo-400 hover:text-indigo-300 hover:underline transition-colors font-medium"
+                      >
+                        {String(row[col.field])}
+                      </a>
+                    ) : (
+                      String(row[col.field] ?? '')
+                    )}
+                  </td>
                 ))}
                 {isWeightTable && (
                   <td className="px-6 py-4 text-right">
