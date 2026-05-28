@@ -152,14 +152,24 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
         const formData = new FormData();
         formData.append('fileData', file);
 
-        await api.postForm(
+        const response = await api.postForm(
           `${API_BASE}/semesters/${semesterId}/classes/${classId}/students:importStudents`,
           formData,
           '匯入失敗'
-        );
+        ) as any;
 
         queryClient.invalidateQueries({ queryKey: ['listStudents'] });
-        handleResolve('學生資料匯入成功');
+
+        const successCount = response?.successCount ?? 0;
+        const failureCount = response?.failureCount ?? 0;
+
+        if (successCount === 0 && failureCount > 0) {
+          handleReject(new Error(`匯入失敗：資料已存在，全域唯一欄位（學號/信箱）發生衝突（失敗 ${failureCount} 筆）`));
+        } else if (failureCount > 0) {
+          handleResolve(`部分資料匯入成功（成功 ${successCount} 筆，失敗/衝突 ${failureCount} 筆）`);
+        } else {
+          handleResolve(`學生資料匯入成功（成功 ${successCount} 筆）`);
+        }
       } catch (err: any) {
         handleReject(new Error(err.message || '匯入失敗'));
       }
