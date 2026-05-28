@@ -80,7 +80,7 @@ public class StudentController {
         
         FilePart filePart = filePartData != null ? filePartData : filePartFile;
         if (filePart == null) {
-            return Mono.error(new ValidationException("Missing CSV file part 'fileData' or 'file'"));
+            return Mono.error(new ValidationException("Missing import file part 'fileData' or 'file'"));
         }
         
         return filePart.content()
@@ -92,6 +92,6 @@ public class StudentController {
                     System.arraycopy(bytes, 0, combined, acc.length, bytes.length);
                     return combined;
                 })
-                .flatMap(bytes -> studentService.importStudents(classId, bytes, conflictResolution));
+                .flatMap(bytes -> studentService.importStudents(classId, bytes, filePart.filename(), conflictResolution));
     }
 }

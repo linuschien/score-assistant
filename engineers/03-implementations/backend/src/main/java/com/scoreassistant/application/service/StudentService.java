@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import com.scoreassistant.application.service.parser.TableParser;
 import com.scoreassistant.application.service.parser.CsvTableParser;
+import com.scoreassistant.application.service.parser.ExcelTableParser;
 
 @Service
 public class StudentService {
@@ -178,26 +179,33 @@ public class StudentService {
 
     @Transactional
     public Mono<OperationStatusDto> importStudents(UUID classId, byte[] csvBytes) {
-        return importStudents(classId, csvBytes, "SKIP");
+        return importStudents(classId, csvBytes, null, "SKIP");
     }
 
     @Transactional
     public Mono<OperationStatusDto> importStudents(UUID classId, byte[] csvBytes, String strategy) {
+        return importStudents(classId, csvBytes, null, strategy);
+    }
+
+    @Transactional
+    public Mono<OperationStatusDto> importStudents(UUID classId, byte[] fileBytes, String filename, String strategy) {
         var classProbe = new ClassEntity(classId, null, null, null, null, null, null, false, null);
         return classRepository.exists(Example.of(classProbe))
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
-                    TableParser parser = new CsvTableParser();
+                    TableParser parser = (filename != null && filename.toLowerCase().endsWith(".xlsx"))
+                            ? new ExcelTableParser()
+                            : new CsvTableParser();
                     java.util.List<String[]> rows;
                     try {
-                        rows = parser.parse(csvBytes);
+                        rows = parser.parse(fileBytes);
                     } catch (Exception e) {
-                        return Mono.error(new ValidationException("Failed to parse CSV file: " + e.getMessage()));
+                        return Mono.error(new ValidationException("Failed to parse import file: " + e.getMessage()));
                     }
 
                     if (rows.isEmpty()) {
-                        return Mono.error(new ValidationException("CSV file is empty"));
+                        return Mono.error(new ValidationException("Import file is empty"));
                     }
 
                     String[] headers = rows.get(0);

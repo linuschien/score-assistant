@@ -170,4 +170,47 @@ class StudentServiceTest {
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("importStudents() should parse Excel (XLSX) and save students")
+    void importStudents_shouldParseExcelAndSave() throws Exception {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
+        when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
+
+        // Create an in-memory XLSX workbook
+        byte[] excelBytes;
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Students");
+            
+            // Header Row
+            org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("學號");
+            header.createCell(1).setCellValue("座號");
+            header.createCell(2).setCellValue("姓名");
+            header.createCell(3).setCellValue("信箱");
+            
+            // Data Row 1
+            org.apache.poi.ss.usermodel.Row row1 = sheet.createRow(1);
+            row1.createCell(0).setCellValue("S101");
+            row1.createCell(1).setCellValue(2026001); // Numeric
+            row1.createCell(2).setCellValue("Alice");
+            row1.createCell(3).setCellValue("alice@gmail.com");
+            
+            // Data Row 2
+            org.apache.poi.ss.usermodel.Row row2 = sheet.createRow(2);
+            row2.createCell(0).setCellValue("S102");
+            row2.createCell(1).setCellValue(2026002);
+            row2.createCell(2).setCellValue("Bob");
+            row2.createCell(3).setCellValue("bob@gmail.com");
+
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            workbook.write(bos);
+            excelBytes = bos.toByteArray();
+        }
+
+        StepVerifier.create(studentService.importStudents(classId, excelBytes, "students.xlsx", "SKIP"))
+                .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
+                .verifyComplete();
+    }
 }
