@@ -17,6 +17,7 @@ import ClassListPage from '@/pages/class-list.page';
 
 import { executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
+import { useWhoAmI } from '@/hooks/use-whoami';
 
 // Read initial selected state from sessionStorage to survive page refreshes
 const getInitialSelected = () => {
@@ -73,9 +74,9 @@ async function dispatchBehavior(ref: string, store: ReturnType<typeof createStat
   return null;
 }
 
-export default function App({ queryClient: customQueryClient }: AppProps) {
+function AppContent() {
   const [activePage, setActivePage] = useState<PageKey>('home');
-  const localQueryClient = customQueryClient || queryClient;
+  const { data: whoami, isLoading: isUserLoading } = useWhoAmI();
 
   const [systemTime, setSystemTime] = useState<string>(() => {
     const pad = (n: number) => n < 10 ? '0' + n : n;
@@ -135,82 +136,104 @@ export default function App({ queryClient: customQueryClient }: AppProps) {
   };
 
   return (
-    <QueryClientProvider client={localQueryClient}>
-      <JSONUIProvider
-        registry={componentRegistry}
-        store={globalStore}
-        handlers={{
-          navigate: (params: any) => {
-            if (params?.to) window.location.hash = '#' + params.to.replace('-page', '');
+    <JSONUIProvider
+      registry={componentRegistry}
+      store={globalStore}
+      handlers={{
+        navigate: (params: any) => {
+          if (params?.to) window.location.hash = '#' + params.to.replace('-page', '');
+        },
+        openModal: (params: any) => {
+          if (params?.id) {
+            globalStore.set(`/modals/${params.id}`, true);
+          }
+        },
+        executeBehavior: handleExecuteBehavior,
+      } as any}
+    >
+      {/* Sonner Toast — dark theme matching app palette */}
+      <Toaster
+        theme="dark"
+        position="top-right"
+        richColors
+        toastOptions={{
+          style: {
+            background: 'hsl(215 27.9% 16.9%)',
+            border: '1px solid hsl(215 27.9% 25%)',
+            color: 'hsl(210 20% 98%)',
           },
-          openModal: (params: any) => {
-            if (params?.id) {
-              globalStore.set(`/modals/${params.id}`, true);
-            }
-          },
-          executeBehavior: handleExecuteBehavior,
-        } as any}
-      >
-        {/* Sonner Toast — dark theme matching app palette */}
-        <Toaster
-          theme="dark"
-          position="top-right"
-          richColors
-          toastOptions={{
-            style: {
-              background: 'hsl(215 27.9% 16.9%)',
-              border: '1px solid hsl(215 27.9% 25%)',
-              color: 'hsl(210 20% 98%)',
-            },
-          }}
-        />
+        }}
+      />
 
-        <div className="flex flex-col h-screen bg-[#080b11] text-slate-100 font-sans overflow-hidden">
-          <header className="sticky top-0 z-40 bg-[#0d131f]/90 backdrop-blur-md border-b border-slate-800/60 px-6 sm:px-8 py-3 sm:py-4 flex justify-between items-center shrink-0">
-            <div
-              className="flex items-center space-x-3 cursor-pointer group"
-              onClick={() => { window.location.hash = '#home'; }}
-            >
-              <div className="bg-gradient-to-tr from-indigo-500 to-purple-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                <Activity className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex items-baseline space-x-2">
-                <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">
-                  Score Assistant
-                </h1>
-                <p className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase hidden sm:block">
-                  Teacher Console
-                </p>
-              </div>
+      <div className="flex flex-col h-screen bg-[#080b11] text-slate-100 font-sans overflow-hidden">
+        <header className="sticky top-0 z-40 bg-[#0d131f]/90 backdrop-blur-md border-b border-slate-800/60 px-6 sm:px-8 py-3 sm:py-4 flex justify-between items-center shrink-0">
+          <div
+            className="flex items-center space-x-3 cursor-pointer group"
+            onClick={() => { window.location.hash = '#home'; }}
+          >
+            <div className="bg-gradient-to-tr from-indigo-500 to-purple-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+              <Activity className="h-5 w-5 text-white" />
             </div>
+            <div className="flex items-baseline space-x-2">
+              <h1 className="text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">
+                Score Assistant
+              </h1>
+              <p className="text-[10px] text-indigo-400 font-medium tracking-wide uppercase hidden sm:block">
+                Teacher Console
+              </p>
+            </div>
+          </div>
 
-            <div className="flex items-center space-x-6">
-              <span className="text-xs text-slate-500 font-mono hidden md:inline-block">
-                System Time: {systemTime}
-              </span>
-              <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
+          <div className="flex items-center space-x-6">
+            <span className="text-xs text-slate-500 font-mono hidden md:inline-block">
+              System Time: {systemTime}
+            </span>
+            <div className="flex items-center space-x-3 pl-6 border-l border-slate-800">
+              {isUserLoading ? (
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-200 leading-tight">Linus Chien</p>
-                  <p className="text-[10px] text-slate-500">Administrator</p>
+                  <div className="h-4 w-20 bg-slate-800 animate-pulse rounded mb-1" />
+                  <div className="h-3 w-16 bg-slate-800/60 animate-pulse rounded" />
                 </div>
-                <div className="relative">
+              ) : (
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-semibold text-slate-200 leading-tight">
+                    {whoami?.email ? whoami.email.split('@')[0] : 'Guest'}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {whoami?.email || 'Guest User'}
+                  </p>
+                </div>
+              )}
+              <div className="relative">
+                {isUserLoading ? (
+                  <div className="w-9 h-9 rounded-full bg-slate-800 animate-pulse" />
+                ) : (
                   <div
                     className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-md text-xl"
                     style={{ fontFamily: "'UnifrakturMaguntia', 'Cloister Black', 'Old English Text MT', serif" }}
                   >
-                    L
+                    {whoami?.email ? whoami.email.charAt(0).toUpperCase() : 'G'}
                   </div>
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0d131f]" />
-                </div>
+                )}
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0d131f]" />
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
-          <main className="flex-1 overflow-y-auto bg-[#07090e] relative flex flex-col">
-            <div className="flex-1">{renderActivePage()}</div>
-          </main>
-        </div>
-      </JSONUIProvider>
+        <main className="flex-1 overflow-y-auto bg-[#07090e] relative flex flex-col">
+          <div className="flex-1">{renderActivePage()}</div>
+        </main>
+      </div>
+    </JSONUIProvider>
+  );
+}
+
+export default function App({ queryClient: customQueryClient }: AppProps) {
+  const localQueryClient = customQueryClient || queryClient;
+  return (
+    <QueryClientProvider client={localQueryClient}>
+      <AppContent />
     </QueryClientProvider>
   );
 }

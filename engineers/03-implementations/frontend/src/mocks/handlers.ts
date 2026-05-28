@@ -1,3 +1,4 @@
+import { http, HttpResponse } from 'msw';
 import { semesterHandlers } from './handlers/semester-handlers';
 import { classHandlers } from './handlers/class-handlers';
 import { studentHandlers } from './handlers/student-handlers';
@@ -21,8 +22,15 @@ export {
   setMockAttachments
 } from './fixtures';
 
+export const whoamiHandlers = [
+  http.get('*/whoami', () => {
+    return HttpResponse.json({ email: 'dev-user@example.com' });
+  })
+];
+
 // Aggregate all domain-specific handlers
 export const handlers = [
+  ...whoamiHandlers,
   ...semesterHandlers,
   ...classHandlers,
   ...studentHandlers,
