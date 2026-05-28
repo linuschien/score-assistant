@@ -187,7 +187,7 @@ public class StudentService {
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
                     var lines = new String(csvBytes).lines()
-                             .filter(l -> !l.isBlank() && !l.toLowerCase().startsWith("student_id") && !l.toLowerCase().startsWith("student_number"))
+                             .filter(l -> !l.isBlank() && !l.toLowerCase().startsWith("student_id") && !l.toLowerCase().startsWith("student_number") && !l.startsWith("學號"))
                              .toList();
 
                     return Flux.fromIterable(lines)

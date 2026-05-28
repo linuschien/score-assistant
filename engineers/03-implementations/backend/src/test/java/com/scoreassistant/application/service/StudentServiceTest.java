@@ -126,4 +126,18 @@ class StudentServiceTest {
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("importStudents() should parse CSV and save students with Chinese headers")
+    void importStudents_shouldParseCsvAndSaveWithChineseHeaders() {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
+        when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
+
+        var csv = "學號,座號,姓名,信箱\nS101,2026001,Alice,alice@gmail.com\nS102,2026002,Bob,bob@gmail.com\n".getBytes();
+
+        StepVerifier.create(studentService.importStudents(classId, csv))
+                .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
+                .verifyComplete();
+    }
 }
