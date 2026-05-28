@@ -186,7 +186,11 @@ public class StudentService {
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Class", classId)))
                 .flatMap(exists -> {
-                    var lines = new String(csvBytes).lines()
+                    var csvStr = new String(csvBytes);
+                    if (csvStr.startsWith("\uFEFF")) {
+                        csvStr = csvStr.substring(1);
+                    }
+                    var lines = csvStr.lines()
                              .filter(l -> !l.isBlank())
                              .toList();
 

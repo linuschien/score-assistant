@@ -155,4 +155,19 @@ class StudentServiceTest {
                         && throwable.getMessage().contains("Missing required columns: 學號"))
                 .verify();
     }
+
+    @Test
+    @DisplayName("importStudents() should successfully parse CSV with a UTF-8 BOM")
+    void importStudents_shouldParseCsvWithUtf8Bom() {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
+        when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
+
+        // Prepend UTF-8 BOM (\uFEFF)
+        var csv = "\uFEFF學號,座號,姓名,信箱\nS101,2026001,Alice,alice@gmail.com\nS102,2026002,Bob,bob@gmail.com\n".getBytes();
+
+        StepVerifier.create(studentService.importStudents(classId, csv))
+                .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
+                .verifyComplete();
+    }
 }
