@@ -160,7 +160,7 @@
       "type": "Button",
       "props": {
         "id": "import-students-button",
-        "label": "批次匯入 CSV",
+        "label": "批次匯入 CSV / Excel",
         "dataRef": "importStudents",
         "variant": "secondary",
         "disabled": null
@@ -205,7 +205,7 @@
       "type": "Text",
       "props": {
         "id": "import-helper-text",
-        "text": "格式為 2 欄 CSV (座號,姓名) ─",
+        "text": "支援 CSV 與 Excel 格式 (學號,座號,姓名,信箱) ─",
         "variant": "muted"
       },
       "children": []

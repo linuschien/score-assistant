@@ -101,7 +101,7 @@ function setupMocks() {
         email: 'xiaomei@school.edu.tw',
       };
       mockStudents.push(newStudent);
-      return HttpResponse.json({ success: true });
+      return HttpResponse.json({ success: true, successCount: 1, failureCount: 0 });
     })
   );
 }
@@ -364,30 +364,32 @@ describe('StudentListPage', () => {
       // Spy on document.createElement to intercept the file input instantiation
       const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockInput as any);
 
-      // Trigger the behavior execution promise
-      const behaviorPromise = executeRegisteredBehavior('Import Students CSV', store);
+      try {
+        // Trigger the behavior execution promise
+        const behaviorPromise = executeRegisteredBehavior('Import Students CSV', store);
 
-      // Verify a file input was created and clicked
-      expect(createElementSpy).toHaveBeenCalledWith('input');
-      expect(mockInput.click).toHaveBeenCalled();
+        // Verify a file input was created and clicked
+        expect(createElementSpy).toHaveBeenCalledWith('input');
+        expect(mockInput.click).toHaveBeenCalled();
 
-      // Fire the change event manually to simulate selecting a CSV file
-      await act(async () => {
-        const file = new File(['02,李小美'], 'students.csv', { type: 'text/csv' });
-        await mockInput.onchange({
-          target: {
-            files: [file]
-          }
+        // Fire the change event manually to simulate selecting a CSV file
+        await act(async () => {
+          const file = new File(['02,李小美'], 'students.csv', { type: 'text/csv' });
+          await mockInput.onchange({
+            target: {
+              files: [file]
+            }
+          });
         });
-      });
 
-      const result = await behaviorPromise;
-      expect(result).toBe('學生資料匯入成功');
-      expect(mockStudents).toContainEqual(
-        expect.objectContaining({ studentId: 'S1120002', studentNumber: '02', studentName: '李小美', email: 'xiaomei@school.edu.tw' })
-      );
-
-      createElementSpy.mockRestore();
+        const result = await behaviorPromise;
+        expect(result).toBe('學生資料匯入成功（成功 1 筆）');
+        expect(mockStudents).toContainEqual(
+          expect.objectContaining({ studentId: 'S1120002', studentNumber: '02', studentName: '李小美', email: 'xiaomei@school.edu.tw' })
+        );
+      } finally {
+        createElementSpy.mockRestore();
+      }
     });
   });
 

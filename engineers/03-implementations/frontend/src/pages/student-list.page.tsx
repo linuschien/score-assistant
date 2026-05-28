@@ -110,7 +110,7 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
   return new Promise<string | null>((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.csv';
+    input.accept = '.csv,.xlsx';
 
     let resolved = false;
 
