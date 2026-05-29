@@ -8,25 +8,7 @@ import spec from '@/schemas/grade-item-list.render-schema.json';
 import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
 import { api, API_BASE } from '@/lib/api-client';
-
-// Localized type translation maps
-const TYPE_TO_BACKEND: Record<string, string> = {
-  '考試': 'EXAM',
-  '作業': 'ASSIGNMENT',
-  '報告': 'REPORT',
-  '出席': 'ATTENDANCE',
-  '課堂表現': 'CLASSROOM_PERFORMANCE',
-  '其他': 'OTHER',
-};
-
-const TYPE_TO_FRONTEND: Record<string, string> = {
-  'EXAM': '考試',
-  'ASSIGNMENT': '作業',
-  'REPORT': '報告',
-  'ATTENDANCE': '出席',
-  'CLASSROOM_PERFORMANCE': '課堂表現',
-  'OTHER': '其他',
-};
+import { TYPE_TO_BACKEND, TYPE_TO_FRONTEND } from '@/lib/constants';
 
 // Register GradeItem behaviors statically
 registerBehavior('Open Grade Item Form Modal for Create', async (_ref, store) => {

@@ -14,6 +14,7 @@ const Spinner = shadcnComponents.Spinner;
 
 import { registerBehavior } from '@/behaviors/registry';
 import { api, API_BASE } from '@/lib/api-client';
+import { TYPE_TO_FRONTEND } from '@/lib/constants';
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Static Behavior Registrations
@@ -61,15 +62,6 @@ registerBehavior('Export grades to a file', async (_ref, store) => {
 registerBehavior('Grade Summary preview shows weight warning when total weight is not 100%', async () => {
   return null;
 });
-
-const TYPE_TO_FRONTEND: Record<string, string> = {
-  'EXAM': '考試',
-  'ASSIGNMENT': '作業',
-  'REPORT': '報告',
-  'ATTENDANCE': '出席',
-  'CLASSROOM_PERFORMANCE': '課堂表現',
-  'OTHER': '其他',
-};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Custom Overrides inside Local Component Registry

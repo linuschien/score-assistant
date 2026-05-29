@@ -107,14 +107,7 @@ const AttendanceCellSelect = ({ rowId, itemId, value, onChange }: any) => {
 import { shadcnComponents } from '@json-render/shadcn';
 const Spinner = shadcnComponents.Spinner;
 
-const TYPE_TO_FRONTEND: Record<string, string> = {
-  'EXAM': '考試',
-  'ASSIGNMENT': '作業',
-  'REPORT': '報告',
-  'ATTENDANCE': '出席',
-  'CLASSROOM_PERFORMANCE': '課堂表現',
-  'OTHER': '其他',
-};
+import { TYPE_TO_FRONTEND } from '@/lib/constants';
 
 export const DataTable: ComponentType<any> = ({ element, children, bindings, emit, on }: any) => {
   let store: any;
