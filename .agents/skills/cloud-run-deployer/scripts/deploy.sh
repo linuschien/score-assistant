@@ -119,6 +119,7 @@ gcloud run services update "${IMAGE_NAME}" \
   --image="${REGISTRY_URL}" \
   --region="${REGION}" \
   --project="${PROJECT_ID}" \
+  --update-env-vars=APP_VERSION="${TAG}" \
   --quiet
 
 # ---------------------------------------------------------------------------

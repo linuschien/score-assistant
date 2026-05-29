@@ -14,3 +14,5 @@ logging:
       rename:
         level: severity
         "[@timestamp]": timestamp
+      add:
+        version: ${APP_VERSION:unknown}
