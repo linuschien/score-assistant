@@ -37,12 +37,23 @@ fi
 # ---------------------------------------------------------------------------
 REPOSITORY="docker"
 IMAGE_NAME="score-assistant"
-TAG="latest"
+
+# Find the newest timestamped tag from the local docker daemon by sorting reverse-lexicographically
+TAG=$(docker images "${IMAGE_NAME}" --format '{{.Tag}}' 2>/dev/null | grep -E '^[0-9]{8}-[0-9]{6}' | sort -r | head -n 1 || echo "")
+
+if [ -z "${TAG}" ]; then
+  echo "❌ Error: No timestamped image found for '${IMAGE_NAME}' in local docker daemon."
+  echo "   Please run the build script first to compile and tag a new version:"
+  echo "   ./.agents/skills/docker-image-builder/scripts/build.sh"
+  exit 1
+fi
+
 LOCAL_IMAGE="${IMAGE_NAME}:${TAG}"
 REGISTRY_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${TAG}"
 
 echo "   GCP Project  : ${PROJECT_ID}"
 echo "   Region       : ${REGION}"
+echo "   Active Tag   : ${TAG}"
 echo "   Registry URL : ${REGISTRY_URL}"
 echo "========================================================================"
 

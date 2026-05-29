@@ -7,11 +7,10 @@ description: Pushes a locally built Docker image to Google Artifact Registry and
 
 ## ℹ️ Objective
 
-Take a pre-built local Docker image (produced by the `docker-image-builder` skill) and publish it to GCP, then trigger a zero-downtime rolling update of the Cloud Run service — fully preserving existing environment variables, GCS volume mounts, IAM bindings, and scaling configurations.
+Take a pre-built local Docker image (produced by the `docker-image-builder` skill) and publish it to GCP, then trigger a zero-downtime rolling update of the Cloud Run service. Rather than using a static `latest` tag, the deployer automatically extracts the unique timestamped tag associated with the latest built image ID in the local Docker daemon.
 
 > [!IMPORTANT]
-> This skill has a **single prerequisite**: a locally available Docker image named `score-assistant:latest`.
-> Run the `docker-image-builder` skill first if no local image exists.
+> This skill has a **single prerequisite**: a locally available Docker image named `score-assistant:latest` and its corresponding unique tag (`score-assistant:<TIMESTAMP>-<SHA>`) created by the `docker-image-builder` skill.
 
 ---
 
@@ -49,11 +48,11 @@ fi
 
 ### 3. Tag → Push → Update Pipeline
 
-The three steps MUST execute in strict order with abort-on-error (`set -euo pipefail`):
+The deployer dynamically queries the local Docker daemon for all tags matching the pattern `score-assistant:YYYYMMDD-HHMMSS-sha`, sorts them in reverse chronological order, and extracts the newest tag directly. The three steps MUST execute in strict order with abort-on-error (`set -euo pipefail`):
 
 | Step | Command | Purpose |
 |------|---------|---------|
-| Tag | `docker tag score-assistant:latest <REGISTRY_URL>` | Map local image to remote coordinate |
+| Tag | `docker tag score-assistant:<TAG> <REGISTRY_URL>` | Map local unique-tagged image to remote coordinate |
 | Push | `docker push <REGISTRY_URL>` | Upload image layers to Artifact Registry |
 | Update | `gcloud run services update <SERVICE> --image=<REGISTRY_URL> --region=<REGION> --project=<PROJECT_ID> --quiet` | Surgically swap image only — preserves all other service config |
 

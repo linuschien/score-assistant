@@ -69,9 +69,15 @@ echo "✅ Artifact successfully placed in build context."
 echo ""
 echo "--- 🐳 Step 5: Building Secure, Lightweight Docker Image ---"
 cd "${DEVOPS_DIR}"
-# Build local docker image
-docker build -t score-assistant:latest .
-echo "✅ Docker Image 'score-assistant:latest' built successfully."
+
+# Generate dynamic build tag (Timestamp + Git Short SHA)
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
+TAG="${TIMESTAMP}-${GIT_SHA}"
+
+echo "Building local docker images with tags 'score-assistant:${TAG}' and 'score-assistant:latest'..."
+docker build -t "score-assistant:${TAG}" -t score-assistant:latest .
+echo "✅ Docker Images built successfully."
 
 # 7. Post-Build Cleanup
 echo ""
@@ -82,5 +88,6 @@ echo "✅ Transient build JAR removed. Workspace remains clean."
 echo ""
 echo "======================================================================"
 echo "🎉 DevOps Pipeline: Successfully Containerized Score Assistant!"
-echo "   Image Tag: score-assistant:latest"
+echo "   Image Tags: score-assistant:${TAG}"
+echo "               score-assistant:latest"
 echo "======================================================================"
