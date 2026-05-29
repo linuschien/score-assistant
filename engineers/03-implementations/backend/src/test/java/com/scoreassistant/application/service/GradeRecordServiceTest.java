@@ -32,6 +32,7 @@ class GradeRecordServiceTest {
     @Mock GradeRecordRepository gradeRecordRepository;
     @Mock GradeItemRepository gradeItemRepository;
     @Mock StudentRepository studentRepository;
+    @Mock AttachmentService attachmentService;
     @InjectMocks GradeRecordService gradeRecordService;
 
     private UUID recordId;
@@ -108,6 +109,7 @@ class GradeRecordServiceTest {
     void delete_shouldSoftDelete() {
         when(gradeRecordRepository.findById(recordId)).thenReturn(Mono.just(testRecord));
         when(gradeRecordRepository.save(any())).thenReturn(Mono.just(testRecord));
+        when(attachmentService.deleteByGradeRecordId(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(gradeRecordService.delete(recordId))
                 .verifyComplete();

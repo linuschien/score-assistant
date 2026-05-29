@@ -32,6 +32,7 @@ class StudentServiceTest {
 
     @Mock StudentRepository studentRepository;
     @Mock ClassRepository classRepository;
+    @Mock GradeRecordService gradeRecordService;
     @InjectMocks StudentService studentService;
 
     private UUID studentId;
@@ -98,6 +99,7 @@ class StudentServiceTest {
     void delete_shouldSoftDeleteStudent() {
         when(studentRepository.findById(studentId)).thenReturn(Mono.just(studentEntity));
         when(studentRepository.save(any())).thenReturn(Mono.just(studentEntity));
+        when(gradeRecordService.deleteByStudentId(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(studentService.delete(studentId))
                 .verifyComplete();

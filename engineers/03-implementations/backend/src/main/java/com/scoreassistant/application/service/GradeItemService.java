@@ -31,16 +31,19 @@ public class GradeItemService {
     private final ClassRepository classRepository;
     private final StudentRepository studentRepository;
     private final GradeRecordRepository gradeRecordRepository;
+    private final GradeRecordService gradeRecordService;
 
     public GradeItemService(
             GradeItemRepository gradeItemRepository,
             ClassRepository classRepository,
             StudentRepository studentRepository,
-            GradeRecordRepository gradeRecordRepository) {
+            GradeRecordRepository gradeRecordRepository,
+            GradeRecordService gradeRecordService) {
         this.gradeItemRepository = gradeItemRepository;
         this.classRepository = classRepository;
         this.studentRepository = studentRepository;
         this.gradeRecordRepository = gradeRecordRepository;
+        this.gradeRecordService = gradeRecordService;
     }
 
     @Transactional
@@ -110,6 +113,16 @@ public class GradeItemService {
                         e.id(), e.classId(), e.itemName(), e.itemType(),
                         e.itemDate(), e.itemDescription(), e.maxScore(), e.weight(),
                         e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
+                .flatMap(saved -> gradeRecordService.deleteByGradeItemId(saved.id()))
+                .then();
+    }
+
+    @Transactional
+    public Mono<Void> deleteByClassId(UUID classId) {
+        var probe = new GradeItemEntity(null, classId, null, null, null, null, null, null, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnoreNullValues();
+        return gradeItemRepository.findAll(Example.of(probe, matcher))
+                .flatMap(gi -> delete(gi.id()))
                 .then();
     }
 

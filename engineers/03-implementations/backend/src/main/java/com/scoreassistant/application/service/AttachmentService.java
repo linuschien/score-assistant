@@ -99,6 +99,17 @@ public class AttachmentService {
                 .then();
     }
 
+    @Transactional
+    public Mono<Void> deleteByGradeRecordId(UUID gradeRecordId) {
+        var probe = new AttachmentEntity(null, gradeRecordId, null, null, 0, null, null, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnorePaths("fileSize").withIgnoreNullValues();
+        return attachmentRepository.findAll(Example.of(probe, matcher))
+                .flatMap(attachment -> attachmentRepository.save(new AttachmentEntity(
+                        attachment.id(), attachment.gradeRecordId(), attachment.fileName(), attachment.mimeType(), attachment.fileSize(), attachment.fileData(),
+                        attachment.uploadedAt(), attachment.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
+                .then();
+    }
+
     public Flux<AttachmentResponse> listAll(UUID gradeRecordId) {
         var probe = new AttachmentEntity(
                 null,

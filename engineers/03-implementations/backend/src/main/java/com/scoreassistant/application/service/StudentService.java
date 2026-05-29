@@ -33,10 +33,12 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final ClassRepository classRepository;
+    private final GradeRecordService gradeRecordService;
 
-    public StudentService(StudentRepository studentRepository, ClassRepository classRepository) {
+    public StudentService(StudentRepository studentRepository, ClassRepository classRepository, GradeRecordService gradeRecordService) {
         this.studentRepository = studentRepository;
         this.classRepository = classRepository;
+        this.gradeRecordService = gradeRecordService;
     }
 
     @Transactional
@@ -162,6 +164,16 @@ public class StudentService {
                 .flatMap(e -> studentRepository.save(new StudentEntity(
                         e.id(), e.classId(), e.studentId(), e.studentNumber(), e.studentName(), e.email(),
                         e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
+                .flatMap(saved -> gradeRecordService.deleteByStudentId(saved.id()))
+                .then();
+    }
+
+    @Transactional
+    public Mono<Void> deleteByClassId(UUID classId) {
+        var probe = new StudentEntity(null, classId, null, 0, null, null, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
+        return studentRepository.findAll(Example.of(probe, matcher))
+                .flatMap(s -> delete(s.id()))
                 .then();
     }
 

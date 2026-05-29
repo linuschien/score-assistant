@@ -26,13 +26,16 @@ public class GradeRecordService {
     private final GradeRecordRepository gradeRecordRepository;
     private final GradeItemRepository gradeItemRepository;
     private final StudentRepository studentRepository;
+    private final AttachmentService attachmentService;
 
     public GradeRecordService(GradeRecordRepository gradeRecordRepository,
                               GradeItemRepository gradeItemRepository,
-                              StudentRepository studentRepository) {
+                              StudentRepository studentRepository,
+                              AttachmentService attachmentService) {
         this.gradeRecordRepository = gradeRecordRepository;
         this.gradeItemRepository = gradeItemRepository;
         this.studentRepository = studentRepository;
+        this.attachmentService = attachmentService;
     }
 
     private Mono<Void> validateParentExistence(UUID gradeItemId, UUID studentId) {
@@ -109,6 +112,25 @@ public class GradeRecordService {
                 .flatMap(e -> gradeRecordRepository.save(new GradeRecordEntity(
                         e.id(), e.gradeItemId(), e.studentId(), e.score(),
                         e.lastModifiedAt(), e.version(), e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
+                .flatMap(saved -> attachmentService.deleteByGradeRecordId(saved.id()))
+                .then();
+    }
+
+    @Transactional
+    public Mono<Void> deleteByStudentId(UUID studentId) {
+        var probe = new GradeRecordEntity(null, null, studentId, null, null, 0, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnorePaths("version").withIgnoreNullValues();
+        return gradeRecordRepository.findAll(Example.of(probe, matcher))
+                .flatMap(gr -> delete(gr.id()))
+                .then();
+    }
+
+    @Transactional
+    public Mono<Void> deleteByGradeItemId(UUID gradeItemId) {
+        var probe = new GradeRecordEntity(null, gradeItemId, null, null, null, 0, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnorePaths("version").withIgnoreNullValues();
+        return gradeRecordRepository.findAll(Example.of(probe, matcher))
+                .flatMap(gr -> delete(gr.id()))
                 .then();
     }
 

@@ -18,9 +18,11 @@ import java.util.UUID;
 public class SemesterService {
 
     private final SemesterRepository semesterRepository;
+    private final ClassService classService;
 
-    public SemesterService(SemesterRepository semesterRepository) {
+    public SemesterService(SemesterRepository semesterRepository, ClassService classService) {
         this.semesterRepository = semesterRepository;
+        this.classService = classService;
     }
 
     @Transactional
@@ -100,9 +102,10 @@ public class SemesterService {
                             LocalDateTime.now(),
                             true,
                             LocalDateTime.now()
-                    );
-                    return semesterRepository.save(soft);
+                     );
+                     return semesterRepository.save(soft);
                 })
+                .flatMap(saved -> classService.deleteBySemesterId(saved.id()))
                 .then();
     }
 

@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 class SemesterServiceTest {
 
     @Mock SemesterRepository semesterRepository;
+    @Mock ClassService classService;
     @InjectMocks SemesterService semesterService;
 
     private UUID testId;
@@ -108,6 +109,7 @@ class SemesterServiceTest {
     void delete_shouldSoftDelete() {
         when(semesterRepository.findById(testId)).thenReturn(Mono.just(testEntity));
         when(semesterRepository.save(any())).thenReturn(Mono.just(testEntity));
+        when(classService.deleteBySemesterId(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(semesterService.delete(testId))
                 .verifyComplete();

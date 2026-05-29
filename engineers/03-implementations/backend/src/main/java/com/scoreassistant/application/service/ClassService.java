@@ -22,10 +22,17 @@ public class ClassService {
 
     private final ClassRepository classRepository;
     private final SemesterRepository semesterRepository;
+    private final StudentService studentService;
+    private final GradeItemService gradeItemService;
 
-    public ClassService(ClassRepository classRepository, SemesterRepository semesterRepository) {
+    public ClassService(ClassRepository classRepository,
+                        SemesterRepository semesterRepository,
+                        StudentService studentService,
+                        GradeItemService gradeItemService) {
         this.classRepository = classRepository;
         this.semesterRepository = semesterRepository;
+        this.studentService = studentService;
+        this.gradeItemService = gradeItemService;
     }
 
     @Transactional
@@ -87,6 +94,17 @@ public class ClassService {
                 .flatMap(e -> classRepository.save(new ClassEntity(
                         e.id(), e.semesterId(), e.className(), e.classGroup(), e.passingThreshold(),
                         e.createdAt(), LocalDateTime.now(), true, LocalDateTime.now())))
+                .flatMap(saved -> studentService.deleteByClassId(saved.id())
+                        .then(gradeItemService.deleteByClassId(saved.id())))
+                .then();
+    }
+
+    @Transactional
+    public Mono<Void> deleteBySemesterId(UUID semesterId) {
+        var probe = new ClassEntity(null, semesterId, null, null, null, null, null, false, null);
+        var matcher = ExampleMatcher.matching().withIgnoreNullValues();
+        return classRepository.findAll(Example.of(probe, matcher))
+                .flatMap(c -> delete(c.id()))
                 .then();
     }
 

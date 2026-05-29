@@ -32,6 +32,8 @@ class ClassServiceTest {
 
     @Mock ClassRepository classRepository;
     @Mock SemesterRepository semesterRepository;
+    @Mock StudentService studentService;
+    @Mock GradeItemService gradeItemService;
     @InjectMocks ClassService classService;
 
     private UUID classId;
@@ -90,6 +92,8 @@ class ClassServiceTest {
     void delete_shouldSoftDelete() {
         when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
         when(classRepository.save(any())).thenReturn(Mono.just(classEntity));
+        when(studentService.deleteByClassId(any())).thenReturn(Mono.empty());
+        when(gradeItemService.deleteByClassId(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(classService.delete(classId))
                 .verifyComplete();

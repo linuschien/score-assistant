@@ -36,6 +36,7 @@ class GradeItemServiceTest {
     @Mock ClassRepository classRepository;
     @Mock StudentRepository studentRepository;
     @Mock GradeRecordRepository gradeRecordRepository;
+    @Mock GradeRecordService gradeRecordService;
     @InjectMocks GradeItemService gradeItemService;
 
     private UUID itemId;
@@ -83,6 +84,7 @@ class GradeItemServiceTest {
     void delete_shouldSoftDelete() {
         when(gradeItemRepository.findById(itemId)).thenReturn(Mono.just(gradeItemEntity));
         when(gradeItemRepository.save(any())).thenReturn(Mono.just(gradeItemEntity));
+        when(gradeRecordService.deleteByGradeItemId(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(gradeItemService.delete(itemId))
                 .verifyComplete();
