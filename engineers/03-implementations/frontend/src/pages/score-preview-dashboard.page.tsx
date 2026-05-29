@@ -62,6 +62,15 @@ registerBehavior('Grade Summary preview shows weight warning when total weight i
   return null;
 });
 
+const TYPE_TO_FRONTEND: Record<string, string> = {
+  'EXAM': '考試',
+  'ASSIGNMENT': '作業',
+  'REPORT': '報告',
+  'ATTENDANCE': '出席',
+  'CLASSROOM_PERFORMANCE': '課堂表現',
+  'OTHER': '其他',
+};
+
 // ────────────────────────────────────────────────────────────────────────────────
 // Custom Overrides inside Local Component Registry
 // ────────────────────────────────────────────────────────────────────────────────
@@ -88,7 +97,8 @@ const ScoreSummaryTable = (props: any) => {
               <th className="px-6 py-4 sticky left-16 bg-[#090e18] z-20 border-r border-slate-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[100px]">姓名</th>
               {gradeItems.map((gi: any) => {
                 const percent = Math.round((Number(gi.weight) || 0) * 100);
-                const typeLabel = gi.itemType || gi.type || 'OTHER';
+                const rawType = gi.itemType || gi.type || 'OTHER';
+                const typeLabel = TYPE_TO_FRONTEND[rawType] || rawType;
                 return (
                   <th key={gi.id} className="px-6 py-4 border-r border-slate-800/40 min-w-[150px]">
                     <div className="flex flex-col space-y-0.5">

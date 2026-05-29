@@ -58,6 +58,7 @@ enum GradeItemType {
     ASSIGNMENT
     REPORT
     OTHER
+    EXAM
 }
 
 type GradeItem {

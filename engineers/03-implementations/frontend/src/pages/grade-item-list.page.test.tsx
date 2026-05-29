@@ -282,7 +282,7 @@ describe('GradeItemListPage', () => {
       const result = await executeRegisteredBehavior('Create a new GradeItem', store);
       expect(result).toBe('成績項目已更新');
       expect(mockGradeItems.find(gi => gi.id === '1')).toEqual(
-        expect.objectContaining({ itemName: '期中大考', itemType: 'ASSIGNMENT', maxScore: 120, weight: 0.35 })
+        expect.objectContaining({ itemName: '期中大考', itemType: 'EXAM', maxScore: 120, weight: 0.35 })
       );
     });
   });

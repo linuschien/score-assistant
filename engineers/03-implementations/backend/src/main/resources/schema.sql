@@ -3,7 +3,7 @@
 -- ============================================================
 
 CREATE TYPE IF NOT EXISTS grade_item_type AS ENUM (
-    'ATTENDANCE', 'CLASSROOM_PERFORMANCE', 'ASSIGNMENT', 'REPORT', 'OTHER'
+    'ATTENDANCE', 'CLASSROOM_PERFORMANCE', 'ASSIGNMENT', 'REPORT', 'OTHER', 'EXAM'
 );
 
 CREATE TABLE IF NOT EXISTS semester (

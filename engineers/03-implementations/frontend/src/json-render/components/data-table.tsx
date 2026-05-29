@@ -107,6 +107,15 @@ const AttendanceCellSelect = ({ rowId, itemId, value, onChange }: any) => {
 import { shadcnComponents } from '@json-render/shadcn';
 const Spinner = shadcnComponents.Spinner;
 
+const TYPE_TO_FRONTEND: Record<string, string> = {
+  'EXAM': '考試',
+  'ASSIGNMENT': '作業',
+  'REPORT': '報告',
+  'ATTENDANCE': '出席',
+  'CLASSROOM_PERFORMANCE': '課堂表現',
+  'OTHER': '其他',
+};
+
 export const DataTable: ComponentType<any> = ({ element, children, bindings, emit, on }: any) => {
   let store: any;
   try {
@@ -252,7 +261,9 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
                 <th className="px-6 py-4 sticky left-0 bg-[#090e18] z-20 border-r border-slate-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">座號</th>
                 <th className="px-6 py-4 sticky left-16 bg-[#090e18] z-20 border-r border-slate-800/60 shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[100px]">姓名</th>
                 {gradeItems.map((gi: any) => {
-                  const frontendType = gi.type || gi.itemType || '其他';
+                  const rawType = gi.type || gi.itemType || 'OTHER';
+                  const frontendType = TYPE_TO_FRONTEND[rawType] || rawType;
+                  const weightPercent = gi.weight !== undefined && gi.weight !== null ? Math.round(gi.weight * 100) : 0;
                   return (
                     <th key={gi.id} className="px-6 py-4 border-r border-slate-800/40 min-w-[220px]">
                       <div className="flex flex-col space-y-0.5">
@@ -262,7 +273,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
                             {frontendType}
                           </span>
                           <span className="text-[11px] text-slate-500 font-medium">
-                            (滿分: {gi.maxScore})
+                            (滿分: {gi.maxScore} / 權重: {weightPercent}%)
                           </span>
                         </div>
                       </div>

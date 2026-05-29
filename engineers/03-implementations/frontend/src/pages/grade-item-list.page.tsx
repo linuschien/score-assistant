@@ -11,7 +11,7 @@ import { api, API_BASE } from '@/lib/api-client';
 
 // Localized type translation maps
 const TYPE_TO_BACKEND: Record<string, string> = {
-  '考試': 'ASSIGNMENT',
+  '考試': 'EXAM',
   '作業': 'ASSIGNMENT',
   '報告': 'REPORT',
   '出席': 'ATTENDANCE',
@@ -20,6 +20,7 @@ const TYPE_TO_BACKEND: Record<string, string> = {
 };
 
 const TYPE_TO_FRONTEND: Record<string, string> = {
+  'EXAM': '考試',
   'ASSIGNMENT': '作業',
   'REPORT': '報告',
   'ATTENDANCE': '出席',

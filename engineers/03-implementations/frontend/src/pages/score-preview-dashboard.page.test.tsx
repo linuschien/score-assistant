@@ -28,7 +28,7 @@ const store = createStateStore({
       { id: 'student-1', studentNumber: '01', studentName: '王小明' }
     ],
     listGradeItems: [
-      { id: 'item-1', itemName: '期中考', itemType: 'ASSIGNMENT', maxScore: 100, weight: 0.3 }
+      { id: 'item-1', itemName: '期中考', itemType: 'EXAM', maxScore: 100, weight: 0.3 }
     ],
     listGradeRecords: [
       { id: 'r-1', studentId: 'student-1', gradeItemId: 'item-1', score: 80 }
@@ -92,7 +92,7 @@ describe('ScorePreviewDashboardPage', () => {
         return HttpResponse.json({
           data: {
             listGradeItems: [
-              { id: 'item-1', itemName: '期中考', itemType: 'ASSIGNMENT', maxScore: 100, weight: 0.3 }
+              { id: 'item-1', itemName: '期中考', itemType: 'EXAM', maxScore: 100, weight: 0.3 }
             ]
           }
         });
@@ -125,7 +125,7 @@ describe('ScorePreviewDashboardPage', () => {
       { id: 'student-1', studentNumber: '01', studentName: '王小明' }
     ]);
     store.set('/data/listGradeItems', [
-      { id: 'item-1', itemName: '期中考', itemType: 'ASSIGNMENT', maxScore: 100, weight: 0.3 }
+      { id: 'item-1', itemName: '期中考', itemType: 'EXAM', maxScore: 100, weight: 0.3 }
     ]);
     store.set('/data/listGradeRecords', [
       { id: 'r-1', studentId: 'student-1', gradeItemId: 'item-1', score: 80 }
