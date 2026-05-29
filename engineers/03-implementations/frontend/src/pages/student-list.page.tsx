@@ -204,7 +204,12 @@ export default function StudentListPage() {
   const { data: classData } = useGetClassById(semesterId || '', classId || '');
 
   // Query students for the active class
-  const { data } = useListStudents(classId ? { classId } : undefined);
+  const { data, isLoading } = useListStudents(classId ? { classId } : undefined);
+
+  // Sync loading state reactively
+  useEffect(() => {
+    store.set('/loading/listStudents', isLoading);
+  }, [isLoading, store]);
 
   // Sync active class/semester details into store for the title headers
   useEffect(() => {

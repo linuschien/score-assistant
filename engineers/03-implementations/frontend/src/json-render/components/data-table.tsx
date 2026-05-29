@@ -104,7 +104,10 @@ const AttendanceCellSelect = ({ rowId, itemId, value, onChange }: any) => {
   );
 };
 
-export const DataTable: ComponentType<any> = ({ element, children, bindings }: any) => {
+import { shadcnComponents } from '@json-render/shadcn';
+const Spinner = shadcnComponents.Spinner;
+
+export const DataTable: ComponentType<any> = ({ element, children, bindings, emit, on }: any) => {
   let store: any;
   try {
     store = useStateStore();
@@ -112,7 +115,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
     store = null;
   }
 
-  const { columns, data: rawData, label } = element?.props || {};
+  const { columns, data: rawData, label, dataRef } = element?.props || {};
   
   // Resolve data reactively using useStateValue
   let bindPath = '';
@@ -123,6 +126,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
     bindPath = dataProp.$bindState;
   }
 
+  const isLoading = useStateValue(`/loading/${dataRef}`) === true;
   const isWeightTable = element?.props?.id === 'weight-editor-table';
   const isGradeMatrixTable = element?.props?.id === 'grade-matrix-table';
 
@@ -134,6 +138,11 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
     const gradeItems = (useStateValue('/data/listGradeItems') || []) as any[];
     const gradeRecords = (useStateValue('/data/listGradeRecords') || []) as any[];
     const attachments = (useStateValue('/data/allAttachments') || useStateValue('/data/listAttachments') || []) as any[];
+
+    const isStudentsLoading = useStateValue('/loading/listStudents') === true;
+    const isGradeItemsLoading = useStateValue('/loading/listGradeItems') === true;
+    const isGradeRecordsLoading = useStateValue('/loading/listGradeRecords') === true;
+    const isMatrixLoading = isStudentsLoading || isGradeItemsLoading || isGradeRecordsLoading;
 
     const handleScoreInputBlur = async (studentId: string, itemId: string, newScore: number | null) => {
       if (store) {
@@ -263,7 +272,19 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
               </tr>
             </thead>
             <tbody>
-              {students.length === 0 ? (
+              {isMatrixLoading && students.length === 0 ? (
+                <tr>
+                  <td colSpan={gradeItems.length + 2} className="px-6 py-12 text-center text-slate-500 font-medium">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <Spinner
+                        props={{ size: 'md', label: '正在載入成績板...' }}
+                        emit={emit}
+                        on={on}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ) : students.length === 0 ? (
                 <tr>
                   <td colSpan={gradeItems.length + 2} className="px-6 py-8 text-center text-slate-500 font-medium">
                     (沒有學生資料)
@@ -388,7 +409,22 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings }: a
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 ? (
+          {isLoading && rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={(columns?.length || 0) + ((React.Children.count(children) > 0 || isWeightTable) ? 1 : 0)}
+                className="px-6 py-12 text-center text-slate-500 font-medium"
+              >
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <Spinner
+                    props={{ size: 'md', label: '正在載入資料...' }}
+                    emit={emit}
+                    on={on}
+                  />
+                </div>
+              </td>
+            </tr>
+          ) : rows.length === 0 ? (
             <tr>
               <td
                 colSpan={(columns?.length || 0) + ((React.Children.count(children) > 0 || isWeightTable) ? 1 : 0)}

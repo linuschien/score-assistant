@@ -9,6 +9,9 @@ import { useListStudents } from '@/hooks/use-list-students';
 import { useListGradeItems } from '@/hooks/use-list-grade-items';
 import { useListGradeRecords } from '@/hooks/use-list-grade-records';
 
+import { shadcnComponents } from '@json-render/shadcn';
+const Spinner = shadcnComponents.Spinner;
+
 import { registerBehavior } from '@/behaviors/registry';
 import { api, API_BASE } from '@/lib/api-client';
 
@@ -64,10 +67,16 @@ registerBehavior('Grade Summary preview shows weight warning when total weight i
 // ────────────────────────────────────────────────────────────────────────────────
 const ScoreSummaryTable = (props: any) => {
   const label = props.element?.props?.label || '成績總表';
+  const { emit, on } = props;
 
   const students = (useStateValue('/data/listStudents') || []) as any[];
   const gradeItems = (useStateValue('/data/listGradeItems') || []) as any[];
   const gradeRecords = (useStateValue('/data/listGradeRecords') || []) as any[];
+
+  const isStudentsLoading = useStateValue('/loading/listStudents') === true;
+  const isGradeItemsLoading = useStateValue('/loading/listGradeItems') === true;
+  const isGradeRecordsLoading = useStateValue('/loading/listGradeRecords') === true;
+  const isMatrixLoading = isStudentsLoading || isGradeItemsLoading || isGradeRecordsLoading;
 
   return (
     <div className="bg-[#0d1321]/80 backdrop-blur-sm border border-slate-800/80 rounded-xl overflow-hidden shadow-xl">
@@ -100,7 +109,19 @@ const ScoreSummaryTable = (props: any) => {
             </tr>
           </thead>
           <tbody>
-            {students.length === 0 ? (
+            {isMatrixLoading && students.length === 0 ? (
+              <tr>
+                <td colSpan={gradeItems.length + 3} className="px-6 py-12 text-center text-slate-500 font-medium">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <Spinner
+                      props={{ size: 'md', label: '正在載入成績總表...' }}
+                      emit={emit}
+                      on={on}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ) : students.length === 0 ? (
               <tr>
                 <td colSpan={gradeItems.length + 3} className="px-6 py-8 text-center text-slate-500 font-medium">
                   (沒有資料)
@@ -209,9 +230,22 @@ export default function ScorePreviewDashboardPage() {
 
   const { data: semesterData } = useGetSemesterById(semesterId || '');
   const { data: classData } = useGetClassById(semesterId || '', classId || '');
-  const { data: studentsData } = useListStudents(classId ? { classId } : undefined);
-  const { data: gradeItemsData } = useListGradeItems(classId ? { classId } : undefined);
-  const { data: gradeRecordsData } = useListGradeRecords();
+  const { data: studentsData, isLoading: isStudentsLoading } = useListStudents(classId ? { classId } : undefined);
+  const { data: gradeItemsData, isLoading: isGradeItemsLoading } = useListGradeItems(classId ? { classId } : undefined);
+  const { data: gradeRecordsData, isLoading: isGradeRecordsLoading } = useListGradeRecords();
+
+  // Sync loading states reactively
+  useEffect(() => {
+    store.set('/loading/listStudents', isStudentsLoading);
+  }, [isStudentsLoading, store]);
+
+  useEffect(() => {
+    store.set('/loading/listGradeItems', isGradeItemsLoading);
+  }, [isGradeItemsLoading, store]);
+
+  useEffect(() => {
+    store.set('/loading/listGradeRecords', isGradeRecordsLoading);
+  }, [isGradeRecordsLoading, store]);
 
   // Sync Semester
   useEffect(() => {

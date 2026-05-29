@@ -111,7 +111,12 @@ export default function ClassListPage() {
   const { data: semesterData } = useGetSemesterById(semesterId || '');
 
   // Query classes for the active semester
-  const { data } = useListClasses(semesterId ? { semesterId } : undefined);
+  const { data, isLoading } = useListClasses(semesterId ? { semesterId } : undefined);
+
+  // Sync loading state reactively
+  useEffect(() => {
+    store.set('/loading/listClasses', isLoading);
+  }, [isLoading, store]);
 
   // Query all students to count them per class
   const { data: studentsData } = useListStudents();

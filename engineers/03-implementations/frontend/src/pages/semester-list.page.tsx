@@ -100,8 +100,13 @@ registerBehavior('Delete a Semester', async (_ref, store) => {
 
 export default function SemesterListPage() {
   const store = useStateStore();
-  const { data } = useListSemesters();
+  const { data, isLoading } = useListSemesters();
   const { data: classesData } = useListClasses();
+
+  // Sync loading state reactively
+  useEffect(() => {
+    store.set('/loading/listSemesters', isLoading);
+  }, [isLoading, store]);
 
   useEffect(() => {
     if (data) {

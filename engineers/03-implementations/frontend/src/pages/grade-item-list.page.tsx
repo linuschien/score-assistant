@@ -184,7 +184,12 @@ export default function GradeItemListPage() {
   const { data: classData } = useGetClassById(semesterId || '', classId || '');
 
   // Query grade items for the active class
-  const { data } = useListGradeItems(classId ? { classId } : undefined);
+  const { data, isLoading } = useListGradeItems(classId ? { classId } : undefined);
+
+  // Sync loading state reactively
+  useEffect(() => {
+    store.set('/loading/listGradeItems', isLoading);
+  }, [isLoading, store]);
 
   // Sync active class/semester details into store for title headers
   useEffect(() => {

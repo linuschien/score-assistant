@@ -221,9 +221,22 @@ export default function GradeEntryBoardPage() {
   // Subscriptions to API queries
   const { data: semesterData } = useGetSemesterById(semesterId || '');
   const { data: classData } = useGetClassById(semesterId || '', classId || '');
-  const { data: studentsData } = useListStudents(classId ? { classId } : undefined);
-  const { data: gradeItemsData } = useListGradeItems(classId ? { classId } : undefined);
-  const { data: gradeRecordsData } = useListGradeRecords();
+  const { data: studentsData, isLoading: isStudentsLoading } = useListStudents(classId ? { classId } : undefined);
+  const { data: gradeItemsData, isLoading: isGradeItemsLoading } = useListGradeItems(classId ? { classId } : undefined);
+  const { data: gradeRecordsData, isLoading: isGradeRecordsLoading } = useListGradeRecords();
+
+  // Sync loading states reactively
+  useEffect(() => {
+    store.set('/loading/listStudents', isStudentsLoading);
+  }, [isStudentsLoading, store]);
+
+  useEffect(() => {
+    store.set('/loading/listGradeItems', isGradeItemsLoading);
+  }, [isGradeItemsLoading, store]);
+
+  useEffect(() => {
+    store.set('/loading/listGradeRecords', isGradeRecordsLoading);
+  }, [isGradeRecordsLoading, store]);
   const { data: allAttachmentsData } = useListAttachments();
   const { data: attachmentsData } = useListAttachments(selectedRecordId ? { gradeRecordId: selectedRecordId } : undefined);
 
