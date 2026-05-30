@@ -124,7 +124,7 @@ class GradeItemServiceTest {
         var student = new StudentEntity(UUID.randomUUID(), classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.empty());
-        when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
+        when(studentRepository.findAll(any(Example.class), any(Sort.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.empty());
 
         StepVerifier.create(gradeItemService.exportAttendance(classId, new ExportAttendanceRequestDto("xlsx")))

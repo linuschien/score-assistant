@@ -153,17 +153,19 @@ public class GradeItemService {
                                     try (var wb = new XSSFWorkbook()) {
                                         var sheet = wb.createSheet("Grades");
                                         var header = sheet.createRow(0);
-                                        header.createCell(0).setCellValue("Student Number");
-                                        header.createCell(1).setCellValue("Student Name");
+                                        header.createCell(0).setCellValue("學號");
+                                        header.createCell(1).setCellValue("座號");
+                                        header.createCell(2).setCellValue("姓名");
                                         for (int i = 0; i < items.size(); i++) {
-                                            header.createCell(i + 2).setCellValue(items.get(i).itemName());
+                                            header.createCell(i + 3).setCellValue(items.get(i).itemName());
                                         }
-                                        header.createCell(items.size() + 2).setCellValue("加權總分");
+                                        header.createCell(items.size() + 3).setCellValue("加權總分");
                                         for (int r = 0; r < students.size(); r++) {
                                             var student = students.get(r);
                                             var row = sheet.createRow(r + 1);
-                                            row.createCell(0).setCellValue(student.studentNumber());
-                                            row.createCell(1).setCellValue(student.studentName());
+                                            row.createCell(0).setCellValue(student.studentId());
+                                            row.createCell(1).setCellValue(student.studentNumber());
+                                            row.createCell(2).setCellValue(student.studentName());
                                             double weightedTotal = 0.0;
                                             for (int c = 0; c < items.size(); c++) {
                                                 var item = items.get(c);
@@ -172,11 +174,11 @@ public class GradeItemService {
                                                         .findFirst()
                                                         .map(gr -> gr.score() != null ? gr.score().doubleValue() : 0.0)
                                                         .orElse(0.0);
-                                                row.createCell(c + 2).setCellValue(score);
+                                                row.createCell(c + 3).setCellValue(score);
                                                 double weight = item.weight() != null ? item.weight().doubleValue() : 0.0;
                                                 weightedTotal += score * weight;
                                             }
-                                            row.createCell(items.size() + 2).setCellValue(weightedTotal);
+                                            row.createCell(items.size() + 3).setCellValue(weightedTotal);
                                         }
                                         var out = new ByteArrayOutputStream();
                                         wb.write(out);
@@ -201,48 +203,71 @@ public class GradeItemService {
 
         return gradeItemRepository.findAll(Example.of(itemProbe, ExampleMatcher.matching().withIgnoreNullValues()))
                 .collectList()
-                .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher)).collectList()
+                .flatMap(items -> studentRepository.findAll(Example.of(studentProbe, studentMatcher), Sort.by("studentNumber")).collectList()
                         .flatMap(students -> gradeRecordRepository.findByClassId(classId).collectList()
                                 .flatMap(records -> Mono.fromCallable(() -> {
                                     try (var wb = new XSSFWorkbook()) {
                                         var sheet = wb.createSheet("Attendance");
                                         var header = sheet.createRow(0);
-                                        header.createCell(0).setCellValue("Student Number");
-                                        header.createCell(1).setCellValue("Student Name");
-                                        header.createCell(2).setCellValue("Present Count");
-                                        header.createCell(3).setCellValue("Absent Count");
-                                        header.createCell(4).setCellValue("Excused Count");
+                                        header.createCell(0).setCellValue("學號");
+                                        header.createCell(1).setCellValue("座號");
+                                        header.createCell(2).setCellValue("姓名");
+
+                                        // Dynamic Date/Item columns (US-08-04 AC2)
+                                        for (int i = 0; i < items.size(); i++) {
+                                            var item = items.get(i);
+                                            String label = item.itemDate() != null ? item.itemDate().toString() : item.itemName();
+                                            header.createCell(i + 3).setCellValue(label);
+                                        }
+
+                                        int countStartIndex = items.size() + 3;
+                                        header.createCell(countStartIndex).setCellValue("出席次數");
+                                        header.createCell(countStartIndex + 1).setCellValue("缺席次數");
+                                        header.createCell(countStartIndex + 2).setCellValue("請假次數");
 
                                         for (int r = 0; r < students.size(); r++) {
                                             var student = students.get(r);
                                             var row = sheet.createRow(r + 1);
-                                            row.createCell(0).setCellValue(student.studentNumber());
-                                            row.createCell(1).setCellValue(student.studentName());
+                                            row.createCell(0).setCellValue(student.studentId());
+                                            row.createCell(1).setCellValue(student.studentNumber());
+                                            row.createCell(2).setCellValue(student.studentName());
 
                                             long present = 0;
                                             long absent = 0;
                                             long excused = 0;
-                                            for (var item : items) {
+                                            for (int i = 0; i < items.size(); i++) {
+                                                var item = items.get(i);
                                                 var opt = records.stream()
                                                         .filter(gr -> gr.gradeItemId().equals(item.id()) && gr.studentId().equals(student.id()))
                                                         .findFirst();
+                                                String statusStr = "出席";
                                                 if (opt.isPresent()) {
                                                     var scoreVal = opt.get().score();
                                                     if (scoreVal != null) {
                                                         double val = scoreVal.doubleValue();
-                                                        if (val == 100.0) present++;
-                                                        else if (val == 0.0) absent++;
-                                                        else excused++;
+                                                        if (val == 1.0 || val == 100.0) {
+                                                            present++;
+                                                            statusStr = "出席";
+                                                        } else if (val == 0.0) {
+                                                            absent++;
+                                                            statusStr = "缺席";
+                                                        } else {
+                                                            excused++;
+                                                            statusStr = "請假";
+                                                        }
                                                     } else {
                                                         present++;
+                                                        statusStr = "出席";
                                                     }
                                                 } else {
                                                     present++;
+                                                    statusStr = "出席";
                                                 }
+                                                row.createCell(i + 3).setCellValue(statusStr);
                                             }
-                                            row.createCell(2).setCellValue(present);
-                                            row.createCell(3).setCellValue(absent);
-                                            row.createCell(4).setCellValue(excused);
+                                            row.createCell(countStartIndex).setCellValue(present);
+                                            row.createCell(countStartIndex + 1).setCellValue(absent);
+                                            row.createCell(countStartIndex + 2).setCellValue(excused);
                                         }
 
                                         var out = new ByteArrayOutputStream();

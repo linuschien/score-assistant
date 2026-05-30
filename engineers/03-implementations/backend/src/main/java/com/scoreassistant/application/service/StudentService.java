@@ -256,39 +256,63 @@ public class StudentService {
                     final int maxIdx = Math.max(Math.max(idIdx, numIdx), Math.max(nameIdx, emailIdx));
 
                     var dataRows = rows.subList(1, rows.size());
+                    java.util.List<IndexedRow> indexedRows = new java.util.ArrayList<>();
+                    for (int i = 0; i < dataRows.size(); i++) {
+                        indexedRows.add(new IndexedRow(i + 2, dataRows.get(i)));
+                    }
 
-                    return Flux.fromIterable(dataRows)
-                            .flatMap(parts -> {
-                                if (parts.length <= maxIdx) return Mono.just(new ImportResult(false, false));
+                    return Flux.fromIterable(indexedRows)
+                            .flatMap(indexedRow -> {
+                                int line = indexedRow.lineNumber();
+                                String[] parts = indexedRow.parts();
+                                if (parts.length <= maxIdx) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：資料欄位不足"));
+                                }
                                 String studentId = parts[idIdx].trim();
+                                if (studentId.isEmpty()) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：學號不得為空"));
+                                }
                                 int studentNumber;
                                 try {
                                     studentNumber = Integer.parseInt(parts[numIdx].trim());
                                 } catch (NumberFormatException e) {
-                                    return Mono.just(new ImportResult(false, false));
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：座號必須為有效數字"));
                                 }
                                 String studentName = parts[nameIdx].trim();
+                                if (studentName.isEmpty()) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：姓名不得為空"));
+                                }
                                 String email = parts[emailIdx].trim();
+                                if (email.isEmpty()) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：電子信箱不得為空"));
+                                }
+                                if (!email.matches("\\S+@\\S+\\.\\S+")) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：電子信箱格式不正確"));
+                                }
 
-                                return processCsvRow(classId, studentId, studentNumber, studentName, email, strategy);
+                                return processCsvRow(classId, studentId, studentNumber, studentName, email, strategy, line);
                             })
                             .collectList()
                             .map(results -> {
                                 int success = 0;
                                 int failure = 0;
+                                java.util.List<String> errorsList = new java.util.ArrayList<>();
                                 for (var res : results) {
                                     if (res.success()) {
                                         success++;
                                     } else {
                                         failure++;
+                                        if (res.errorMessage() != null) {
+                                            errorsList.add(res.errorMessage());
+                                        }
                                     }
                                 }
-                                return new OperationStatusDto(true, "Import completed", success, success, failure);
+                                return new OperationStatusDto(true, "Import completed", success, success, failure, errorsList);
                             });
                 });
     }
 
-    private Mono<ImportResult> processCsvRow(UUID classId, String studentId, int studentNumber, String studentName, String email, String strategy) {
+    private Mono<ImportResult> processCsvRow(UUID classId, String studentId, int studentNumber, String studentName, String email, String strategy, int line) {
         var idProbe = new StudentEntity(null, null, studentId, 0, null, null, null, null, false, null);
         var idMatcher = ExampleMatcher.matching().withIgnorePaths("studentNumber").withIgnoreNullValues();
 
@@ -311,19 +335,20 @@ public class StudentService {
             boolean hasEmailConflict = byEmail != NONE && !byEmail.classId().equals(classId);
 
             if (hasIdConflict || hasEmailConflict) {
-                return Mono.just(new ImportResult(false, false));
+                String cause = hasIdConflict ? "學號已被其他班級佔用" : "信箱已被其他班級佔用";
+                return Mono.just(new ImportResult(false, false, "第 " + line + " 行：" + cause));
             }
 
             if (byId != NONE && byId.studentNumber() != studentNumber) {
-                return Mono.just(new ImportResult(false, false));
+                return Mono.just(new ImportResult(false, false, "第 " + line + " 行：學號已存在且與輸入之座號不相符"));
             }
             if (byEmail != NONE && byEmail.studentNumber() != studentNumber) {
-                return Mono.just(new ImportResult(false, false));
+                return Mono.just(new ImportResult(false, false, "第 " + line + " 行：信箱已存在且與輸入之座號不相符"));
             }
 
             if (byNum != NONE) {
                 if ("SKIP".equalsIgnoreCase(strategy)) {
-                    return Mono.just(new ImportResult(false, false));
+                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：座號已存在 (略過)"));
                 } else if ("OVERWRITE".equalsIgnoreCase(strategy)) {
                     var now = LocalDateTime.now();
                     var updated = new StudentEntity(
@@ -332,7 +357,7 @@ public class StudentService {
                     );
                     return studentRepository.save(updated).map(saved -> new ImportResult(true, true));
                 } else {
-                    return Mono.just(new ImportResult(false, false));
+                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：座號已存在 (略過)"));
                 }
             }
 
@@ -349,5 +374,11 @@ public class StudentService {
         return new StudentResponse(e.id().toString(), e.classId().toString(), e.studentId(), e.studentNumber(), e.studentName(), e.email());
     }
 
-    private record ImportResult(boolean success, boolean isUpdate) {}
+    private record IndexedRow(int lineNumber, String[] parts) {}
+
+    private record ImportResult(boolean success, boolean isUpdate, String errorMessage) {
+        public ImportResult(boolean success, boolean isUpdate) {
+            this(success, isUpdate, null);
+        }
+    }
 }
