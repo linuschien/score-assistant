@@ -38,6 +38,30 @@ function setupMocks() {
       });
     }),
 
+    graphql.query('listGradeItems', () => {
+      return HttpResponse.json({
+        data: {
+          listGradeItems: [
+            { id: 'item-1', itemName: '期中考', itemType: 'EXAM', maxScore: 100, weight: 0.4 },
+            { id: 'item-2', itemName: '作業一', itemType: 'ASSIGNMENT', maxScore: 50, weight: 0.3 },
+            { id: 'item-3', itemName: '出席表現', itemType: 'ATTENDANCE', maxScore: 10, weight: 0.3 }
+          ],
+        },
+      });
+    }),
+
+    graphql.query('listGradeRecords', () => {
+      return HttpResponse.json({
+        data: {
+          listGradeRecords: [
+            { id: 'rec-1', studentId: '1', gradeItemId: 'item-1', score: 90.0, lastModifiedAt: '2026-05-30T10:00:00Z', version: 1 },
+            { id: 'rec-2', studentId: '1', gradeItemId: 'item-2', score: 40.0, lastModifiedAt: '2026-05-30T10:00:00Z', version: 1 },
+            { id: 'rec-3', studentId: '1', gradeItemId: 'item-3', score: 10.0, lastModifiedAt: '2026-05-30T10:00:00Z', version: 1 },
+          ],
+        },
+      });
+    }),
+
     http.post('*/semesters/:semesterId/classes/:classId/students', async ({ request, params }) => {
       const body = (await request.json()) as any;
       if (!body.studentName || !body.studentName.trim()) {
@@ -452,6 +476,51 @@ describe('StudentListPage', () => {
         expect(screen.getByText('王小明')).toBeInTheDocument();
         expect(screen.getByText('李小美')).toBeInTheDocument();
       });
+    });
+  });
+
+  // ── View Grades (US-05-03): 查看成績 ───────────────────────────────────────
+  describe('View Grades (US-05-03)', () => {
+    it('shows View Grades button and opens modal with correct student info, grades and weighted total score', async () => {
+      const user = userEvent.setup();
+      
+      mockStudents = [
+        { id: '1', classId: '1', studentId: 'S1120001', studentNumber: '01', studentName: '王小明', email: 'xiaoming@school.edu.tw' }
+      ];
+
+      renderPage();
+
+      // Find the "查看成績" button in the row and click it
+      const viewGradesBtn = await screen.findByRole('button', { name: /查看成績/i });
+      expect(viewGradesBtn).toBeInTheDocument();
+
+      await user.click(viewGradesBtn);
+
+      // Verify the Dialog/Modal is opened by checking for the modal title or text
+      await waitFor(() => {
+        expect(screen.getByText('學生個人成績一覽')).toBeInTheDocument();
+      });
+
+      // Verify student details card values
+      expect(screen.getByTestId('modal-student-id')).toHaveTextContent('S1120001');
+      expect(screen.getByTestId('modal-student-number')).toHaveTextContent('01');
+      expect(screen.getByTestId('modal-student-name')).toHaveTextContent('王小明');
+      expect(screen.getByTestId('modal-student-email')).toHaveTextContent('xiaoming@school.edu.tw');
+
+      // Verify mapped grades inside the table
+      expect(screen.getByText('期中考')).toBeInTheDocument();
+      expect(screen.getByText('考試')).toBeInTheDocument();
+      expect(screen.getByText('作業一')).toBeInTheDocument();
+      expect(screen.getByText('作業')).toBeInTheDocument();
+      expect(screen.getByText('出席表現')).toBeInTheDocument();
+
+      // Verify individual grades display values
+      expect(screen.getByText('90')).toBeInTheDocument();
+      expect(screen.getByText('40')).toBeInTheDocument();
+      expect(screen.getAllByText('出席')).toHaveLength(2); // One for type label, one for score display
+
+      // Verify weighted total score calculation
+      expect(screen.getByTestId('weighted-total-score')).toHaveTextContent('90.0');
     });
   });
 });

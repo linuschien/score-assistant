@@ -11,6 +11,7 @@ import { DatePicker } from './components/date-picker';
 import { CustomButton } from './components/custom-button';
 import { RechartsPieChartComponent } from './components/pie-chart';
 import { ChartPlaceholder } from './components/chart-placeholder';
+import { StudentGradesPreview } from './components/student-grades-preview';
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Adapter: bridges @json-render/react's ComponentRenderProps  { element, children, emit, on, bindings, loading }
@@ -143,6 +144,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   'Breadcrumb': Breadcrumb,
   'AlertDialog': AlertDialog,
   'DatePicker': DatePicker,
+  'StudentGradesPreview': StudentGradesPreview,
 
   // ── 4. Chart wrappers ───────────────────────────────────────────────────────
   'Chart:bar': ChartPlaceholder('Bar'),

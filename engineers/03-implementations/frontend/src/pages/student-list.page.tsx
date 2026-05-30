@@ -8,6 +8,8 @@ import spec from '@/schemas/student-list.render-schema.json';
 import { registerBehavior, executeRegisteredBehavior } from '@/behaviors/registry';
 import { queryClient } from '@/lib/query-client';
 import { api, API_BASE } from '@/lib/api-client';
+import { useListGradeItems } from '@/hooks/use-list-grade-items';
+import { useListGradeRecords } from '@/hooks/use-list-grade-records';
 
 // Register Student behaviors statically
 registerBehavior('Open Student Form Modal for Create', async (_ref, store) => {
@@ -192,6 +194,8 @@ registerBehavior('Filter Students List', async (_ref, store) => {
   return null;
 });
 
+
+
 export default function StudentListPage() {
   const store = useStateStore();
 
@@ -206,10 +210,20 @@ export default function StudentListPage() {
   // Query students for the active class
   const { data, isLoading } = useListStudents(classId ? { classId } : undefined);
 
+  // Query grade items and grade records reactively
+  const { data: gradeItemsData, isLoading: isGradeItemsLoading } = useListGradeItems(classId ? { classId } : undefined);
+  const { data: gradeRecordsData, isLoading: isGradeRecordsLoading } = useListGradeRecords();
+
   // Sync loading state reactively
   useEffect(() => {
     store.set('/loading/listStudents', isLoading);
   }, [isLoading, store]);
+
+  // Sync grade loading states reactively
+  useEffect(() => {
+    store.set('/loading/listGradeItems', isGradeItemsLoading);
+    store.set('/loading/listGradeRecords', isGradeRecordsLoading);
+  }, [isGradeItemsLoading, isGradeRecordsLoading, store]);
 
   // Sync active class/semester details into store for the title headers
   useEffect(() => {
@@ -275,6 +289,26 @@ export default function StudentListPage() {
       }
     }
   }, [data, searchQuery, store]);
+
+  // Sync grade items into store reactively
+  useEffect(() => {
+    if (gradeItemsData) {
+      const current = store.get('/data/listGradeItems');
+      if (JSON.stringify(current) !== JSON.stringify(gradeItemsData)) {
+        store.set('/data/listGradeItems', gradeItemsData);
+      }
+    }
+  }, [gradeItemsData, store]);
+
+  // Sync grade records into store reactively
+  useEffect(() => {
+    if (gradeRecordsData) {
+      const current = store.get('/data/listGradeRecords');
+      if (JSON.stringify(current) !== JSON.stringify(gradeRecordsData)) {
+        store.set('/data/listGradeRecords', gradeRecordsData);
+      }
+    }
+  }, [gradeRecordsData, store]);
 
   // Decoupled Student Form Modal Logic:
   // Populate the student-form-modal inputs dynamically based on selectedStudentId

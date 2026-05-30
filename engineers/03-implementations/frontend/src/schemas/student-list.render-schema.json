@@ -365,6 +365,7 @@
         }
       },
       "children": [
+        "view-student-grades-trigger",
         "edit-student-trigger",
         "delete-student-trigger"
       ]
@@ -633,6 +634,45 @@
         "$state": "/modals/delete-student-confirm-dialog"
       }
     },
+    "view-student-grades-trigger": {
+      "type": "Button",
+      "props": {
+        "id": "view-student-grades-trigger",
+        "label": "查看成績",
+        "variant": "secondary",
+        "disabled": null
+      },
+      "children": [],
+      "on": {
+        "press": [
+          {
+            "action": "openModal",
+            "params": {
+              "id": "student-grades-modal"
+            }
+          }
+        ]
+      }
+    },
+    "student-grades-modal": {
+      "type": "Dialog",
+      "props": {
+        "id": "student-grades-modal",
+        "title": "學生個人成績一覽",
+        "description": null,
+        "openPath": "/modals/student-grades-modal"
+      },
+      "children": [
+        "student-grades-content"
+      ]
+    },
+    "student-grades-content": {
+      "type": "StudentGradesPreview",
+      "props": {
+        "id": "student-grades-content"
+      },
+      "children": []
+    },
     "student-list-page": {
       "type": "Container:page",
       "props": {
@@ -645,7 +685,8 @@
         "filter-bar",
         "list-section",
         "student-form-modal",
-        "delete-student-confirm-dialog"
+        "delete-student-confirm-dialog",
+        "student-grades-modal"
       ]
     }
   }

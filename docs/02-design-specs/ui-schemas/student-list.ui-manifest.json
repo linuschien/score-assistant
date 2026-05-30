@@ -93,6 +93,16 @@
             ],
             "children": [
               {
+                "id": "view-student-grades-trigger",
+                "abstract_type": "Trigger",
+                "semantic_variant": "secondary",
+                "label": "查看成績",
+                "behavior_ref": "nielsen:control",
+                "interactions": [
+                  { "on_event": "on_click", "target_id": "student-grades-modal", "behavior_ref": "nielsen:control" }
+                ]
+              },
+              {
                 "id": "edit-student-trigger",
                 "abstract_type": "Trigger",
                 "semantic_variant": "secondary",
@@ -227,6 +237,19 @@
             }
           },
           { "id": "cancel-delete-student-trigger", "abstract_type": "Trigger", "semantic_variant": "secondary", "label": "取消" }
+        ]
+      },
+      {
+        "id": "student-grades-modal",
+        "abstract_type": "Overlay",
+        "semantic_variant": "modal",
+        "label": "學生個人成績一覽",
+        "children": [
+          {
+            "id": "student-grades-content",
+            "abstract_type": "Container",
+            "semantic_variant": "custom-grades-preview"
+          }
         ]
       }
     ]
