@@ -111,7 +111,7 @@ function AppContent() {
       try {
         const msg = await dispatchBehavior(ref, globalStore);
         toast.dismiss(loadingId);
-        if (msg) toast.success(msg);
+        if (msg) toast.success(<div className="whitespace-pre-line text-left">{msg}</div>);
       } catch (err: any) {
         toast.dismiss(loadingId);
         const msg = err?.message || '操作失敗，請稍後再試';
