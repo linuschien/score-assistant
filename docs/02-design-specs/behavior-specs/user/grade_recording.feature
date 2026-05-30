@@ -83,3 +83,14 @@ Feature: Grade Recording
     When a POST request is made to "/grade-records/b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e/attachments" with a 1MB PDF file
     Then the response code should be 400
     And the error message should indicate that the attachment limit has been reached
+
+  # US-05-03: 查看單一學生的所有成績 (GraphQL Primary Port)
+  Scenario: View a single Student's full grades and weighted total score via GraphQL
+    Given a Student with ID "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" exists in Class "c81d4e2e-bcf2-4b2a-8c81-8b1e428df13a"
+    When a GraphQL query is made for all GradeRecords of Student "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" with the following fields:
+      | id             |
+      | gradeItemId    |
+      | score          |
+      | lastModifiedAt |
+    Then the response should contain the list of GradeRecords for the Student
+    And the Student's weighted_total_score should be calculated and displayed
