@@ -164,11 +164,18 @@ registerBehavior('Import Students CSV', async (_ref, store) => {
 
         const successCount = response?.successCount ?? 0;
         const failureCount = response?.failureCount ?? 0;
+        const errors = response?.errors || [];
 
         if (successCount === 0 && failureCount > 0) {
-          handleReject(new Error(`匯入失敗：資料已存在，全域唯一欄位（學號/信箱）發生衝突（失敗 ${failureCount} 筆）`));
+          const errMsg = errors.length > 0
+            ? `匯入失敗（共 ${failureCount} 筆失敗）：\n` + errors.map((e: string) => `• ${e}`).join('\n')
+            : `匯入失敗：資料已存在，全域唯一欄位（學號/信箱）發生衝突（失敗 ${failureCount} 筆）`;
+          handleReject(new Error(errMsg));
         } else if (failureCount > 0) {
-          handleResolve(`部分資料匯入成功（成功 ${successCount} 筆，失敗/衝突 ${failureCount} 筆）`);
+          const msg = errors.length > 0
+            ? `部分資料匯入成功（成功 ${successCount} 筆，失敗/衝突 ${failureCount} 筆）：\n` + errors.slice(0, 3).map((e: string) => `• ${e}`).join('\n') + (errors.length > 3 ? `\n...以及其他 ${errors.length - 3} 筆錯誤` : '')
+            : `部分資料匯入成功（成功 ${successCount} 筆，失敗/衝突 ${failureCount} 筆）`;
+          handleResolve(msg);
         } else {
           handleResolve(`學生資料匯入成功（成功 ${successCount} 筆）`);
         }
