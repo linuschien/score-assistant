@@ -223,7 +223,7 @@ a PUT request is made to grade-item detail endpoint with full payload
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to "${url}" with name "${name}" type "${type}" max "${max}"
-    ${payload}=    Create Dictionary    itemName=${name}    itemType=${type}    maxScore=${max}
+    ${payload}=    Create Dictionary    itemName=${name}    itemType=${type}    maxScore=${max}    weight=0
     ${resp}=    PUT On Session    score_api    ${url}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 

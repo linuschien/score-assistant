@@ -324,7 +324,7 @@ a DELETE request is made to "${url}"
 a POST request is made to import students endpoint with CSV content and no conflicts
     [Documentation]    POST /api/v1/semesters/{id}/classes/{id}/students:importStudents
     ...    UI: import-students-button (student-list.ui-manifest.json)
-    ${csv_content}=    Set Variable    學號,座號,姓名,信箱\nS001,10,匯入甲,xiaoming@gmail.com\nS002,11,匯入乙,xiaohua@gmail.com\nS003,12,匯入丙,daqiang@gmail.com
+    ${csv_content}=    Set Variable    學號,座號,姓名,信箱\nS010,10,匯入甲,import_xiaoming@gmail.com\nS011,11,匯入乙,import_xiaohua@gmail.com\nS012,12,匯入丙,import_daqiang@gmail.com
     ${files}=    Create Dictionary    file=${csv_content.encode()}
     ${resp}=    POST On Session    score_api    ${STUDENTS_BASE}:importStudents    files=${files}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}

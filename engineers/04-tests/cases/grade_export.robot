@@ -166,10 +166,13 @@ a Class with ID "${class_id}" exists with several Students and GradeRecords
 a Student "${student_id}" has no GradeRecord for GradeItem "${item_id}"
     [Documentation]    Verifies no grade record exists for the given student/item pair.
     ...                ${STUDENT_ID_NO_RECORD} was intentionally not given a record in Suite Setup.
-    ${params}=    Create Dictionary    studentId=${student_id}    gradeItemId=${item_id}
-    ${resp}=    GET On Session    score_api    /api/v1/grade-records    params=${params}    expected_status=any
+    ${query}=    Set Variable
+    ...    { listGradeRecords(filter: { studentId: "${student_id}", gradeItemId: "${item_id}" }) { id } }
+    ${payload}=    Create Dictionary    query=${query}
+    ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     ${body}=    Set Variable    ${resp.json()}
-    ${count}=    Get Length    ${body}
+    ${records}=    Set Variable    ${body}[data][listGradeRecords]
+    ${count}=    Get Length    ${records}
     Should Be Equal As Integers    ${count}    0
 
 the GradeItems in Class "${class_id}" have a total weight of 80

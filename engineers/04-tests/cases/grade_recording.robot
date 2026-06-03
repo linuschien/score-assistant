@@ -195,8 +195,9 @@ a GradeRecord with ID "${record_id}" exists
 a GradeItem with type "${item_type}" is prepared for this test
     [Documentation]    Creates a per-test GradeItem of the given type.
     ...    Stored as ${TEMP_ITEM_ID} for use within this test only.
+    ${rand}=    Evaluate    str(uuid.uuid4())[:8]    modules=uuid
     ${payload}=    Create Dictionary
-    ...    itemName=AutoTest-Temp-${item_type}
+    ...    itemName=AutoTest-Temp-${item_type}-${rand}
     ...    itemType=${item_type}
     ...    maxScore=100
     ...    weight=0
@@ -214,9 +215,14 @@ a GradeRecord with 5 existing attachments is prepared
     Should Be Equal As Strings    ${r_resp.status_code}    201
     Set Test Variable    ${FULL_RECORD_ID}    ${r_resp.json()}[id]
     FOR    ${i}    IN RANGE    1    6
-        ${dummy}=    Evaluate    b'x' * 1024
-        ${files}=    Create Dictionary    file=${dummy}
-        POST On Session    score_api    /api/v1/grade-records/${FULL_RECORD_ID}/attachments    files=${files}    expected_status=any
+        ${b64_data}=    Evaluate    base64.b64encode(b'x' * 1024).decode('utf-8')    modules=base64
+        ${payload}=    Create Dictionary
+        ...    fileName=test_${i}.bin
+        ...    mimeType=application/octet-stream
+        ...    fileSize=${1024}
+        ...    fileData=${b64_data}
+        ...    uploadedAt=2026-06-03T19:44:43
+        POST On Session    score_api    /api/v1/grade-records/${FULL_RECORD_ID}/attachments    json=${payload}    expected_status=any
     END
 
 a new Student is prepared for this test
@@ -274,21 +280,36 @@ a PUT request is made to "/api/v1/grade-records/${record_id}" with score ${score
 a POST request is made to "/api/v1/grade-records/${record_id}/attachments" with a 5MB file
     [Documentation]    POST /api/v1/grade-records/{id}/attachments
     ...    UI: attachment-trigger → upload-attachment-trigger (grade-entry-board.ui-manifest.json)
-    ${dummy}=    Evaluate    b'x' * 5242880
-    ${files}=    Create Dictionary    file=${dummy}
-    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    files=${files}    expected_status=any
+    ${b64_data}=    Evaluate    base64.b64encode(b'x' * 5242880).decode('utf-8')    modules=base64
+    ${payload}=    Create Dictionary
+    ...    fileName=file_5mb.bin
+    ...    mimeType=application/octet-stream
+    ...    fileSize=${5242880}
+    ...    fileData=${b64_data}
+    ...    uploadedAt=2026-06-03T19:44:43
+    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to "/api/v1/grade-records/${record_id}/attachments" with a 15MB file
-    ${dummy}=    Evaluate    b'x' * 15728640
-    ${files}=    Create Dictionary    file=${dummy}
-    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    files=${files}    expected_status=any
+    ${b64_data}=    Evaluate    base64.b64encode(b'x' * 15728640).decode('utf-8')    modules=base64
+    ${payload}=    Create Dictionary
+    ...    fileName=file_15mb.bin
+    ...    mimeType=application/octet-stream
+    ...    fileSize=${15728640}
+    ...    fileData=${b64_data}
+    ...    uploadedAt=2026-06-03T19:44:43
+    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to "/api/v1/grade-records/${record_id}/attachments" with a 1MB file
-    ${dummy}=    Evaluate    b'x' * 1048576
-    ${files}=    Create Dictionary    file=${dummy}
-    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    files=${files}    expected_status=any
+    ${b64_data}=    Evaluate    base64.b64encode(b'x' * 1048576).decode('utf-8')    modules=base64
+    ${payload}=    Create Dictionary
+    ...    fileName=file_1mb.bin
+    ...    mimeType=application/octet-stream
+    ...    fileSize=${1048576}
+    ...    fileData=${b64_data}
+    ...    uploadedAt=2026-06-03T19:44:43
+    ${resp}=    POST On Session    score_api    /api/v1/grade-records/${record_id}/attachments    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 # ---------------------------------------------------------------------------
