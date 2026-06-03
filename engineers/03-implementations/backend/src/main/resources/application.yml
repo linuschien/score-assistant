@@ -1,6 +1,8 @@
 spring:
   application:
     name: score-assistant
+  codec:
+    max-in-memory-size: 25MB
 
   r2dbc:
     url: r2dbc:h2:mem:///scoreassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE

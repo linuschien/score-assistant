@@ -53,6 +53,7 @@ class AttachmentServiceTest {
     @DisplayName("create() should save attachment under valid GradeRecord")
     void create_shouldSaveUnderValidRecord() {
         when(gradeRecordRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(attachmentRepository.count(any(Example.class))).thenReturn(Mono.just(0L));
         when(attachmentRepository.save(any())).thenReturn(Mono.just(attachmentEntity));
 
         var req = new AttachmentRequest("homework.pdf", "application/pdf", 1024,
@@ -165,6 +166,45 @@ class AttachmentServiceTest {
         StepVerifier.create(attachmentService.update(attachmentId, req))
                 .expectErrorMatches(throwable -> throwable instanceof ValidationException &&
                         throwable.getMessage().equals("File size must be greater than 0"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when file size exceeds 10MB limit")
+    void create_shouldThrowWhenFileSizeExceedsLimit() {
+        var req = new AttachmentRequest("homework.pdf", "application/pdf", 11 * 1024 * 1024,
+                new byte[]{1}, LocalDateTime.now());
+
+        StepVerifier.create(attachmentService.create(gradeRecordId, req))
+                .expectErrorMatches(throwable -> throwable instanceof ValidationException &&
+                        throwable.getMessage().equals("File size exceeds the limit"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when attachment count limit is reached")
+    void create_shouldThrowWhenCountLimitReached() {
+        when(gradeRecordRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(attachmentRepository.count(any(Example.class))).thenReturn(Mono.just(5L));
+
+        var req = new AttachmentRequest("homework.pdf", "application/pdf", 1024,
+                new byte[]{1, 2, 3}, LocalDateTime.now());
+
+        StepVerifier.create(attachmentService.create(gradeRecordId, req))
+                .expectErrorMatches(throwable -> throwable instanceof ValidationException &&
+                        throwable.getMessage().equals("Attachment limit has been reached"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("update() should throw ValidationException when file size exceeds 10MB limit")
+    void update_shouldThrowWhenFileSizeExceedsLimit() {
+        var req = new AttachmentRequest("homework.pdf", "application/pdf", 11 * 1024 * 1024,
+                new byte[]{1}, LocalDateTime.now());
+
+        StepVerifier.create(attachmentService.update(attachmentId, req))
+                .expectErrorMatches(throwable -> throwable instanceof ValidationException &&
+                        throwable.getMessage().equals("File size exceeds the limit"))
                 .verify();
     }
 }

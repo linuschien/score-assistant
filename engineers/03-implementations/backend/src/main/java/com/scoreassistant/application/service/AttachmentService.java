@@ -34,6 +34,9 @@ public class AttachmentService {
         if (req.fileSize() <= 0) {
             return Mono.error(new ValidationException("File size must be greater than 0"));
         }
+        if (req.fileSize() > 10 * 1024 * 1024) {
+            return Mono.error(new ValidationException("File size exceeds the limit"));
+        }
         var recordProbe = new GradeRecordEntity(gradeRecordId, null, null, null, null, 0, null, null, false, null);
         var matcher = ExampleMatcher.matching()
                 .withIgnorePaths("version")
@@ -42,13 +45,21 @@ public class AttachmentService {
                 .filter(exists -> exists)
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("GradeRecord", gradeRecordId)))
                 .flatMap(exists -> {
-                    var now = LocalDateTime.now();
-                    var entity = new AttachmentEntity(
-                            null, gradeRecordId,
-                            req.fileName(), req.mimeType(), req.fileSize(), req.fileData(),
-                            req.uploadedAt(), now, now, false, null
-                    );
-                    return attachmentRepository.save(entity);
+                    var attProbe = new AttachmentEntity(null, gradeRecordId, null, null, 0, null, null, null, null, false, null);
+                    var attMatcher = ExampleMatcher.matching().withIgnorePaths("fileSize").withIgnoreNullValues();
+                    return attachmentRepository.count(Example.of(attProbe, attMatcher))
+                            .flatMap(count -> {
+                                if (count >= 5) {
+                                    return Mono.error(new ValidationException("Attachment limit has been reached"));
+                                }
+                                var now = LocalDateTime.now();
+                                var entity = new AttachmentEntity(
+                                        null, gradeRecordId,
+                                        req.fileName(), req.mimeType(), req.fileSize(), req.fileData(),
+                                        req.uploadedAt(), now, now, false, null
+                                );
+                                return attachmentRepository.save(entity);
+                            });
                 })
                 .map(this::toResponse);
     }
@@ -64,6 +75,9 @@ public class AttachmentService {
     public Mono<AttachmentResponse> update(UUID id, AttachmentRequest req) {
         if (req.fileSize() <= 0) {
             return Mono.error(new ValidationException("File size must be greater than 0"));
+        }
+        if (req.fileSize() > 10 * 1024 * 1024) {
+            return Mono.error(new ValidationException("File size exceeds the limit"));
         }
         return attachmentRepository.findById(id)
                 .filter(e -> !e.deleted())
