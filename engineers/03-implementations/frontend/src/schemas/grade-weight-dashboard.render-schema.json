@@ -222,6 +222,13 @@
         ]
       }
     },
+    "weight-inline-input": {
+      "type": "WeightInlineInput",
+      "props": {
+        "id": "weight-inline-input"
+      },
+      "children": []
+    },
     "weight-editor-table": {
       "type": "DataTable",
       "props": {
@@ -249,7 +256,7 @@
         }
       },
       "children": [
-        "weight-input"
+        "weight-inline-input"
       ],
       "on": {
         "press": [

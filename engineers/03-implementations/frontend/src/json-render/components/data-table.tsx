@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { createContext } from 'react';
 import { useStateStore, useStateValue } from '@json-render/react';
 import { shadcnComponents } from '@json-render/shadcn';
 import type { ComponentType } from 'react';
-import { WeightInlineInput } from './weight-inline-input';
 
 const Spinner = shadcnComponents.Spinner;
+
+export const RowContext = createContext<{ rowId?: string; row?: any }>({});
 
 export const DataTable: ComponentType<any> = ({ element, children, bindings, emit, on }: any) => {
   let store: any;
@@ -26,27 +27,10 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
   }
 
   const isLoading = useStateValue(`/loading/${dataRef}`) === true;
-  const isWeightTable = element?.props?.id === 'weight-editor-table';
+  const stateVal = useStateValue(bindPath);
+  const rows: any[] = Array.isArray(stateVal) ? (stateVal as any[]) : (Array.isArray(dataProp) ? dataProp : []);
 
-  // ────────────────────────────────────────────────────────────────────────────────
-  // Standard list / weight table rendering
-  // ────────────────────────────────────────────────────────────────────────────────
-  const boundData = useStateValue(isWeightTable ? '/data/listGradeItems' : (bindPath || '/__dummy__'));
-  const data = isWeightTable ? boundData : (bindPath ? boundData : dataProp);
-  const rows: any[] = Array.isArray(data) ? data : [];
-
-  const handleWeightChange = (rowId: string, newVal: number) => {
-    if (store) {
-      const currentList = store.get('/data/listGradeItems') || [];
-      const updatedList = currentList.map((item: any) => {
-        if (item.id === rowId) {
-          return { ...item, weight: newVal };
-        }
-        return item;
-      });
-      store.set('/data/listGradeItems', updatedList);
-    }
-  };
+  const hasOperations = React.Children.count(children) > 0;
 
   return (
     <div className="bg-[#0d1321]/80 backdrop-blur-sm border border-slate-800/80 rounded-xl overflow-hidden shadow-xl">
@@ -56,15 +40,14 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
             {columns?.map((col: any) => (
               <th key={col.field} className="px-6 py-4">{col.label}</th>
             ))}
-            {isWeightTable && <th className="px-6 py-4 text-right">權重 (%)</th>}
-            {!isWeightTable && React.Children.count(children) > 0 && <th className="px-6 py-4 text-right">操作</th>}
+            {hasOperations && <th className="px-6 py-4 text-right">操作</th>}
           </tr>
         </thead>
         <tbody>
           {isLoading && rows.length === 0 ? (
             <tr>
               <td
-                colSpan={(columns?.length || 0) + ((React.Children.count(children) > 0 || isWeightTable) ? 1 : 0)}
+                colSpan={(columns?.length || 0) + (hasOperations ? 1 : 0)}
                 className="px-6 py-12 text-center text-slate-500 font-medium"
               >
                 <div className="flex flex-col items-center justify-center space-y-3">
@@ -79,7 +62,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
           ) : rows.length === 0 ? (
             <tr>
               <td
-                colSpan={(columns?.length || 0) + ((React.Children.count(children) > 0 || isWeightTable) ? 1 : 0)}
+                colSpan={(columns?.length || 0) + (hasOperations ? 1 : 0)}
                 className="px-6 py-8 text-center text-slate-500 font-medium"
               >
                 (沒有資料)
@@ -102,44 +85,44 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
                     )}
                   </td>
                 ))}
-                {isWeightTable && (
-                  <td className="px-6 py-4 text-right">
-                    <WeightInlineInput
-                      rowId={row.id}
-                      value={row.weight ?? 0}
-                      onChange={(newVal) => handleWeightChange(row.id, newVal)}
-                    />
-                  </td>
-                )}
-                {!isWeightTable && React.Children.count(children) > 0 && (
+                {hasOperations && (
                   <td className="px-6 py-4 text-right space-x-2">
-                    {React.Children.map(children, (child) => {
-                      if (!React.isValidElement(child)) return child;
-                      return (
-                        <div
-                          className="inline-block"
-                          onClickCapture={() => {
-                            if (store && row?.id) {
-                              const tableId = element?.props?.id || '';
-                              const dataRef = element?.props?.dataRef || '';
-                              let entity = '';
-                              if (dataRef && dataRef.startsWith('list')) {
-                                const raw = dataRef.slice(4);
-                                const base = raw.endsWith('es') ? raw.slice(0, -2) : raw.endsWith('s') ? raw.slice(0, -1) : raw;
-                                entity = base.charAt(0).toLowerCase() + base.slice(1);
-                              } else if (tableId) {
-                                entity = tableId.replace('-table', '').replace('-list', '');
+                    <RowContext.Provider value={{ rowId: row.id, row }}>
+                      {React.Children.map(children, (child) => {
+                        if (!React.isValidElement(child)) return child;
+                        
+                        // Clone the child and dynamically inject rowId and row details
+                        const clonedChild = React.cloneElement(child as any, {
+                          rowId: row.id,
+                          row: row,
+                        });
+
+                        return (
+                          <div
+                            className="inline-block"
+                            onClickCapture={() => {
+                              if (store && row?.id) {
+                                const tableId = element?.props?.id || '';
+                                const dataRef = element?.props?.dataRef || '';
+                                let entity = '';
+                                if (dataRef && dataRef.startsWith('list')) {
+                                  const raw = dataRef.slice(4);
+                                  const base = raw.endsWith('es') ? raw.slice(0, -2) : raw.endsWith('s') ? raw.slice(0, -1) : raw;
+                                  entity = base.charAt(0).toLowerCase() + base.slice(1);
+                                } else if (tableId) {
+                                  entity = tableId.replace('-table', '').replace('-list', '');
+                                }
+                                if (entity) {
+                                  store.set(`/selected/${entity}Id`, row.id);
+                                }
                               }
-                              if (entity) {
-                                store.set(`/selected/${entity}Id`, row.id);
-                              }
-                            }
-                          }}
-                        >
-                          {child}
-                        </div>
-                      );
-                    })}
+                            }}
+                          >
+                            {clonedChild}
+                          </div>
+                        );
+                      })}
+                    </RowContext.Provider>
                   </td>
                 )}
               </tr>

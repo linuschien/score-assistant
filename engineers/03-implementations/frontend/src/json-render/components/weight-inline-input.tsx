@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useStateStore } from '@json-render/react';
+import { RowContext } from './data-table';
 
 interface WeightInlineInputProps {
-  rowId: string;
-  value: number;
-  onChange: (val: number) => void;
+  rowId?: string;
+  row?: any;
 }
 
-export const WeightInlineInput = ({ rowId, value, onChange }: WeightInlineInputProps) => {
+export const WeightInlineInput = ({ rowId: propRowId, row: propRow }: WeightInlineInputProps) => {
+  const context = useContext(RowContext);
+  const row = propRow ?? context?.row;
+  const rowId = propRowId ?? context?.rowId;
+
+  const store = useStateStore();
+  const value = row?.weight ?? 0;
+  const activeRowId = rowId || row?.id || '';
+
   const [localVal, setLocalVal] = useState(String(value));
 
   useEffect(() => {
@@ -17,10 +26,17 @@ export const WeightInlineInput = ({ rowId, value, onChange }: WeightInlineInputP
     const val = e.target.value;
     setLocalVal(val);
     const parsed = parseFloat(val);
-    if (!isNaN(parsed)) {
-      onChange(parsed);
-    } else if (val === '') {
-      onChange(0);
+    const newVal = isNaN(parsed) ? 0 : parsed;
+
+    if (store && activeRowId) {
+      const currentList = (store.get('/data/listGradeItems') as any[]) || [];
+      const updatedList = currentList.map((item: any) => {
+        if (item.id === activeRowId) {
+          return { ...item, weight: newVal };
+        }
+        return item;
+      });
+      store.set('/data/listGradeItems', updatedList);
     }
   };
 
@@ -34,7 +50,7 @@ export const WeightInlineInput = ({ rowId, value, onChange }: WeightInlineInputP
       min="0"
       max="100"
       step="any"
-      data-testid={`weight-input-${rowId}`}
+      data-testid={`weight-input-${activeRowId}`}
     />
   );
 };

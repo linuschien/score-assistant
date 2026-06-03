@@ -13,6 +13,7 @@ import { RechartsPieChartComponent } from './components/pie-chart';
 import { ChartPlaceholder } from './components/chart-placeholder';
 import { StudentGradesPreview } from './components/student-grades-preview';
 import { GradeMatrixTable } from './components/grade-matrix-table';
+import { WeightInlineInput } from './components/weight-inline-input';
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Adapter: bridges @json-render/react's ComponentRenderProps  { element, children, emit, on, bindings, loading }
@@ -147,6 +148,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   'DatePicker': DatePicker,
   'StudentGradesPreview': StudentGradesPreview,
   'GradeMatrixTable': GradeMatrixTable,
+  'WeightInlineInput': WeightInlineInput,
 
   // ── 4. Chart wrappers ───────────────────────────────────────────────────────
   'Chart:bar': ChartPlaceholder('Bar'),
