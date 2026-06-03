@@ -1,6 +1,7 @@
-import React, { createContext } from 'react';
+import React, { createContext, useState, useMemo } from 'react';
 import { useStateStore, useStateValue } from '@json-render/react';
 import { shadcnComponents } from '@json-render/shadcn';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 const Spinner = shadcnComponents.Spinner;
@@ -32,14 +33,113 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
 
   const hasOperations = React.Children.count(children) > 0;
 
+  const tableId = element?.props?.id || '';
+  const [prevTableId, setPrevTableId] = useState<string>(tableId);
+
+  // Sorting state
+  const [sortField, setSortField] = useState<string | null>(() => {
+    const col = columns?.find((c: any) => c.default_sort);
+    return col ? col.field : null;
+  });
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(() => {
+    const col = columns?.find((c: any) => c.default_sort);
+    return col ? (col.default_sort === 'desc' ? 'desc' : 'asc') : null;
+  });
+
+  // Reset sorting state if the table ID changes (e.g. navigation or switching tabs)
+  if (tableId !== prevTableId) {
+    const col = columns?.find((c: any) => c.default_sort);
+    setSortField(col ? col.field : null);
+    setSortDirection(col ? (col.default_sort === 'desc' ? 'desc' : 'asc') : null);
+    setPrevTableId(tableId);
+  }
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      const col = columns?.find((c: any) => c.field === field);
+      setSortDirection(col?.default_sort === 'desc' ? 'desc' : 'asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    if (!sortField || !sortDirection) return rows;
+
+    return [...rows].sort((a, b) => {
+      const aVal = a[sortField];
+      const bVal = b[sortField];
+
+      // Handle null/undefined values by placing them at the bottom
+      if (aVal === undefined || aVal === null) return 1;
+      if (bVal === undefined || bVal === null) return -1;
+
+      // Handle numbers
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      // Convert to string and compare
+      const strA = String(aVal).trim();
+      const strB = String(bVal).trim();
+
+      // Check if they are numeric strings (e.g. seat numbers like "01", "02")
+      const numA = Number(strA);
+      const numB = Number(strB);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      }
+
+      // Localized string comparison
+      return sortDirection === 'asc'
+        ? strA.localeCompare(strB, 'zh-Hant-TW', { numeric: true })
+        : strB.localeCompare(strA, 'zh-Hant-TW', { numeric: true });
+    });
+  }, [rows, sortField, sortDirection]);
+
   return (
     <div className="bg-[#0d1321]/80 backdrop-blur-sm border border-slate-800/80 rounded-xl overflow-hidden shadow-xl">
       <table className="w-full text-left border-collapse text-slate-300 text-sm" aria-label={label}>
         <thead className="bg-slate-900/50 text-slate-400 font-medium border-b border-slate-800/80">
           <tr>
-            {columns?.map((col: any) => (
-              <th key={col.field} className="px-6 py-4">{col.label}</th>
-            ))}
+            {columns?.map((col: any) => {
+              const isSortable = col.sortable === true;
+              const isSorted = sortField === col.field;
+              return (
+                <th
+                  key={col.field}
+                  className={`px-6 py-4 select-none ${
+                    isSortable
+                      ? 'cursor-pointer group hover:text-slate-200 transition-colors duration-200'
+                      : ''
+                  }`}
+                  onClick={() => isSortable && handleSort(col.field)}
+                  aria-sort={
+                    isSorted
+                      ? (sortDirection === 'asc' ? 'ascending' : 'descending')
+                      : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>{col.label}</span>
+                    {isSortable && (
+                      <span className="inline-flex">
+                        {isSorted ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp className="w-4 h-4 text-indigo-400 transition-transform duration-200" />
+                          ) : (
+                            <ArrowDown className="w-4 h-4 text-indigo-400 transition-transform duration-200" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 text-slate-600/60 group-hover:text-slate-400/80 transition-colors duration-200" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              );
+            })}
             {hasOperations && <th className="px-6 py-4 text-right">操作</th>}
           </tr>
         </thead>
@@ -69,7 +169,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
               </td>
             </tr>
           ) : (
-            rows.map((row: any, idx: number) => (
+            sortedRows.map((row: any, idx: number) => (
               <tr key={row.id || idx} className="border-b border-slate-800/40 hover:bg-slate-900/30 transition-colors">
                 {columns?.map((col: any) => (
                   <td key={col.field} className="px-6 py-4">
@@ -91,11 +191,13 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
                       {React.Children.map(children, (child) => {
                         if (!React.isValidElement(child)) return child;
                         
-                        // Clone the child and dynamically inject rowId and row details
-                        const clonedChild = React.cloneElement(child as any, {
-                          rowId: row.id,
-                          row: row,
-                        });
+                        // Clone the child and dynamically inject rowId and row details if it is a component, not a native tag
+                        const clonedChild = typeof child.type === 'string'
+                          ? child
+                          : React.cloneElement(child as any, {
+                              rowId: row.id,
+                              row: row,
+                            });
 
                         return (
                           <div

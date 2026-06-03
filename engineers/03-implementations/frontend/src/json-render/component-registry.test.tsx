@@ -1,6 +1,7 @@
 import { render as tlRender, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { JSONUIProvider, createStateStore } from '@json-render/react';
+import userEvent from '@testing-library/user-event';
 import { componentRegistry } from './component-registry';
 
 function render(ui: React.ReactElement) {
@@ -83,6 +84,75 @@ describe('ComponentRegistry custom components', () => {
     // Case 3: Missing columns and props edge cases
     rerender(<DataTable element={null} />);
     expect(screen.getByText('(沒有資料)')).toBeInTheDocument();
+  });
+
+  it('supports column sorting in DataTable', async () => {
+    const user = userEvent.setup();
+    const DataTable = componentRegistry['DataTable'];
+
+    const mockData = [
+      { id: 'S02', name: 'Bob', score: 90 },
+      { id: 'S01', name: 'Charlie', score: 85 },
+      { id: 'S03', name: 'Alice', score: 95 },
+    ];
+
+    const columns = [
+      { field: 'id', label: 'ID', sortable: true },
+      { field: 'name', label: 'Name', sortable: true, default_sort: 'asc' },
+      { field: 'score', label: 'Score', sortable: false },
+    ];
+
+    render(
+      <DataTable
+        element={{
+          props: {
+            columns,
+            data: mockData,
+            label: 'Sort Table',
+          },
+        }}
+      />
+    );
+
+    // Initial render should be sorted by Name in 'asc' order (Alice, Bob, Charlie) due to default_sort: 'asc'
+    let rows = screen.getAllByRole('row');
+    // Note: row 0 is the table header
+    expect(rows[1]).toHaveTextContent('Alice');
+    expect(rows[2]).toHaveTextContent('Bob');
+    expect(rows[3]).toHaveTextContent('Charlie');
+
+    // Click 'Name' header to toggle to descending (Charlie, Bob, Alice)
+    const nameHeader = screen.getByText('Name');
+    await user.click(nameHeader);
+    rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('Charlie');
+    expect(rows[2]).toHaveTextContent('Bob');
+    expect(rows[3]).toHaveTextContent('Alice');
+
+    // Click 'ID' header to sort by ID in ascending (S01, S02, S03)
+    // S01 is Charlie, S02 is Bob, S03 is Alice
+    const idHeader = screen.getByText('ID');
+    await user.click(idHeader);
+    rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('Charlie'); // S01
+    expect(rows[2]).toHaveTextContent('Bob');     // S02
+    expect(rows[3]).toHaveTextContent('Alice');   // S03
+
+    // Click 'ID' header again to sort by ID in descending (S03, S02, S01)
+    await user.click(idHeader);
+    rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('Alice');   // S03
+    expect(rows[2]).toHaveTextContent('Bob');     // S02
+    expect(rows[3]).toHaveTextContent('Charlie'); // S01
+
+    // Clicking non-sortable 'Score' header shouldn't change the sorting
+    const scoreHeader = screen.getByText('Score');
+    await user.click(scoreHeader);
+    rows = screen.getAllByRole('row');
+    // Still sorted by ID descending
+    expect(rows[1]).toHaveTextContent('Alice');
+    expect(rows[2]).toHaveTextContent('Bob');
+    expect(rows[3]).toHaveTextContent('Charlie');
   });
 
   it('renders Breadcrumb component with children', () => {
