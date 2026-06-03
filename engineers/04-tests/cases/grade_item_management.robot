@@ -29,28 +29,28 @@ Create a new GradeItem — ASSIGNMENT 100pts weight 10 should return 201
     ...                UI: create-grade-item-button → item-name-field, item-type-selection,
     ...                    max-score-field, weight-field, submit-grade-item-trigger
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to grade-items endpoint with name "第1次作業" type "ASSIGNMENT" max "100" weight "10"
+    When a POST request is made to grade-items endpoint with name "第1次作業" type "ASSIGNMENT" max "100" weight "0.10"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — REPORT 100pts weight 20 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to grade-items endpoint with name "期中報告" type "REPORT" max "100" weight "20"
+    When a POST request is made to grade-items endpoint with name "期中報告" type "REPORT" max "100" weight "0.20"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — ATTENDANCE 1pt weight 5 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to grade-items endpoint with name "10/20出席" type "ATTENDANCE" max "1" weight "5"
+    When a POST request is made to grade-items endpoint with name "10/20出席" type "ATTENDANCE" max "1" weight "0.05"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Create a new GradeItem — CLASSROOM_PERFORMANCE 10pts weight 5 should return 201
     [Documentation]    US-04-01 — Reused from: grade_item_management.feature
     Given a Class with ID "${CLASS_ID}" exists in Semester "${SEMESTER_ID}"
-    When a POST request is made to grade-items endpoint with name "課堂發言" type "CLASSROOM_PERFORMANCE" max "10" weight "5"
+    When a POST request is made to grade-items endpoint with name "課堂發言" type "CLASSROOM_PERFORMANCE" max "10" weight "0.05"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
@@ -158,7 +158,7 @@ Initialize Grade Item Suite
     ...    itemName=AutoTest-SuiteItem
     ...    itemType=ASSIGNMENT
     ...    maxScore=100
-    ...    weight=20
+    ...    weight=0.20
     ${i_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${i_payload}
     Should Be Equal As Strings    ${i_resp.status_code}    201
     Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[id]
@@ -218,7 +218,7 @@ a PUT request is made to grade-item detail endpoint with full payload
     ...    itemType=ASSIGNMENT
     ...    itemDescription=修正後的作業說明
     ...    maxScore=100
-    ...    weight=15
+    ...    weight=0.15
     ${resp}=    PUT On Session    score_api    ${ITEMS_BASE}/${GRADE_ITEM_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 

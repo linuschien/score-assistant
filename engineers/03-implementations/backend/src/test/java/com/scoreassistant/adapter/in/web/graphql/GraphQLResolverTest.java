@@ -60,9 +60,9 @@ class GraphQLResolverTest {
         var classId = UUID.randomUUID().toString();
         var semId = UUID.randomUUID().toString();
         var response = new ClassResponse(classId, semId, "CS-101", null, BigDecimal.valueOf(60.0));
-        when(classService.listAll(any(), any())).thenReturn(Flux.just(response));
+        when(classService.listAll(any(), any(), any())).thenReturn(Flux.just(response));
 
-        var result = resolver.listClasses(new ClassGraphQLResolver.ClassFilterInput(semId, "CS-101"));
+        var result = resolver.listClasses(new ClassGraphQLResolver.ClassFilterInput(semId, "CS-101", null));
         StepVerifier.create(result)
                 .expectNext(response)
                 .verifyComplete();

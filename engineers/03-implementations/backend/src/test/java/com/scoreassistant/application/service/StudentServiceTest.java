@@ -215,4 +215,26 @@ class StudentServiceTest {
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 2)
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when studentNumber is less than 1")
+    void create_shouldThrowWhenStudentNumberLessThanOne() {
+        var req = new StudentRequest("S101", 0, "Alice", "alice@gmail.com");
+
+        StepVerifier.create(studentService.create(classId, req))
+                .expectErrorMatches(throwable -> throwable instanceof com.scoreassistant.domain.exception.ValidationException
+                        && throwable.getMessage().contains("Student seat number must be at least 1"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("update() should throw ValidationException when studentNumber is less than 1")
+    void update_shouldThrowWhenStudentNumberLessThanOne() {
+        var req = new StudentRequest("S101", 0, "Alice", "alice@gmail.com");
+
+        StepVerifier.create(studentService.update(studentId, req))
+                .expectErrorMatches(throwable -> throwable instanceof com.scoreassistant.domain.exception.ValidationException
+                        && throwable.getMessage().contains("Student seat number must be at least 1"))
+                .verify();
+    }
 }

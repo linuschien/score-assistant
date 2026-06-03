@@ -43,6 +43,9 @@ public class StudentService {
 
     @Transactional
     public Mono<StudentResponse> create(UUID classId, StudentRequest req) {
+        if (req.studentNumber() < 1) {
+            return Mono.error(new ValidationException("Student seat number must be at least 1"));
+        }
         var classProbe = new ClassEntity(classId, null, null, null, null, null, null, false, null);
         return classRepository.exists(Example.of(classProbe))
                 .filter(exists -> exists)
@@ -89,6 +92,9 @@ public class StudentService {
 
     @Transactional
     public Mono<StudentResponse> update(UUID id, StudentRequest req) {
+        if (req.studentNumber() < 1) {
+            return Mono.error(new ValidationException("Student seat number must be at least 1"));
+        }
         return studentRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
@@ -121,6 +127,9 @@ public class StudentService {
 
     @Transactional
     public Mono<StudentResponse> patch(UUID id, StudentPatchRequest req) {
+        if (req.studentNumber() != null && req.studentNumber() < 1) {
+            return Mono.error(new ValidationException("Student seat number must be at least 1"));
+        }
         return studentRepository.findById(id)
                 .filter(e -> !e.deleted())
                 .switchIfEmpty(Mono.error(ResourceNotFoundException.of("Student", id)))
@@ -277,6 +286,9 @@ public class StudentService {
                                     studentNumber = Integer.parseInt(parts[numIdx].trim());
                                 } catch (NumberFormatException e) {
                                     return Mono.just(new ImportResult(false, false, "第 " + line + " 行：座號必須為有效數字"));
+                                }
+                                if (studentNumber < 1) {
+                                    return Mono.just(new ImportResult(false, false, "第 " + line + " 行：座號必須大於等於 1"));
                                 }
                                 String studentName = parts[nameIdx].trim();
                                 if (studentName.isEmpty()) {

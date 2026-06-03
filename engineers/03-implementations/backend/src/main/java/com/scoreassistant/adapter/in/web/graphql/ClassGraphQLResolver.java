@@ -24,7 +24,8 @@ public class ClassGraphQLResolver {
     public Flux<ClassResponse> listClasses(@Argument ClassFilterInput filter) {
         UUID semesterId = filter != null && filter.semesterId() != null ? UUID.fromString(filter.semesterId()) : null;
         String className = filter != null ? filter.className() : null;
-        return classService.listAll(semesterId, className);
+        String classGroup = filter != null ? filter.classGroup() : null;
+        return classService.listAll(semesterId, className, classGroup);
     }
 
     @SchemaMapping(typeName = "Class", field = "semesterId")
@@ -47,5 +48,5 @@ public class ClassGraphQLResolver {
         return cls.classGroup();
     }
 
-    public record ClassFilterInput(String semesterId, String className) {}
+    public record ClassFilterInput(String semesterId, String className, String classGroup) {}
 }

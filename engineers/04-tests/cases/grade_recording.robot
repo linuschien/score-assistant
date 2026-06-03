@@ -249,12 +249,15 @@ a POST request is made to "/api/v1/grade-records" for ${item_type} item with sco
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to "/api/v1/grade-records" with attendance_status "${status}"
-    [Documentation]    POST /api/v1/grade-records with attendanceStatus
-    ...    UI: attendance-selector → score-input (grade-entry-board.ui-manifest.json)
+    [Documentation]    POST /api/v1/grade-records mapping status to score (matching UI behavior)
+    ${score}=    Set Variable If
+    ...    '${status}' == 'PRESENT'    ${1.0}
+    ...    '${status}' == 'ABSENT'     ${0.0}
+    ...    '${status}' == 'EXCUSED'    ${0.5}
     ${payload}=    Create Dictionary
     ...    gradeItemId=${TEMP_ITEM_ID}
     ...    studentId=${STUDENT_ID}
-    ...    attendanceStatus=${status}
+    ...    score=${score}
     ${resp}=    POST On Session    score_api    /api/v1/grade-records    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 

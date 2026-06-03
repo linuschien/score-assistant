@@ -6,6 +6,7 @@ import com.scoreassistant.adapter.in.web.dto.ExportAttendanceRequestDto;
 import com.scoreassistant.adapter.in.web.dto.CalculateWeightedScoresRequestDto;
 import com.scoreassistant.adapter.out.persistence.*;
 import com.scoreassistant.domain.exception.ResourceNotFoundException;
+import com.scoreassistant.domain.exception.ValidationException;
 import com.scoreassistant.domain.model.*;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -59,6 +60,7 @@ class GradeItemServiceTest {
     @DisplayName("create() should save GradeItem")
     void create_shouldSaveGradeItem() {
         when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(gradeItemRepository.exists(any(Example.class))).thenReturn(Mono.just(false));
         when(gradeItemRepository.save(any())).thenReturn(Mono.just(gradeItemEntity));
 
         var req = new GradeItemRequest("Midterm Exam", "ASSIGNMENT", LocalDate.now(),
@@ -109,6 +111,7 @@ class GradeItemServiceTest {
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
                 BigDecimal.valueOf(95.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
 
+        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.just(gradeItemEntity));
         when(studentRepository.findAll(any(Example.class), any(Sort.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.just(record));
@@ -123,6 +126,7 @@ class GradeItemServiceTest {
     void exportAttendance_shouldSucceed() {
         var student = new StudentEntity(UUID.randomUUID(), classId, "S101", 2026001, "Alice", "alice@gmail.com",
                 LocalDateTime.now(), LocalDateTime.now(), false, null);
+        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.empty());
         when(studentRepository.findAll(any(Example.class), any(Sort.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.empty());
@@ -141,6 +145,7 @@ class GradeItemServiceTest {
         var record = new GradeRecordEntity(UUID.randomUUID(), itemId, studentId,
                 BigDecimal.valueOf(90.0), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
 
+        when(classRepository.findById(classId)).thenReturn(Mono.just(classEntity));
         when(gradeItemRepository.findAll(any(Example.class))).thenReturn(Flux.just(gradeItemEntity));
         when(studentRepository.findAll(any(Example.class))).thenReturn(Flux.just(student));
         when(gradeRecordRepository.findByClassId(classId)).thenReturn(Flux.just(record));
@@ -148,5 +153,63 @@ class GradeItemServiceTest {
         StepVerifier.create(gradeItemService.calculateWeightedScores(classId, new CalculateWeightedScoresRequestDto(classId)))
                 .expectNextMatches(r -> r.success() && r.affectedCount() == 1)
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when maxScore is negative")
+    void create_shouldThrowWhenMaxScoreNegative() {
+        var req = new GradeItemRequest("Quiz 1", "ASSIGNMENT", LocalDate.now(),
+                "Quiz", BigDecimal.valueOf(-1.0), BigDecimal.valueOf(0.1));
+
+        StepVerifier.create(gradeItemService.create(classId, req))
+                .expectErrorMatches(t -> t instanceof ValidationException && t.getMessage().equals("Max score must not be negative"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when weight is greater than 1.0")
+    void create_shouldThrowWhenWeightTooLarge() {
+        var req = new GradeItemRequest("Quiz 1", "ASSIGNMENT", LocalDate.now(),
+                "Quiz", BigDecimal.valueOf(10.0), BigDecimal.valueOf(1.1));
+
+        StepVerifier.create(gradeItemService.create(classId, req))
+                .expectErrorMatches(t -> t instanceof ValidationException && t.getMessage().equals("Weight must be between 0.0 and 1.0"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when weight is negative")
+    void create_shouldThrowWhenWeightNegative() {
+        var req = new GradeItemRequest("Quiz 1", "ASSIGNMENT", LocalDate.now(),
+                "Quiz", BigDecimal.valueOf(10.0), BigDecimal.valueOf(-0.1));
+
+        StepVerifier.create(gradeItemService.create(classId, req))
+                .expectErrorMatches(t -> t instanceof ValidationException && t.getMessage().equals("Weight must be between 0.0 and 1.0"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when item name is empty")
+    void create_shouldThrowWhenNameEmpty() {
+        var req = new GradeItemRequest("", "ASSIGNMENT", LocalDate.now(),
+                "Quiz", BigDecimal.valueOf(10.0), BigDecimal.valueOf(0.1));
+
+        StepVerifier.create(gradeItemService.create(classId, req))
+                .expectErrorMatches(t -> t instanceof ValidationException && t.getMessage().equals("Item name must not be empty"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("create() should throw ValidationException when item name is duplicate")
+    void create_shouldThrowWhenNameDuplicate() {
+        when(classRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(gradeItemRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+
+        var req = new GradeItemRequest("Midterm Exam", "ASSIGNMENT", LocalDate.now(),
+                "Quiz", BigDecimal.valueOf(10.0), BigDecimal.valueOf(0.1));
+
+        StepVerifier.create(gradeItemService.create(classId, req))
+                .expectErrorMatches(t -> t instanceof ValidationException && t.getMessage().equals("Grade item name already exists in this class"))
+                .verify();
     }
 }

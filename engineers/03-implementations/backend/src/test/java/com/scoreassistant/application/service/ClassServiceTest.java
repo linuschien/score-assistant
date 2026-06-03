@@ -104,7 +104,7 @@ class ClassServiceTest {
     void listAll_shouldReturnClasses() {
         when(classRepository.findAll(any(Example.class))).thenReturn(Flux.just(classEntity));
 
-        StepVerifier.create(classService.listAll(semesterId, null))
+        StepVerifier.create(classService.listAll(semesterId, null, null))
                 .expectNextCount(1)
                 .verifyComplete();
     }

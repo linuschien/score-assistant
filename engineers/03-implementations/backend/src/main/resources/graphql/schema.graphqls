@@ -33,6 +33,7 @@ type Class {
 input ClassFilterInput {
     semesterId: ID
     className:  String
+    classGroup: String
 }
 
 # ── Student ───────────────────────────────────────────────────

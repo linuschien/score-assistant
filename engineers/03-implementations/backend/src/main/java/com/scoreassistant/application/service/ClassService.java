@@ -108,12 +108,12 @@ public class ClassService {
                 .then();
     }
 
-    public Flux<ClassResponse> listAll(UUID semesterId, String className) {
+    public Flux<ClassResponse> listAll(UUID semesterId, String className, String classGroup) {
         var probe = new ClassEntity(
                 null,
                 semesterId,
                 (className != null && !className.isBlank()) ? className : null,
-                null,
+                (classGroup != null && !classGroup.isBlank()) ? classGroup : null,
                 null, null, null, false, null
         );
         var matcher = ExampleMatcher.matching()
