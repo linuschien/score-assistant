@@ -144,15 +144,15 @@ Initialize Grade Item Suite
     ...    semesterName=AutoTest-GradeItemSuite-Semester
     ...    startDate=2024-09-01
     ...    endDate=2025-01-31
-    ${s_resp}=    POST On Session    score_api    /semesters    json=${s_payload}
+    ${s_resp}=    POST On Session    score_api    /api/v1/semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
     Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Create Class
     ${c_payload}=    Create Dictionary    className=AutoTest-GradeItemSuite-Class
-    ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${c_payload}
+    ${c_resp}=    POST On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
     Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
-    Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
+    Set Suite Variable    ${ITEMS_BASE}    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
     # Step 3: Create GradeItem — used by GET/PUT and duplicate tests
     ${i_payload}=    Create Dictionary
     ...    itemName=AutoTest-SuiteItem
@@ -165,14 +165,14 @@ Initialize Grade Item Suite
 
 Cleanup Grade Item Suite
     # Deleting Semester cascades to Class → GradeItems → GradeRecords
-    DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
+    DELETE On Session    score_api    /api/v1/semesters/${SEMESTER_ID}    expected_status=any
     Delete All Sessions
 
 # ---------------------------------------------------------------------------
 # Given Steps
 # ---------------------------------------------------------------------------
 a Class with ID "${class_id}" exists in Semester "${semester_id}"
-    ${resp}=    GET On Session    score_api    /semesters/${semester_id}/classes/${class_id}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${semester_id}/classes/${class_id}    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    200
 
 a disposable GradeItem is created in Class "${class_id}"
@@ -189,7 +189,7 @@ a disposable GradeItem is created in Class "${class_id}"
 # When Steps
 # ---------------------------------------------------------------------------
 a POST request is made to grade-items endpoint with name "${name}" type "${type}" max "${max}" weight "${weight}"
-    [Documentation]    POST /semesters/{id}/classes/{id}/grade-items
+    [Documentation]    POST /api/v1/semesters/{id}/classes/{id}/grade-items
     ...    UI: create-grade-item-button → item-name-field, item-type-selection,
     ...        max-score-field, weight-field, submit-grade-item-trigger
     ${payload}=    Create Dictionary    itemName=${name}    itemType=${type}    maxScore=${max}    weight=${weight}
@@ -210,7 +210,7 @@ a GET request is made to grade-item detail endpoint
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to grade-item detail endpoint with full payload
-    [Documentation]    PUT /semesters/{id}/classes/{id}/grade-items/{id}
+    [Documentation]    PUT /api/v1/semesters/{id}/classes/{id}/grade-items/{id}
     ...    UI: edit-grade-item-trigger → item-name-field, item-description-field,
     ...        max-score-field, weight-field, submit-grade-item-trigger
     ${payload}=    Create Dictionary

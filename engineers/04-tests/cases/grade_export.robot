@@ -111,64 +111,63 @@ Attendance export includes required columns
 Initialize Grade Export Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Semester
-    ${s_resp}=    POST On Session    score_api    /semesters
-    ...    json={"semesterName":"AutoTest-ExportSuite-Semester","startDate":"2024-09-01","endDate":"2025-01-31"}
+    ${s_payload}=    Create Dictionary    semesterName=AutoTest-ExportSuite-Semester    startDate=2024-09-01    endDate=2025-01-31
+    ${s_resp}=    POST On Session    score_api    /api/v1/semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
     Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Class
-    ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes
-    ...    json={"className":"AutoTest-ExportSuite-Class"}
+    ${c_payload}=    Create Dictionary    className=AutoTest-ExportSuite-Class
+    ${c_resp}=    POST On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
     Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
-    Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
-    Set Suite Variable    ${STUDENTS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/students
+    Set Suite Variable    ${ITEMS_BASE}    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
+    Set Suite Variable    ${STUDENTS_BASE}    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}/students
     # Step 3: Student with grade record (seat 1)
-    ${st1_resp}=    POST On Session    score_api    ${STUDENTS_BASE}
-    ...    json={"studentNumber":1,"studentName":"AutoTest-ExportStudent1"}
+    ${st1_payload}=    Create Dictionary    studentId=S_ExportSuite_1    studentNumber=${1}    studentName=AutoTest-ExportStudent1    email=exportsuite1@gmail.com
+    ${st1_resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${st1_payload}
     Should Be Equal As Strings    ${st1_resp.status_code}    201
     Set Suite Variable    ${STUDENT_ID}    ${st1_resp.json()}[id]
     # Step 4: Student WITHOUT grade record (seat 2) — used for null score test
-    ${st2_resp}=    POST On Session    score_api    ${STUDENTS_BASE}
-    ...    json={"studentNumber":2,"studentName":"AutoTest-ExportStudent2-NoRecord"}
+    ${st2_payload}=    Create Dictionary    studentId=S_ExportSuite_2    studentNumber=${2}    studentName=AutoTest-ExportStudent2-NoRecord    email=exportsuite2@gmail.com
+    ${st2_resp}=    POST On Session    score_api    ${STUDENTS_BASE}    json=${st2_payload}
     Should Be Equal As Strings    ${st2_resp.status_code}    201
     Set Suite Variable    ${STUDENT_ID_NO_RECORD}    ${st2_resp.json()}[id]
-    # Step 5: ASSIGNMENT GradeItem (weight 40)
-    ${i_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"itemName":"AutoTest-ExportAssignment","itemType":"ASSIGNMENT","maxScore":100,"weight":40}
+    # Step 5: ASSIGNMENT GradeItem (weight 0.40)
+    ${i_payload}=    Create Dictionary    itemName=AutoTest-ExportAssignment    itemType=ASSIGNMENT    maxScore=${100}    weight=${0.40}
+    ${i_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${i_payload}
     Should Be Equal As Strings    ${i_resp.status_code}    201
     Set Suite Variable    ${GRADE_ITEM_ID}    ${i_resp.json()}[id]
-    # Step 6: ATTENDANCE GradeItem (weight 40) — used for attendance export tests
-    ${ai_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"itemName":"AutoTest-ExportAttendance","itemType":"ATTENDANCE","maxScore":1,"weight":40}
+    # Step 6: ATTENDANCE GradeItem (weight 0.40) — used for attendance export tests
+    ${ai_payload}=    Create Dictionary    itemName=AutoTest-ExportAttendance    itemType=ATTENDANCE    maxScore=${1}    weight=${0.40}
+    ${ai_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${ai_payload}
     Should Be Equal As Strings    ${ai_resp.status_code}    201
     Set Suite Variable    ${ATTENDANCE_ITEM_ID}    ${ai_resp.json()}[id]
-    # Total weight is intentionally 80 (not 100) to support the weight_warning test
+    # Total weight is intentionally 0.80 (80%) to support the weight_warning test
     # Step 7: GradeRecord for Student1 on ASSIGNMENT item (score 85)
-    ${r_resp}=    POST On Session    score_api    /grade-records
-    ...    json={"gradeItemId":"${GRADE_ITEM_ID}","studentId":"${STUDENT_ID}","score":85}
+    ${r_payload}=    Create Dictionary    gradeItemId=${GRADE_ITEM_ID}    studentId=${STUDENT_ID}    score=${85}
+    ${r_resp}=    POST On Session    score_api    /api/v1/grade-records    json=${r_payload}
     Should Be Equal As Strings    ${r_resp.status_code}    201
     Set Suite Variable    ${GRADE_RECORD_ID}    ${r_resp.json()}[id]
     # Step 8: Attendance record for Student1 (PRESENT → score 1.0)
-    POST On Session    score_api    /grade-records
-    ...    json={"gradeItemId":"${ATTENDANCE_ITEM_ID}","studentId":"${STUDENT_ID}","attendanceStatus":"PRESENT"}
-    ...    expected_status=any
+    ${r_att_payload}=    Create Dictionary    gradeItemId=${ATTENDANCE_ITEM_ID}    studentId=${STUDENT_ID}    attendanceStatus=PRESENT
+    POST On Session    score_api    /api/v1/grade-records    json=${r_att_payload}    expected_status=any
 
 Cleanup Grade Export Suite
-    DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
+    DELETE On Session    score_api    /api/v1/semesters/${SEMESTER_ID}    expected_status=any
     Delete All Sessions
 
 # ---------------------------------------------------------------------------
 # Given Steps
 # ---------------------------------------------------------------------------
 a Class with ID "${class_id}" exists with several Students and GradeRecords
-    ${resp}=    GET On Session    score_api    /semesters/${SEMESTER_ID}/classes/${class_id}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes/${class_id}    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    200
 
 a Student "${student_id}" has no GradeRecord for GradeItem "${item_id}"
     [Documentation]    Verifies no grade record exists for the given student/item pair.
     ...                ${STUDENT_ID_NO_RECORD} was intentionally not given a record in Suite Setup.
     ${params}=    Create Dictionary    studentId=${student_id}    gradeItemId=${item_id}
-    ${resp}=    GET On Session    score_api    /grade-records    params=${params}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/grade-records    params=${params}    expected_status=any
     ${body}=    Set Variable    ${resp.json()}
     ${count}=    Get Length    ${body}
     Should Be Equal As Integers    ${count}    0
@@ -190,26 +189,26 @@ a GraphQL query is made for the Grade Summary of Class "${class_id}"
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to exportGrades endpoint with format "${format}"
-    [Documentation]    POST /semesters/{id}/classes/{id}:exportGrades
+    [Documentation]    POST /api/v1/semesters/{id}/classes/{id}:exportGrades
     ...    UI: export-xlsx-trigger (score-preview-dashboard.ui-manifest.json)
     ${payload}=    Create Dictionary    format=${format}
     ${resp}=    POST On Session    score_api
-    ...    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}:exportGrades
+    ...    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}:exportGrades
     ...    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to exportGrades endpoint for nonexistent class with format "${format}"
     ${payload}=    Create Dictionary    format=${format}
     ${resp}=    POST On Session    score_api
-    ...    /semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000:exportGrades
+    ...    /api/v1/semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000:exportGrades
     ...    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to exportAttendance endpoint with format "${format}"
-    [Documentation]    POST /semesters/{id}/classes/{id}:exportAttendance
+    [Documentation]    POST /api/v1/semesters/{id}/classes/{id}:exportAttendance
     ${payload}=    Create Dictionary    format=${format}
     ${resp}=    POST On Session    score_api
-    ...    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}:exportAttendance
+    ...    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}:exportAttendance
     ...    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 

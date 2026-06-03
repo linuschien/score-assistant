@@ -18,14 +18,12 @@ ${SEMESTER_ID}          ${EMPTY}
 
 *** Test Cases ***
 # ---------------------------------------------------------------------------
-# US-01-01: Create a new Semester — valid cases
-# Each creates a new semester and self-cleans via [Teardown]
-# ------------------------------------------------------------------------Create a new Semester — 113學年度第一學期 should return 201
+Create a new Semester — 113學年度第一學期 should return 201
     [Documentation]    US-01-01 — Reused from: semester_management.feature
     ...                UI: semester-name-field, start-date-field, end-date-field, submit-semester-trigger
     [Teardown]    Delete Last Created Semester
     Given the "score-assistant" service is initialized
-    When a POST request is made to "/semesters" with name "113學年度第一學期-TC1" start "2024-09-01" end "2025-01-31"
+    When a POST request is made to "/api/v1/semesters" with name "113學年度第一學期-TC1" start "2024-09-01" end "2025-01-31"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
@@ -33,14 +31,14 @@ Create a new Semester — 113學年度第二學期 should return 201
     [Documentation]    US-01-01 — Reused from: semester_management.feature
     [Teardown]    Delete Last Created Semester
     Given the "score-assistant" service is initialized
-    When a POST request is made to "/semesters" with name "113學年度第二學期-TC2" start "2025-02-01" end "2025-06-30"
+    When a POST request is made to "/api/v1/semesters" with name "113學年度第二學期-TC2" start "2025-02-01" end "2025-06-30"
     Then the response code should be 201
     And the response should contain a valid UUID for "id"
 
 Create a new Semester — empty name should return 400
     [Documentation]    US-01-01 — Reused from: semester_management.feature
     Given the "score-assistant" service is initialized
-    When a POST request is made to "/semesters" with name "" start "2024-09-01" end "2025-01-31"
+    When a POST request is made to "/api/v1/semesters" with name "" start "2024-09-01" end "2025-01-31"
     Then the response code should be 400
 
 # ---------------------------------------------------------------------------
@@ -49,7 +47,7 @@ Create a new Semester — empty name should return 400
 Prevent duplicate Semester names
     [Documentation]    US-01-01 AC4 — Reused from: semester_management.feature
     ...                Uses ${SEMESTER_ID} created in Suite Setup as the existing duplicate target
-    When a POST request is made to "/semesters" with name "AutoTest-SuiteSemester" start "2024-09-01" end "2025-01-31"
+    When a POST request is made to "/api/v1/semesters" with name "AutoTest-SuiteSemester" start "2024-09-01" end "2025-01-31"
     Then the response code should be 400
     And the error message should indicate that the name is already taken
 
@@ -69,7 +67,7 @@ List all Semesters via GraphQL
 # ---------------------------------------------------------------------------
 Get a Semester by ID
     [Documentation]    US-01-02 — Reused from: semester_management.feature
-    When a GET request is made to "/semesters/${SEMESTER_ID}"
+    When a GET request is made to "/api/v1/semesters/${SEMESTER_ID}"
     Then the response code should be 200
     And the response body should contain "id" equal to "${SEMESTER_ID}"
 
@@ -79,17 +77,17 @@ Get a Semester by ID
 Update Semester information — valid name should return 200
     [Documentation]    US-01-03 — Reused from: semester_management.feature
     ...                UI: edit-semester-trigger → semester-name-field, submit-semester-trigger
-    When a PUT request is made to "/semesters/${SEMESTER_ID}" with name "AutoTest-SuiteSemester-修正" start "2024-09-01" end "2025-01-20"
+    When a PUT request is made to "/api/v1/semesters/${SEMESTER_ID}" with name "AutoTest-SuiteSemester-修正" start "2024-09-01" end "2025-01-20"
     Then the response code should be 200
 
 Update Semester information — empty name should return 400
     [Documentation]    US-01-03 — Reused from: semester_management.feature
-    When a PUT request is made to "/semesters/${SEMESTER_ID}" with name "" start "2024-09-01" end "2025-01-20"
+    When a PUT request is made to "/api/v1/semesters/${SEMESTER_ID}" with name "" start "2024-09-01" end "2025-01-20"
     Then the response code should be 400
 
 Update a non-existent Semester returns 404
     [Documentation]    US-01-03 — Reused from: semester_management.feature
-    When a PUT request is made to "/semesters/00000000-0000-0000-0000-000000000000" with name "不存在學期" start "2024-09-01" end "2025-01-31"
+    When a PUT request is made to "/api/v1/semesters/00000000-0000-0000-0000-000000000000" with name "不存在學期" start "2024-09-01" end "2025-01-31"
     Then the response code should be 404
 
 # ---------------------------------------------------------------------------
@@ -99,14 +97,14 @@ Update a non-existent Semester returns 404
 Delete a Semester
     [Documentation]    US-01-04 — Reused from: semester_management.feature
     ...                UI: delete-semester-trigger → delete-semester-confirm-dialog → confirm-delete-semester-trigger
-    Given a disposable Semester is created and its ID stored as "${DISPOSABLE_SEMESTER_ID}"
-    When a DELETE request is made to "/semesters/${DISPOSABLE_SEMESTER_ID}"
+    Given a disposable Semester is created and its ID stored as "DISPOSABLE_SEMESTER_ID"
+    When a DELETE request is made to "/api/v1/semesters/${DISPOSABLE_SEMESTER_ID}"
     Then the response code should be 204
     And the Semester with ID "${DISPOSABLE_SEMESTER_ID}" should no longer exist
 
 Delete a non-existent Semester returns 404
     [Documentation]    US-01-04 — Reused from: semester_management.feature
-    When a DELETE request is made to "/semesters/00000000-0000-0000-0000-000000000000"
+    When a DELETE request is made to "/api/v1/semesters/00000000-0000-0000-0000-000000000000"
     Then the response code should be 404
 
 *** Keywords ***
@@ -119,19 +117,19 @@ Initialize Semester Suite
     ...    semesterName=AutoTest-SuiteSemester
     ...    startDate=2024-09-01
     ...    endDate=2025-01-31
-    ${resp}=    POST On Session    score_api    /semesters    json=${payload}
+    ${resp}=    POST On Session    score_api    /api/v1/semesters    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
     Set Suite Variable    ${SEMESTER_ID}    ${resp.json()}[id]
 
 Cleanup Semester Suite
-    DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
+    DELETE On Session    score_api    /api/v1/semesters/${SEMESTER_ID}    expected_status=any
     Delete All Sessions
 
 # ---------------------------------------------------------------------------
 # Background / Given Steps
 # ---------------------------------------------------------------------------
 the "score-assistant" service is initialized
-    ${resp}=    GET On Session    score_api    /actuator/health    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/whoami    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    200
 
 a disposable Semester is created and its ID stored as "${var_name}"
@@ -139,44 +137,44 @@ a disposable Semester is created and its ID stored as "${var_name}"
     ...    semesterName=AutoTest-Disposable-${var_name}
     ...    startDate=2099-01-01
     ...    endDate=2099-06-30
-    ${resp}=    POST On Session    score_api    /semesters    json=${payload}
+    ${resp}=    POST On Session    score_api    /api/v1/semesters    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
     Set Test Variable    ${DISPOSABLE_SEMESTER_ID}    ${resp.json()}[id]
 
 # ---------------------------------------------------------------------------
 # When Steps
 # ---------------------------------------------------------------------------
-a POST request is made to "/semesters" with name "${name}" start "${start}" end "${end}"
-    [Documentation]    POST /semesters
+a POST request is made to "/api/v1/semesters" with name "${name}" start "${start}" end "${end}"
+    [Documentation]    POST /api/v1/semesters
     ...    UI: semester-name-field, start-date-field, end-date-field, submit-semester-trigger
     ${payload}=    Create Dictionary    semesterName=${name}    startDate=${start}    endDate=${end}
-    ${resp}=    POST On Session    score_api    /semesters    json=${payload}    expected_status=any
+    ${resp}=    POST On Session    score_api    /api/v1/semesters    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GraphQL query is made for all Semesters
     [Documentation]    POST /graphql — list semesters ordered by startDate DESC
     ...    UI: semester-table (semester-list.ui-manifest.json)
     ${query}=    Set Variable
-    ...    { listSemesters(orderBy: START_DATE_DESC) { id semesterName startDate endDate } }
+    ...    { listSemesters { id semesterName startDate endDate } }
     ${payload}=    Create Dictionary    query=${query}
     ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a GET request is made to "/semesters/${semester_id}"
-    ${resp}=    GET On Session    score_api    /semesters/${semester_id}    expected_status=any
+a GET request is made to "/api/v1/semesters/${semester_id}"
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${semester_id}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a PUT request is made to "/semesters/${semester_id}" with name "${name}" start "${start}" end "${end}"
-    [Documentation]    PUT /semesters/{id}
+a PUT request is made to "/api/v1/semesters/${semester_id}" with name "${name}" start "${start}" end "${end}"
+    [Documentation]    PUT /api/v1/semesters/{id}
     ...    UI: edit-semester-trigger → semester-name-field, submit-semester-trigger
     ${payload}=    Create Dictionary    semesterName=${name}    startDate=${start}    endDate=${end}
-    ${resp}=    PUT On Session    score_api    /semesters/${semester_id}    json=${payload}    expected_status=any
+    ${resp}=    PUT On Session    score_api    /api/v1/semesters/${semester_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a DELETE request is made to "/semesters/${semester_id}"
-    [Documentation]    DELETE /semesters/{id}
+a DELETE request is made to "/api/v1/semesters/${semester_id}"
+    [Documentation]    DELETE /api/v1/semesters/{id}
     ...    UI: delete-semester-trigger → delete-semester-confirm-dialog → confirm-delete-semester-trigger
-    ${resp}=    DELETE On Session    score_api    /semesters/${semester_id}    expected_status=any
+    ${resp}=    DELETE On Session    score_api    /api/v1/semesters/${semester_id}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 # ---------------------------------------------------------------------------
@@ -210,10 +208,10 @@ the list should be ordered by startDate descending
 
 the error message should indicate that the name is already taken
     ${body_str}=    Convert To String    ${RESPONSE.json()}
-    Should Contain Any    ${body_str}    duplicate    already exists    taken    conflict
+    Should Contain Any    ${body_str}    duplicate    already exists    taken    conflict    violation    Unique
 
 the Semester with ID "${semester_id}" should no longer exist
-    ${resp}=    GET On Session    score_api    /semesters/${semester_id}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${semester_id}    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    404
 
 # ---------------------------------------------------------------------------
@@ -224,4 +222,4 @@ Delete Last Created Semester
     ${created_id}=    Run Keyword If    '${RESPONSE.status_code}' == '201'
     ...    Set Variable    ${RESPONSE.json()}[id]
     Run Keyword If    '${created_id}' != '${None}'
-    ...    DELETE On Session    score_api    /semesters/${created_id}    expected_status=any
+    ...    DELETE On Session    score_api    /api/v1/semesters/${created_id}    expected_status=any

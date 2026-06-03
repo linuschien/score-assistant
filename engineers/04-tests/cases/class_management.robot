@@ -94,7 +94,7 @@ Update Class information
 
 Update a non-existent Class returns 404
     [Documentation]    US-02-03 — Reused from: class_management.feature
-    When a PUT request is made to "/semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000" with class_name "不存在班級" and class_group ""
+    When a PUT request is made to "/api/v1/semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000" with class_name "不存在班級" and class_group ""
     Then the response code should be 404
 
 # ---------------------------------------------------------------------------
@@ -105,13 +105,13 @@ Delete a Class
     [Documentation]    US-02-04 — Reused from: class_management.feature
     ...                UI: delete-class-trigger → delete-class-confirm-dialog → confirm-delete-class-trigger
     Given a disposable Class is created in Semester "${SEMESTER_ID}"
-    When a DELETE request is made to "/semesters/${SEMESTER_ID}/classes/${DISPOSABLE_CLASS_ID}"
+    When a DELETE request is made to "/api/v1/semesters/${SEMESTER_ID}/classes/${DISPOSABLE_CLASS_ID}"
     Then the response code should be 204
     And the Class with ID "${DISPOSABLE_CLASS_ID}" should no longer exist in Semester "${SEMESTER_ID}"
 
 Delete a non-existent Class returns 404
     [Documentation]    US-02-04 — Reused from: class_management.feature
-    When a DELETE request is made to "/semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000"
+    When a DELETE request is made to "/api/v1/semesters/${SEMESTER_ID}/classes/00000000-0000-0000-0000-000000000000"
     Then the response code should be 404
 
 *** Keywords ***
@@ -125,30 +125,30 @@ Initialize Class Suite
     ...    semesterName=AutoTest-ClassSuite-Semester
     ...    startDate=2024-09-01
     ...    endDate=2025-01-31
-    ${s_resp}=    POST On Session    score_api    /semesters    json=${s_payload}
+    ${s_resp}=    POST On Session    score_api    /api/v1/semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
     Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Create Class → get runtime UUID (used by GET/PUT tests)
     ${c_payload}=    Create Dictionary    className=AutoTest-SuiteClass    classGroup=AutoTest-SuiteClass-Group
-    ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${c_payload}
+    ${c_resp}=    POST On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
     Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
 
 Cleanup Class Suite
     # Deleting Semester cascades to all Classes underneath
-    DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
+    DELETE On Session    score_api    /api/v1/semesters/${SEMESTER_ID}    expected_status=any
     Delete All Sessions
 
 # ---------------------------------------------------------------------------
 # Given Steps
 # ---------------------------------------------------------------------------
 a Semester with ID "${semester_id}" exists
-    ${resp}=    GET On Session    score_api    /semesters/${semester_id}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${semester_id}    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    200
 
 a disposable Class is created in Semester "${semester_id}"
     ${payload}=    Create Dictionary    className=AutoTest-Disposable-Class    classGroup=AutoTest-Disposable-Group
-    ${resp}=    POST On Session    score_api    /semesters/${semester_id}/classes    json=${payload}
+    ${resp}=    POST On Session    score_api    /api/v1/semesters/${semester_id}/classes    json=${payload}
     Should Be Equal As Strings    ${resp.status_code}    201
     Set Test Variable    ${DISPOSABLE_CLASS_ID}    ${resp.json()}[id]
 
@@ -156,12 +156,12 @@ a disposable Class is created in Semester "${semester_id}"
 # When Steps
 # ---------------------------------------------------------------------------
 a POST request is made to classes endpoint with class_name "${class_name}" and class_group "${class_group}"
-    [Documentation]    POST /semesters/{id}/classes
+    [Documentation]    POST /api/v1/semesters/{id}/classes
     ...    UI: class-name-field, submit-class-trigger (class-form.ui-manifest.json)
     ${payload}=    Create Dictionary
     Set To Dictionary    ${payload}    className=${class_name}
     Run Keyword If    '${class_group}' != '${EMPTY}'    Set To Dictionary    ${payload}    classGroup=${class_group}
-    ${resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes    json=${payload}    expected_status=any
+    ${resp}=    POST On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GraphQL query is made for all Classes in Semester "${semester_id}"
@@ -183,29 +183,29 @@ a GraphQL query is made for all Classes in Semester "${semester_id}" with class_
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a GET request is made to class detail endpoint
-    ${resp}=    GET On Session    score_api    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a PUT request is made to class detail endpoint with class_name "${class_name}" and class_group "${class_group}"
-    [Documentation]    PUT /semesters/{id}/classes/{classId}
+    [Documentation]    PUT /api/v1/semesters/{id}/classes/{classId}
     ...    UI: edit-class-trigger → class-name-field, submit-class-trigger
     ${payload}=    Create Dictionary
     Set To Dictionary    ${payload}    className=${class_name}
     Run Keyword If    '${class_group}' != '${EMPTY}'    Set To Dictionary    ${payload}    classGroup=${class_group}
-    ${resp}=    PUT On Session    score_api    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}    json=${payload}    expected_status=any
+    ${resp}=    PUT On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a PUT request is made to "/semesters/${semester_id}/classes/${class_id}" with class_name "${class_name}" and class_group "${class_group}"
+a PUT request is made to "/api/v1/semesters/${semester_id}/classes/${class_id}" with class_name "${class_name}" and class_group "${class_group}"
     ${payload}=    Create Dictionary
     Set To Dictionary    ${payload}    className=${class_name}
     Run Keyword If    '${class_group}' != '${EMPTY}'    Set To Dictionary    ${payload}    classGroup=${class_group}
-    ${resp}=    PUT On Session    score_api    /semesters/${semester_id}/classes/${class_id}    json=${payload}    expected_status=any
+    ${resp}=    PUT On Session    score_api    /api/v1/semesters/${semester_id}/classes/${class_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
-a DELETE request is made to "/semesters/${semester_id}/classes/${class_id}"
-    [Documentation]    DELETE /semesters/{id}/classes/{classId}
+a DELETE request is made to "/api/v1/semesters/${semester_id}/classes/${class_id}"
+    [Documentation]    DELETE /api/v1/semesters/{id}/classes/{classId}
     ...    UI: delete-class-trigger → delete-class-confirm-dialog → confirm-delete-class-trigger
-    ${resp}=    DELETE On Session    score_api    /semesters/${semester_id}/classes/${class_id}    expected_status=any
+    ${resp}=    DELETE On Session    score_api    /api/v1/semesters/${semester_id}/classes/${class_id}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
 # ---------------------------------------------------------------------------
@@ -240,5 +240,5 @@ the response should contain only Classes belonging to "${class_group}"
     END
 
 the Class with ID "${class_id}" should no longer exist in Semester "${semester_id}"
-    ${resp}=    GET On Session    score_api    /semesters/${semester_id}/classes/${class_id}    expected_status=any
+    ${resp}=    GET On Session    score_api    /api/v1/semesters/${semester_id}/classes/${class_id}    expected_status=any
     Should Be Equal As Strings    ${resp.status_code}    404

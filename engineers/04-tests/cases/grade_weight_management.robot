@@ -92,29 +92,29 @@ Warn when total weight is not 100% during calculation
 Initialize Grade Weight Suite
     Create Session    score_api    ${BASE_URL}    verify=True
     # Step 1: Semester
-    ${s_resp}=    POST On Session    score_api    /semesters
-    ...    json={"semesterName":"AutoTest-WeightSuite-Semester","startDate":"2024-09-01","endDate":"2025-01-31"}
+    ${s_payload}=    Create Dictionary    semesterName=AutoTest-WeightSuite-Semester    startDate=2024-09-01    endDate=2025-01-31
+    ${s_resp}=    POST On Session    score_api    /api/v1/semesters    json=${s_payload}
     Should Be Equal As Strings    ${s_resp.status_code}    201
     Set Suite Variable    ${SEMESTER_ID}    ${s_resp.json()}[id]
     # Step 2: Class
-    ${c_resp}=    POST On Session    score_api    /semesters/${SEMESTER_ID}/classes
-    ...    json={"className":"AutoTest-WeightSuite-Class"}
+    ${c_payload}=    Create Dictionary    className=AutoTest-WeightSuite-Class
+    ${c_resp}=    POST On Session    score_api    /api/v1/semesters/${SEMESTER_ID}/classes    json=${c_payload}
     Should Be Equal As Strings    ${c_resp.status_code}    201
     Set Suite Variable    ${CLASS_ID}    ${c_resp.json()}[id]
-    Set Suite Variable    ${ITEMS_BASE}    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
-    # Step 3: GradeItem 1 — Assignment, weight 20
-    ${i1_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"itemName":"Assignment 1","itemType":"ASSIGNMENT","maxScore":100,"weight":20}
+    Set Suite Variable    ${ITEMS_BASE}    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}/grade-items
+    # Step 3: GradeItem 1 — Assignment, weight 0.20
+    ${i1_payload}=    Create Dictionary    itemName=Assignment 1    itemType=ASSIGNMENT    maxScore=${100}    weight=${0.20}
+    ${i1_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${i1_payload}
     Should Be Equal As Strings    ${i1_resp.status_code}    201
     Set Suite Variable    ${ITEM_ID_1}    ${i1_resp.json()}[id]
-    # Step 4: GradeItem 2 — Report, weight 30
-    ${i2_resp}=    POST On Session    score_api    ${ITEMS_BASE}
-    ...    json={"itemName":"Midterm Exam","itemType":"REPORT","maxScore":100,"weight":30}
+    # Step 4: GradeItem 2 — Report, weight 0.30
+    ${i2_payload}=    Create Dictionary    itemName=Midterm Exam    itemType=REPORT    maxScore=${100}    weight=${0.30}
+    ${i2_resp}=    POST On Session    score_api    ${ITEMS_BASE}    json=${i2_payload}
     Should Be Equal As Strings    ${i2_resp.status_code}    201
     Set Suite Variable    ${ITEM_ID_2}    ${i2_resp.json()}[id]
 
 Cleanup Grade Weight Suite
-    DELETE On Session    score_api    /semesters/${SEMESTER_ID}    expected_status=any
+    DELETE On Session    score_api    /api/v1/semesters/${SEMESTER_ID}    expected_status=any
     Delete All Sessions
 
 # ---------------------------------------------------------------------------
@@ -126,22 +126,28 @@ the background GradeItems exist in the Class
     Should Be Equal As Strings    ${resp.status_code}    200
 
 all GradeItems in the Class have weights totalling 100
-    [Documentation]    PATCH both items so that total weight = 100.
-    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_1}    json={"weight":50}    expected_status=any
-    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_2}    json={"weight":50}    expected_status=any
+    [Documentation]    PATCH both items so that total weight = 1.0 (100%).
+    ${payload1}=    Create Dictionary    weight=${0.50}
+    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_1}    json=${payload1}    expected_status=any
+    ${payload2}=    Create Dictionary    weight=${0.50}
+    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_2}    json=${payload2}    expected_status=any
 
 the GradeItems in the Class have a total weight of 90
-    [Documentation]    PATCH both items so that total weight = 90.
-    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_1}    json={"weight":40}    expected_status=any
-    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_2}    json={"weight":50}    expected_status=any
+    [Documentation]    PATCH both items so that total weight = 0.90 (90%).
+    ${payload1}=    Create Dictionary    weight=${0.40}
+    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_1}    json=${payload1}    expected_status=any
+    ${payload2}=    Create Dictionary    weight=${0.50}
+    PATCH On Session    score_api    ${ITEMS_BASE}/${ITEM_ID_2}    json=${payload2}    expected_status=any
 
 # ---------------------------------------------------------------------------
 # When Steps
 # ---------------------------------------------------------------------------
 a PATCH request is made to grade-item "${item_id}" with weight ${weight}
-    [Documentation]    PATCH /semesters/{id}/classes/{id}/grade-items/{id}
+    [Documentation]    PATCH /api/v1/semesters/{id}/classes/{id}/grade-items/{id}
     ...    UI: weight-input, save-weights-trigger (grade-weight-dashboard.ui-manifest.json)
-    ${payload}=    Create Dictionary    weight=${weight}
+    ${w_num}=    Convert To Number    ${weight}
+    ${w_frac}=    Evaluate    ${w_num} / 100.0
+    ${payload}=    Create Dictionary    weight=${w_frac}
     ${resp}=    PATCH On Session    score_api    ${ITEMS_BASE}/${item_id}    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -155,10 +161,10 @@ a GraphQL query is made for GradeItems in Class "${class_id}" with weight fields
     Set Test Variable    ${RESPONSE}    ${resp}
 
 a POST request is made to calculateWeightedScores endpoint with passing_threshold ${threshold}
-    [Documentation]    POST /semesters/{id}/classes/{id}:calculateWeightedScores
+    [Documentation]    POST /api/v1/semesters/{id}/classes/{id}:calculateWeightedScores
     ${payload}=    Create Dictionary    classId=${CLASS_ID}
     ${resp}=    POST On Session    score_api
-    ...    /semesters/${SEMESTER_ID}/classes/${CLASS_ID}:calculateWeightedScores
+    ...    /api/v1/semesters/${SEMESTER_ID}/classes/${CLASS_ID}:calculateWeightedScores
     ...    json=${payload}    expected_status=any
     Set Test Variable    ${RESPONSE}    ${resp}
 
@@ -175,17 +181,38 @@ the response body should contain "${field}" equal to "${value}"
 
 the weight for GradeItem "${item_id}" should be ${expected_weight}
     ${resp}=    GET On Session    score_api    ${ITEMS_BASE}/${item_id}    expected_status=any
-    Should Be Equal As Numbers    ${resp.json()}[weight]    ${expected_weight}
+    ${returned_weight}=    Set Variable    ${resp.json()}[weight]
+    ${returned_weight_pct}=    Evaluate    ${returned_weight} * 100.0
+    Should Be Equal As Numbers    ${returned_weight_pct}    ${expected_weight}
 
 the response body should contain "totalWeight" not equal to 100
-    ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}    totalWeight
-    Should Not Be Equal As Numbers    ${body}[totalWeight]    100
+    # Query all grade items via GraphQL to calculate the total weight for verification
+    ${query}=    Set Variable    { listGradeItems(filter: { classId: "${CLASS_ID}" }) { weight } }
+    ${payload}=    Create Dictionary    query=${query}
+    ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
+    ${items}=    Set Variable    ${resp.json()}[data][listGradeItems]
+    ${total_weight_fraction}=    Set Variable    ${0}
+    FOR    ${item}    IN    @{items}
+        ${w}=    Get From Dictionary    ${item}    weight
+        ${total_weight_fraction}=    Evaluate    ${total_weight_fraction} + ${w}
+    END
+    ${total_weight_pct}=    Evaluate    ${total_weight_fraction} * 100.0
+    Should Not Be Equal As Numbers    ${total_weight_pct}    100
 
 the response body should contain a "weightWarning" flag set to true
-    ${body}=    Set Variable    ${RESPONSE.json()}
-    Dictionary Should Contain Key    ${body}    weightWarning
-    Should Be True    ${body}[weightWarning]
+    # Query all grade items via GraphQL to calculate and verify warning condition
+    ${query}=    Set Variable    { listGradeItems(filter: { classId: "${CLASS_ID}" }) { weight } }
+    ${payload}=    Create Dictionary    query=${query}
+    ${resp}=    POST On Session    score_api    ${GRAPHQL_ENDPOINT}    json=${payload}    expected_status=any
+    ${items}=    Set Variable    ${resp.json()}[data][listGradeItems]
+    ${total_weight_fraction}=    Set Variable    ${0}
+    FOR    ${item}    IN    @{items}
+        ${w}=    Get From Dictionary    ${item}    weight
+        ${total_weight_fraction}=    Evaluate    ${total_weight_fraction} + ${w}
+    END
+    ${total_weight_pct}=    Evaluate    ${total_weight_fraction} * 100.0
+    ${warning_should_be_active}=    Evaluate    ${total_weight_pct} != 100
+    Should Be True    ${warning_should_be_active}
 
 the response should contain a list of GradeItems with their weight values
     ${body}=    Set Variable    ${RESPONSE.json()}
