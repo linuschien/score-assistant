@@ -254,31 +254,12 @@
       ]
     },
     "grade-matrix-table": {
-      "type": "DataTable",
+      "type": "GradeMatrixTable",
       "props": {
         "id": "grade-matrix-table",
-        "label": "成績登記矩陣",
-        "dataRef": "listGradeRecords",
-        "columns": [
-          {
-            "field": "studentNumber",
-            "label": "座號",
-            "sortable": true,
-            "default_sort": "asc"
-          },
-          {
-            "field": "name",
-            "label": "姓名",
-            "sortable": true
-          }
-        ],
-        "data": {
-          "$bindState": "/data/listGradeRecords"
-        }
+        "label": "成績登記矩陣"
       },
-      "children": [
-        "dynamic-grade-column"
-      ]
+      "children": []
     },
     "grade-matrix-section": {
       "type": "div",

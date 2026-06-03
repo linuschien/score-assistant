@@ -176,4 +176,51 @@ describe('ComponentRegistry custom components', () => {
     // Button is part of @json-render/shadcn, let's verify it renders with its adapted displayName
     expect(AdaptedButton.displayName).toContain('Adapted(');
   });
+
+  it('renders GradeMatrixTable component and calculates/formats cells correctly', () => {
+    const GradeMatrixTable = componentRegistry['GradeMatrixTable'];
+    const mockState = {
+      data: {
+        listStudents: [
+          { id: 'stud-1', studentNumber: '01', studentName: '王小明' }
+        ],
+        listGradeItems: [
+          { id: 'item-1', itemName: '期中考', type: 'EXAM', maxScore: 100, weight: 0.4 },
+          { id: 'item-2', itemName: '出席表現', type: 'ATTENDANCE', maxScore: 10, weight: 0.2 }
+        ],
+        listGradeRecords: [
+          { id: 'rec-1', studentId: 'stud-1', gradeItemId: 'item-1', score: 85 },
+          { id: 'rec-2', studentId: 'stud-1', gradeItemId: 'item-2', score: 1 }
+        ]
+      }
+    };
+
+    const store = createStateStore(mockState);
+    tlRender(
+      <JSONUIProvider store={store} registry={componentRegistry} handlers={{}}>
+        <GradeMatrixTable element={{ props: { label: 'Grade Matrix Test' } }} />
+      </JSONUIProvider>
+    );
+
+    // Verify row headers
+    expect(screen.getByText('王小明')).toBeInTheDocument();
+    expect(screen.getByText('01')).toBeInTheDocument();
+
+    // Verify dynamic column headers
+    expect(screen.getByText('期中考')).toBeInTheDocument();
+    expect(screen.getByText('出席表現')).toBeInTheDocument();
+
+    // Verify type translations and maxscore/weight descriptions
+    expect(screen.getByText('考試')).toBeInTheDocument();
+    expect(screen.getByText('(滿分: 100 / 權重: 40%)')).toBeInTheDocument();
+
+    // Verify inputs and select controls rendered correctly
+    const scoreInput = screen.getByTestId('score-input-stud-1-item-1');
+    expect(scoreInput).toBeInTheDocument();
+    expect(scoreInput).toHaveValue(85);
+
+    const attendanceSelect = screen.getByTestId('attendance-select-stud-1-item-2');
+    expect(attendanceSelect).toBeInTheDocument();
+    expect(attendanceSelect).toHaveValue('出席');
+  });
 });

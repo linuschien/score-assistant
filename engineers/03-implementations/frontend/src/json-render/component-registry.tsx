@@ -12,6 +12,7 @@ import { CustomButton } from './components/custom-button';
 import { RechartsPieChartComponent } from './components/pie-chart';
 import { ChartPlaceholder } from './components/chart-placeholder';
 import { StudentGradesPreview } from './components/student-grades-preview';
+import { GradeMatrixTable } from './components/grade-matrix-table';
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Adapter: bridges @json-render/react's ComponentRenderProps  { element, children, emit, on, bindings, loading }
@@ -145,6 +146,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   'AlertDialog': AlertDialog,
   'DatePicker': DatePicker,
   'StudentGradesPreview': StudentGradesPreview,
+  'GradeMatrixTable': GradeMatrixTable,
 
   // ── 4. Chart wrappers ───────────────────────────────────────────────────────
   'Chart:bar': ChartPlaceholder('Bar'),
