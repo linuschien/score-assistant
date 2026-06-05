@@ -81,6 +81,23 @@ describe('ComponentRegistry custom components', () => {
     expect(screen.getAllByText('Delete')).toHaveLength(2);
     expect(screen.getByText('操作')).toBeInTheDocument();
 
+    // Case 4: Custom operations column label
+    rerender(
+      <DataTable
+        element={{
+          props: {
+            columns: [{ field: 'id', label: 'ID' }],
+            data: [{ id: 'S01' }],
+            label: 'Students Table',
+            operationsLabel: '動作群組',
+          },
+        }}
+      >
+        <button>Delete</button>
+      </DataTable>
+    );
+    expect(screen.getByText('動作群組')).toBeInTheDocument();
+
     // Case 3: Missing columns and props edge cases
     rerender(<DataTable element={null} />);
     expect(screen.getByText('(沒有資料)')).toBeInTheDocument();

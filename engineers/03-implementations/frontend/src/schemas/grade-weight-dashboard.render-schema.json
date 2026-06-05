@@ -235,6 +235,7 @@
         "id": "weight-editor-table",
         "label": "成績項目權重設定",
         "dataRef": "listGradeItems",
+        "operationsLabel": "權重 (%)",
         "columns": [
           {
             "field": "type",

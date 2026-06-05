@@ -16,7 +16,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
     store = null;
   }
 
-  const { columns, data: rawData, label, dataRef } = element?.props || {};
+  const { columns, data: rawData, label, dataRef, operationsLabel } = element?.props || {};
   
   // Resolve data reactively using useStateValue
   let bindPath = '';
@@ -140,7 +140,7 @@ export const DataTable: ComponentType<any> = ({ element, children, bindings, emi
                 </th>
               );
             })}
-            {hasOperations && <th className="px-6 py-4 text-right">操作</th>}
+            {hasOperations && <th className="px-6 py-4 text-right">{operationsLabel ?? '操作'}</th>}
           </tr>
         </thead>
         <tbody>
