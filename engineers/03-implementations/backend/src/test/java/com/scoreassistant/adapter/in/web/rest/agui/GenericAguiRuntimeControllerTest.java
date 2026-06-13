@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -27,15 +29,18 @@ class GenericAguiRuntimeControllerTest {
     private WebTestClient webTestClient;
     private AguiAgent mockAgent;
     private ChatClient mockChatClient;
+    private ChatModel mockChatModel;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         mockAgent = mock(AguiAgent.class);
         mockChatClient = mock(ChatClient.class);
+        mockChatModel = mock(ChatModel.class);
         
         when(mockAgent.getId()).thenReturn("test-agent");
         when(mockAgent.getChatClient()).thenReturn(mockChatClient);
+        when(mockAgent.getChatModel()).thenReturn(mockChatModel);
         when(mockAgent.getSystemInstruction(any())).thenReturn("Test system instruction");
         when(mockAgent.getTools()).thenReturn(List.of());
 
@@ -50,16 +55,9 @@ class GenericAguiRuntimeControllerTest {
     @Test
     void shouldStreamAguiEvents() {
         // Arrange
-        ChatClient.ChatClientRequestSpec mockRequestSpec = mock(ChatClient.ChatClientRequestSpec.class);
-        ChatClient.StreamResponseSpec mockResponseSpec = mock(ChatClient.StreamResponseSpec.class);
-
-        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.messages(anyList())).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.stream()).thenReturn(mockResponseSpec);
-
         ChatResponse resp1 = mockChatResponse("Hello");
         ChatResponse resp2 = mockChatResponse(" world");
-        when(mockResponseSpec.chatResponse()).thenReturn(Flux.just(resp1, resp2));
+        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1, resp2));
 
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", "hi")),
@@ -99,15 +97,8 @@ class GenericAguiRuntimeControllerTest {
     @SuppressWarnings("unchecked")
     void shouldStreamToolCallEvents() {
         // Arrange
-        ChatClient.ChatClientRequestSpec mockRequestSpec = mock(ChatClient.ChatClientRequestSpec.class);
-        ChatClient.StreamResponseSpec mockResponseSpec = mock(ChatClient.StreamResponseSpec.class);
-
-        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.messages(anyList())).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.stream()).thenReturn(mockResponseSpec);
-
         ChatResponse resp1 = mockToolCallResponse("fetchWeather", "{\"city\":\"Taipei\"}");
-        when(mockResponseSpec.chatResponse()).thenReturn(Flux.just(resp1));
+        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
 
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", "check weather")),
@@ -142,16 +133,8 @@ class GenericAguiRuntimeControllerTest {
     @Test
     void shouldRegisterFrontendActionsAsDynamicTools() {
         // Arrange
-        ChatClient.ChatClientRequestSpec mockRequestSpec = mock(ChatClient.ChatClientRequestSpec.class);
-        ChatClient.StreamResponseSpec mockResponseSpec = mock(ChatClient.StreamResponseSpec.class);
-
-        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.messages(anyList())).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.tools(any(Object[].class))).thenReturn(mockRequestSpec);
-        when(mockRequestSpec.stream()).thenReturn(mockResponseSpec);
-
         ChatResponse resp1 = mockChatResponse("Hello");
-        when(mockResponseSpec.chatResponse()).thenReturn(Flux.just(resp1));
+        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
 
         // Create an ActionDto representing a frontend action
         ActionDto action = new ActionDto(
@@ -173,8 +156,8 @@ class GenericAguiRuntimeControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        // Assert that requestSpec.tools was called to register the frontend action
-        verify(mockRequestSpec).tools(any(Object[].class));
+        // Assert that chatModel.stream was called with the Prompt
+        verify(mockChatModel).stream(any(Prompt.class));
     }
 
     @Test

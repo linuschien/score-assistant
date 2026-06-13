@@ -1,6 +1,7 @@
 package com.scoreassistant.application.agent;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
 import java.util.List;
 
@@ -18,6 +19,11 @@ public interface AguiAgent {
      * Gets the configured ChatClient for this Agent.
      */
     ChatClient getChatClient();
+
+    /**
+     * Gets the raw ChatModel for this Agent to handle custom tool execution loops.
+     */
+    ChatModel getChatModel();
 
     /**
      * Computes the system instruction block for the agent run, dynamically injecting

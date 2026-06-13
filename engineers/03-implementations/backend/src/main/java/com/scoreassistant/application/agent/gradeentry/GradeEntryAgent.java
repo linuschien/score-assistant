@@ -16,8 +16,10 @@ import java.util.List;
 public class GradeEntryAgent implements AguiAgent {
 
     private final ChatClient chatClient;
+    private final ChatModel chatModel;
 
     public GradeEntryAgent(ChatModel chatModel) {
+        this.chatModel = chatModel;
         this.chatClient = ChatClient.create(chatModel);
     }
 
@@ -29,6 +31,11 @@ public class GradeEntryAgent implements AguiAgent {
     @Override
     public ChatClient getChatClient() {
         return this.chatClient;
+    }
+
+    @Override
+    public ChatModel getChatModel() {
+        return this.chatModel;
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.scoreassistant.application.agent.AguiAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -205,13 +207,14 @@ public class GenericAguiRuntimeController {
                 }
             }
 
-            // 3. Configure the chat client and bind registered tools (backend tools + frontend dynamic tools)
-            ChatClient chatClient = agent.getChatClient();
-            ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt().messages(messages);
-
-            List<Object> toolsList = new ArrayList<>();
+            // 3. Configure the chat options and bind registered tools (backend tools + frontend dynamic tools)
+            List<org.springframework.ai.tool.ToolCallback> toolsList = new ArrayList<>();
             if (agent.getTools() != null) {
-                toolsList.addAll(agent.getTools());
+                for (Object tool : agent.getTools()) {
+                    if (tool instanceof org.springframework.ai.tool.ToolCallback) {
+                        toolsList.add((org.springframework.ai.tool.ToolCallback) tool);
+                    }
+                }
             }
 
             if (request.tools() != null && !request.tools().isEmpty()) {
@@ -229,12 +232,14 @@ public class GenericAguiRuntimeController {
                 }
             }
 
-            if (!toolsList.isEmpty()) {
-                requestSpec = requestSpec.tools(toolsList.toArray());
-            }
+            OpenAiChatOptions options = OpenAiChatOptions.builder()
+                    .toolCallbacks(toolsList)
+                    .build();
 
-            // 4. Stream the execution flow
-            Flux<ChatResponse> responseFlux = requestSpec.stream().chatResponse();
+            Prompt prompt = new Prompt(messages, options);
+
+            // 4. Stream the execution flow via raw ChatModel to prevent auto backend execution
+            Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
 
             // 5. Translate ChatResponse stream chunks into EventType events
             Flux<ServerSentEvent<Object>> eventFlux = responseFlux.flatMap(chatResponse -> {
