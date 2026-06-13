@@ -59,10 +59,10 @@ public class GenericAguiRuntimeController {
         try {
             // 1. Build dynamic system prompt using the agent's base instructions + readables context
             StringBuilder systemPrompt = new StringBuilder(agent.getSystemInstruction(request));
-            if (request.frontendReadables() != null && !request.frontendReadables().isEmpty()) {
+            if (request.context() != null && !request.context().isEmpty()) {
                 systemPrompt.append("\n\n當前網頁狀態資料 (Current Frontend Readables Context)：\n");
-                for (ReadableDto readable : request.frontendReadables()) {
-                    systemPrompt.append(String.format("- %s: %s\n", readable.name(), readable.value()));
+                for (ReadableDto readable : request.context()) {
+                    systemPrompt.append(String.format("- %s: %s\n", readable.description(), readable.value()));
                 }
             }
 
@@ -88,8 +88,8 @@ public class GenericAguiRuntimeController {
                 toolsList.addAll(agent.getTools());
             }
 
-            if (request.frontendActions() != null && !request.frontendActions().isEmpty()) {
-                for (ActionDto action : request.frontendActions()) {
+            if (request.tools() != null && !request.tools().isEmpty()) {
+                for (ActionDto action : request.tools()) {
                     String inputSchemaJson = "{}";
                     try {
                         if (action.parameters() != null) {

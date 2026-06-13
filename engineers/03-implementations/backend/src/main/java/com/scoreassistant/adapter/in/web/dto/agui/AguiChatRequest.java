@@ -7,12 +7,12 @@ import java.util.List;
  */
 public record AguiChatRequest(
     List<ChatMessageDto> messages,
-    List<ReadableDto> frontendReadables,
-    List<ActionDto> frontendActions,
+    List<ReadableDto> context,
+    List<ActionDto> tools,
     String threadId,
     String runId
 ) {
-    public AguiChatRequest(List<ChatMessageDto> messages, List<ReadableDto> frontendReadables, List<ActionDto> frontendActions) {
-        this(messages, frontendReadables, frontendActions, null, null);
+    public AguiChatRequest(List<ChatMessageDto> messages, List<ReadableDto> context, List<ActionDto> tools) {
+        this(messages, context, tools, null, null);
     }
 }

@@ -1,9 +1,9 @@
 package com.scoreassistant.adapter.in.web.dto.agui;
 
 /**
- * DTO representing frontend state registered as readable.
+ * DTO representing frontend state registered as readable context.
  */
 public record ReadableDto(
-    String name,
+    String description,
     String value
 ) {}
