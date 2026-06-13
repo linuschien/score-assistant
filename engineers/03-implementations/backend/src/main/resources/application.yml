@@ -1,6 +1,15 @@
 spring:
   application:
     name: score-assistant
+  ai:
+    model:
+      chat: openai
+    openai:
+      base-url: http://localhost:1234
+      api-key: ""
+      chat:
+        options:
+          model: google/gemma-4-26b-a4b-qat
   codec:
     max-in-memory-size: 25MB
 

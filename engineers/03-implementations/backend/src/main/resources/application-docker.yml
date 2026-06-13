@@ -3,6 +3,16 @@ spring:
     activate:
       on-profile: docker
 
+  ai:
+    model:
+      chat: google-genai
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-3.5-flash
+
   r2dbc:
     url: r2dbc:h2:file:///./data/scoreassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
 
