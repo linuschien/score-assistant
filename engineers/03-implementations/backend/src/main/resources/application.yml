@@ -5,7 +5,7 @@ spring:
     model:
       chat: openai
     openai:
-      base-url: http://localhost:1234
+      base-url: http://localhost:1234/v1
       api-key: ""
       chat:
         options:
