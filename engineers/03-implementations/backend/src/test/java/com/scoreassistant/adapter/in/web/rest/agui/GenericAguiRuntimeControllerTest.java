@@ -177,6 +177,105 @@ class GenericAguiRuntimeControllerTest {
         verify(mockRequestSpec).tools(any(Object[].class));
     }
 
+    @Test
+    void shouldHandleInfoHandshakeRequest() {
+        // Act & Assert
+        webTestClient.post()
+                .uri("/api/agui/test-agent/chat")
+                .bodyValue(Map.of("method", "info"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body.get("version")).isEqualTo("1.0");
+                    assertThat(body.get("mode")).isEqualTo("sse");
+                    Map agents = (Map) body.get("agents");
+                    assertThat(agents).containsKey("test-agent");
+                    Map testAgent = (Map) agents.get("test-agent");
+                    assertThat(testAgent.get("description")).isEqualTo("test-agent assistant");
+                });
+    }
+
+    @Test
+    void shouldHandleGetInfoHandshakeRequest() {
+        // Act & Assert
+        webTestClient.get()
+                .uri("/api/agui/test-agent/chat/info")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body.get("version")).isEqualTo("1.0");
+                    assertThat(body.get("mode")).isEqualTo("sse");
+                    Map agents = (Map) body.get("agents");
+                    assertThat(agents).containsKey("test-agent");
+                    Map testAgent = (Map) agents.get("test-agent");
+                    assertThat(testAgent.get("description")).isEqualTo("test-agent assistant");
+                });
+    }
+
+    @Test
+    void shouldHandlePostInfoHandshakeRequest() {
+        // Act & Assert
+        webTestClient.post()
+                .uri("/api/agui/test-agent/chat/info")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body.get("version")).isEqualTo("1.0");
+                    assertThat(body.get("mode")).isEqualTo("sse");
+                    Map agents = (Map) body.get("agents");
+                    assertThat(agents).containsKey("test-agent");
+                    Map testAgent = (Map) agents.get("test-agent");
+                    assertThat(testAgent.get("description")).isEqualTo("test-agent assistant");
+                });
+    }
+
+    @Test
+    void shouldHandleGetThreadsRequest() {
+        webTestClient.get()
+                .uri("/api/agui/test-agent/chat/threads?agentId=default")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body.get("threads")).isInstanceOf(List.class);
+                    assertThat((List) body.get("threads")).isEmpty();
+                });
+    }
+
+    @Test
+    void shouldHandleCreateThreadRequest() {
+        webTestClient.post()
+                .uri("/api/agui/test-agent/chat/threads")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body).containsKey("threadId");
+                    assertThat(body.get("threadId")).isNotNull();
+                });
+    }
+
+    @Test
+    void shouldHandleThreadMutationRequest() {
+        webTestClient.delete()
+                .uri("/api/agui/test-agent/chat/threads/t123")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .expectBody(Map.class)
+                .value(body -> {
+                    assertThat(body.get("ok")).isEqualTo(true);
+                });
+    }
+
     private ChatResponse mockChatResponse(String text) {
         ChatResponse response = mock(ChatResponse.class);
         Generation gen = mock(Generation.class);

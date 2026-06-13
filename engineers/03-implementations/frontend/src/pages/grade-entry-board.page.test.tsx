@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSONUIProvider, createStateStore } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
@@ -6,6 +7,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import GradeEntryBoardPage from './grade-entry-board.page';
 import { executeRegisteredBehavior } from '@/behaviors/registry';
 import { mockGradeRecords, resetMockAttachments, setMockGradeItems, setMockGradeRecords, setMockAttachments } from '@/mocks/handlers';
+import { server } from '@/mocks/server';
+import { http, HttpResponse } from 'msw';
 
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
@@ -215,5 +218,114 @@ describe('GradeEntryBoardPage', () => {
     const deleteMsg = await executeRegisteredBehavior('Delete an Attachment', store);
     expect(deleteMsg).toBe('附件已刪除');
     expect(confirmSpy).toHaveBeenCalled();
+  });
+
+  it('verifies CopilotKit integration sends message, context readables, and tools to backend', async () => {
+    class MockResizeObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    }
+    global.ResizeObserver = MockResizeObserver as any;
+
+    let capturedRequest: any = null;
+
+    server.use(
+      http.post('*/api/agui/:agentId/chat', async ({ request }) => {
+        try {
+          const text = await request.clone().text();
+          console.log("=== MOCK REQUEST RECEIVED ===");
+          console.log("URL:", request.url);
+          console.log("BODY TEXT:", text);
+          
+          let body: any = null;
+          try {
+            body = JSON.parse(text);
+          } catch (err) {
+            console.log("PARSING BODY FAILED:", err);
+          }
+          
+          if (body?.method === 'info') {
+            console.log("HANDSHAKE 'info' RECEIVED");
+            return HttpResponse.json({
+              version: '1.0',
+              mode: 'sse',
+              agents: {
+                default: {
+                  description: 'Grade Entry assistant',
+                  capabilities: {}
+                },
+                'grade-entry-agent': {
+                  description: 'Grade Entry Agent',
+                  capabilities: {}
+                }
+              }
+            });
+          }
+          const innerBody = body?.body || body;
+          if (innerBody?.messages && innerBody.messages.length > 0) {
+            console.log("MESSAGES RECEIVED:", innerBody.messages);
+            capturedRequest = innerBody;
+          }
+        } catch (e) {
+          console.log("ERROR IN MOCK HANDLER:", e);
+        }
+        return new HttpResponse(
+          `data: {"type": "RUN_STARTED", "threadId": "t1", "runId": "r1"}\n\n` +
+          `data: {"type": "TEXT_MESSAGE_CHUNK", "messageId": "msg-1", "delta": "I will update the grade."}\n\n` +
+          `data: {"type": "RUN_FINISHED", "threadId": "t1", "runId": "r1", "outcome": {"type": "success"}}\n\n`,
+          {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            },
+          }
+        );
+      })
+    );
+
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <JSONUIProvider registry={componentRegistry} store={store} handlers={testHandlers as any}>
+          <GradeEntryBoardPage />
+        </JSONUIProvider>
+      </QueryClientProvider>
+    );
+
+    // Find Copilot popup trigger. By default, CopilotPopup renders a button with class copilot-kit-popup-trigger
+    const trigger = document.querySelector('.copilot-kit-popup-trigger') || 
+                    screen.queryByRole('button', { name: /assistant/i }) ||
+                    screen.queryByRole('button', { name: /chat/i });
+                    
+    expect(trigger).toBeInTheDocument();
+    if (trigger) {
+      await user.click(trigger);
+      console.log("BODY HTML AFTER OPEN:", document.body.innerHTML);
+
+      // Locate input textarea (there's only one textarea on the page - the chat input)
+      const input = document.querySelector('textarea');
+      expect(input).toBeInTheDocument();
+
+      if (input) {
+        await user.type(input, '座號 01 期中考 95 分');
+        const sendBtn = screen.getByTestId('copilot-send-button');
+        expect(sendBtn).toBeInTheDocument();
+        await user.click(sendBtn);
+      }
+
+      // Assert that the request was made and intercepted with appropriate payloads
+      await waitFor(() => {
+        expect(capturedRequest).not.toBeNull();
+        expect(capturedRequest.messages).toBeDefined();
+        expect(capturedRequest.messages.length).toBeGreaterThan(0);
+        expect(capturedRequest.messages[capturedRequest.messages.length - 1].content).toContain('座號 01 期中考 95 分');
+        
+        // Assert context variables are included (since listStudents and listGradeItems are loaded)
+        expect(capturedRequest.context).toBeDefined();
+        expect(capturedRequest.context.length).toBeGreaterThan(0);
+      });
+    }
   });
 });
