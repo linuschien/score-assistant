@@ -2,6 +2,8 @@ package com.scoreassistant.adapter.in.web.rest.agui;
 
 import com.scoreassistant.adapter.in.web.dto.agui.*;
 import com.scoreassistant.application.agent.AguiAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -26,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/api/agui")
 public class GenericAguiRuntimeController {
 
+    private static final Logger log = LoggerFactory.getLogger(GenericAguiRuntimeController.class);
+
     private final Map<String, AguiAgent> agentRegistry = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 
@@ -48,6 +52,7 @@ public class GenericAguiRuntimeController {
         // Validate agent ID to prevent traversal or access issues
         AguiAgent agent = agentRegistry.get(agentId);
         if (agent == null) {
+            log.error("Agent execution failed: Agent '{}' not found", agentId);
             return Flux.just(ServerSentEvent.builder()
                     .data(Map.of(
                         "type", "RUN_ERROR",
@@ -56,6 +61,13 @@ public class GenericAguiRuntimeController {
                     .build());
         }
 
+        log.info("Received AGUI chat request for agentId: '{}', threadId: '{}', runId: '{}'", 
+                agentId, request.threadId(), request.runId());
+        log.info("Received payload counts - Messages: {}, Context variables: {}, Registered tools: {}",
+                request.messages() != null ? request.messages().size() : 0,
+                request.context() != null ? request.context().size() : 0,
+                request.tools() != null ? request.tools().size() : 0);
+
         try {
             // 1. Build dynamic system prompt using the agent's base instructions + readables context
             StringBuilder systemPrompt = new StringBuilder(agent.getSystemInstruction(request));
@@ -63,6 +75,7 @@ public class GenericAguiRuntimeController {
                 systemPrompt.append("\n\n當前網頁狀態資料 (Current Frontend Readables Context)：\n");
                 for (ReadableDto readable : request.context()) {
                     systemPrompt.append(String.format("- %s: %s\n", readable.description(), readable.value()));
+                    log.debug("Bound frontend context readable: '{}' = '{}'", readable.description(), readable.value());
                 }
             }
 
@@ -73,8 +86,10 @@ public class GenericAguiRuntimeController {
                 for (ChatMessageDto msg : request.messages()) {
                     if ("user".equalsIgnoreCase(msg.role())) {
                         messages.add(new UserMessage(msg.content()));
+                        log.debug("Added User message to prompt context: '{}'", msg.content());
                     } else if ("assistant".equalsIgnoreCase(msg.role())) {
                         messages.add(new AssistantMessage(msg.content()));
+                        log.debug("Added Assistant message to prompt context: '{}'", msg.content());
                     }
                 }
             }
@@ -96,9 +111,10 @@ public class GenericAguiRuntimeController {
                             inputSchemaJson = objectMapper.writeValueAsString(action.parameters());
                         }
                     } catch (Exception e) {
-                        // fallback to empty schema
+                        log.warn("Failed to serialize parameters for frontend tool '{}'", action.name(), e);
                     }
                     toolsList.add(new FrontendToolCallback(action.name(), action.description(), inputSchemaJson));
+                    log.info("Registered frontend tool: '{}' (params: {})", action.name(), inputSchemaJson);
                 }
             }
 
@@ -137,6 +153,8 @@ public class GenericAguiRuntimeController {
                 if (assistantMessage != null && assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
                     for (var toolCall : assistantMessage.getToolCalls()) {
                         String toolCallId = toolCall.id() != null ? toolCall.id() : "call-" + UUID.randomUUID().toString();
+                        log.info("LLM triggered tool call: name={}, toolCallId={}, args={}", 
+                                toolCall.name(), toolCallId, toolCall.arguments());
                         events.add(ServerSentEvent.builder()
                                 .data(Map.of(
                                     "type", "TOOL_CALL_START",
@@ -163,6 +181,7 @@ public class GenericAguiRuntimeController {
                 // Yield standard text chunk event
                 String content = gen.getOutput().getText();
                 if (content != null && !content.isEmpty()) {
+                    log.debug("LLM streamed text content chunk: '{}'", content);
                     events.add(ServerSentEvent.builder()
                             .data(Map.of(
                                 "type", "TEXT_MESSAGE_CHUNK",
@@ -190,12 +209,14 @@ public class GenericAguiRuntimeController {
                 eventFlux,
                 Flux.just(runFinishedEvent)
             )
+            .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))
             .onErrorResume(throwable -> {
-                throwable.printStackTrace();
+                log.warn("Exception caught in AGUI Event Stream for runId '{}': {}", finalRunId, throwable.getMessage());
                 // Stream failed is often thrown at the end of the stream by Spring AI when parsing
                 // LM Studio's usage stats chunk. Fallback gracefully to RUN_FINISHED.
                 if (throwable.getMessage() != null && 
                     (throwable.getMessage().contains("Stream failed") || throwable.getMessage().contains("Connection closed"))) {
+                    log.info("Handling expected LM Studio stream end exception. Gracefully completing with RUN_FINISHED.");
                     return Flux.just(ServerSentEvent.builder()
                             .data(Map.of(
                                 "type", "RUN_FINISHED",
@@ -205,6 +226,7 @@ public class GenericAguiRuntimeController {
                             ))
                             .build());
                 }
+                log.error("Fatal exception in AGUI Event Stream:", throwable);
                 return Flux.just(ServerSentEvent.builder()
                         .data(Map.of(
                             "type", "RUN_ERROR",
