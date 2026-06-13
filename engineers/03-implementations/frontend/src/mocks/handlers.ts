@@ -28,9 +28,69 @@ export const whoamiHandlers = [
   })
 ];
 
+export const copilotHandlers = [
+  http.post('*/api/agui/:agentId/chat', async ({ request }) => {
+    try {
+      const body = await request.clone().json() as any;
+      if (body?.method === 'info') {
+        return HttpResponse.json({
+          version: '1.0',
+          mode: 'sse',
+          agents: {
+            default: {
+              description: 'Grade Entry assistant',
+              capabilities: {}
+            },
+            'grade-entry-agent': {
+              description: 'Grade Entry Agent',
+              capabilities: {}
+            }
+          }
+        });
+      }
+    } catch (e) {
+      // Ignore json parse error
+    }
+    return HttpResponse.json({ status: 'ok' });
+  }),
+  http.post('*/api/agui/:agentId/chat/info', () => {
+    return HttpResponse.json({
+      version: '1.0',
+      mode: 'sse',
+      agents: {
+        default: {
+          description: 'Grade Entry assistant',
+          capabilities: {}
+        },
+        'grade-entry-agent': {
+          description: 'Grade Entry Agent',
+          capabilities: {}
+        }
+      }
+    });
+  }),
+  http.get('*/api/agui/:agentId/chat/info', () => {
+    return HttpResponse.json({
+      version: '1.0',
+      mode: 'sse',
+      agents: {
+        default: {
+          description: 'Grade Entry assistant',
+          capabilities: {}
+        },
+        'grade-entry-agent': {
+          description: 'Grade Entry Agent',
+          capabilities: {}
+        }
+      }
+    });
+  })
+];
+
 // Aggregate all domain-specific handlers
 export const handlers = [
   ...whoamiHandlers,
+  ...copilotHandlers,
   ...semesterHandlers,
   ...classHandlers,
   ...studentHandlers,

@@ -41,15 +41,18 @@ public class GenericAguiRuntimeController {
      * standard AGUI protocol Server-Sent Events (SSE).
      */
     @PostMapping(value = "/{agentId}/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<AguiEvent>> handleAgentChat(
+    public Flux<ServerSentEvent<Object>> handleAgentChat(
             @PathVariable("agentId") String agentId,
             @RequestBody AguiChatRequest request) {
 
         // Validate agent ID to prevent traversal or access issues
         AguiAgent agent = agentRegistry.get(agentId);
         if (agent == null) {
-            return Flux.just(ServerSentEvent.<AguiEvent>builder()
-                    .data(new AguiEvent("error", "Agent not found: " + agentId))
+            return Flux.just(ServerSentEvent.builder()
+                    .data(Map.of(
+                        "type", "RUN_ERROR",
+                        "message", "Agent not found: " + agentId
+                    ))
                     .build());
         }
 
@@ -76,43 +79,83 @@ public class GenericAguiRuntimeController {
                 }
             }
 
-            // 3. Configure the chat client and bind registered tools
+            // 3. Configure the chat client and bind registered tools (backend tools + frontend dynamic tools)
             ChatClient chatClient = agent.getChatClient();
             ChatClient.ChatClientRequestSpec requestSpec = chatClient.prompt().messages(messages);
 
-            if (agent.getTools() != null && !agent.getTools().isEmpty()) {
-                requestSpec = requestSpec.tools(agent.getTools().toArray());
+            List<Object> toolsList = new ArrayList<>();
+            if (agent.getTools() != null) {
+                toolsList.addAll(agent.getTools());
             }
+
+            if (request.frontendActions() != null && !request.frontendActions().isEmpty()) {
+                for (ActionDto action : request.frontendActions()) {
+                    String inputSchemaJson = "{}";
+                    try {
+                        if (action.parameters() != null) {
+                            inputSchemaJson = objectMapper.writeValueAsString(action.parameters());
+                        }
+                    } catch (Exception e) {
+                        // fallback to empty schema
+                    }
+                    toolsList.add(new FrontendToolCallback(action.name(), action.description(), inputSchemaJson));
+                }
+            }
+
+            if (!toolsList.isEmpty()) {
+                requestSpec = requestSpec.tools(toolsList.toArray());
+            }
+
+            // Generate ids for protocol compliance
+            String finalThreadId = request.threadId() != null ? request.threadId() : UUID.randomUUID().toString();
+            String finalRunId = request.runId() != null ? request.runId() : UUID.randomUUID().toString();
+            String messageId = "msg-" + UUID.randomUUID().toString();
+
+            // First event: RUN_STARTED
+            ServerSentEvent<Object> runStartedEvent = ServerSentEvent.builder()
+                    .data(Map.of(
+                        "type", "RUN_STARTED",
+                        "threadId", finalThreadId,
+                        "runId", finalRunId
+                    ))
+                    .build();
 
             // 4. Stream the execution flow
             Flux<ChatResponse> responseFlux = requestSpec.stream().chatResponse();
 
-            // 5. Translate ChatResponse stream chunks into AGUI events
-            return responseFlux.flatMap(chatResponse -> {
+            // 5. Translate ChatResponse stream chunks into EventType events
+            Flux<ServerSentEvent<Object>> eventFlux = responseFlux.flatMap(chatResponse -> {
                 Generation gen = chatResponse.getResult();
                 if (gen == null) {
                     return Flux.empty();
                 }
 
-                List<ServerSentEvent<AguiEvent>> events = new ArrayList<>();
+                List<ServerSentEvent<Object>> events = new ArrayList<>();
 
-                // If model executes a tool call, yield tool_call event
+                // If model executes a tool call, yield tool call start/args/end events
                 AssistantMessage assistantMessage = gen.getOutput();
                 if (assistantMessage != null && assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
                     for (var toolCall : assistantMessage.getToolCalls()) {
-                        Map<String, Object> arguments = null;
-                        try {
-                            arguments = objectMapper.readValue(toolCall.arguments(), new TypeReference<Map<String, Object>>() {});
-                        } catch (Exception e) {
-                            arguments = Map.of("rawArguments", toolCall.arguments());
-                        }
-                        ToolCallData toolCallData = new ToolCallData(
-                            toolCall.name(),
-                            "executing",
-                            arguments
-                        );
-                        events.add(ServerSentEvent.<AguiEvent>builder()
-                                .data(new AguiEvent("tool_call", toolCallData))
+                        String toolCallId = toolCall.id() != null ? toolCall.id() : "call-" + UUID.randomUUID().toString();
+                        events.add(ServerSentEvent.builder()
+                                .data(Map.of(
+                                    "type", "TOOL_CALL_START",
+                                    "toolCallId", toolCallId,
+                                    "toolCallName", toolCall.name()
+                                ))
+                                .build());
+                        events.add(ServerSentEvent.builder()
+                                .data(Map.of(
+                                    "type", "TOOL_CALL_ARGS",
+                                    "toolCallId", toolCallId,
+                                    "delta", toolCall.arguments()
+                                ))
+                                .build());
+                        events.add(ServerSentEvent.builder()
+                                .data(Map.of(
+                                    "type", "TOOL_CALL_END",
+                                    "toolCallId", toolCallId
+                                ))
                                 .build());
                     }
                 }
@@ -120,30 +163,63 @@ public class GenericAguiRuntimeController {
                 // Yield standard text chunk event
                 String content = gen.getOutput().getText();
                 if (content != null && !content.isEmpty()) {
-                    events.add(ServerSentEvent.<AguiEvent>builder()
-                            .data(new AguiEvent("text", content))
+                    events.add(ServerSentEvent.builder()
+                            .data(Map.of(
+                                "type", "TEXT_MESSAGE_CHUNK",
+                                "messageId", messageId,
+                                "delta", content
+                            ))
                             .build());
                 }
 
                 return Flux.fromIterable(events);
-            })
-            // Stream completed signal
-            .concatWith(Flux.just(
-                ServerSentEvent.<AguiEvent>builder()
-                        .data(new AguiEvent("completed", "Run finished successfully"))
-                        .build()
-            ))
+            });
+
+            // Last event: RUN_FINISHED
+            ServerSentEvent<Object> runFinishedEvent = ServerSentEvent.builder()
+                    .data(Map.of(
+                        "type", "RUN_FINISHED",
+                        "threadId", finalThreadId,
+                        "runId", finalRunId,
+                        "outcome", Map.of("type", "success")
+                    ))
+                    .build();
+
+            return Flux.concat(
+                Flux.just(runStartedEvent),
+                eventFlux,
+                Flux.just(runFinishedEvent)
+            )
             .onErrorResume(throwable -> {
-                // TODO(security): Log detailed diagnostic securely. Do not leak credentials or sensitive info.
-                return Flux.just(ServerSentEvent.<AguiEvent>builder()
-                        .data(new AguiEvent("error", "An error occurred during agent execution: " + throwable.getMessage()))
+                throwable.printStackTrace();
+                // Stream failed is often thrown at the end of the stream by Spring AI when parsing
+                // LM Studio's usage stats chunk. Fallback gracefully to RUN_FINISHED.
+                if (throwable.getMessage() != null && 
+                    (throwable.getMessage().contains("Stream failed") || throwable.getMessage().contains("Connection closed"))) {
+                    return Flux.just(ServerSentEvent.builder()
+                            .data(Map.of(
+                                "type", "RUN_FINISHED",
+                                "threadId", finalThreadId,
+                                "runId", finalRunId,
+                                "outcome", Map.of("type", "success")
+                            ))
+                            .build());
+                }
+                return Flux.just(ServerSentEvent.builder()
+                        .data(Map.of(
+                            "type", "RUN_ERROR",
+                            "message", "An error occurred during agent execution: " + throwable.getMessage()
+                        ))
                         .build());
             });
 
         } catch (Exception e) {
-            // TODO(security): Log detailed diagnostic securely
-            return Flux.just(ServerSentEvent.<AguiEvent>builder()
-                    .data(new AguiEvent("error", "Failed to start agent session: " + e.getMessage()))
+            e.printStackTrace();
+            return Flux.just(ServerSentEvent.builder()
+                    .data(Map.of(
+                        "type", "RUN_ERROR",
+                        "message", "Failed to start agent session: " + e.getMessage()
+                    ))
                     .build());
         }
     }

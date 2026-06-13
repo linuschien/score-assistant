@@ -8,5 +8,11 @@ import java.util.List;
 public record AguiChatRequest(
     List<ChatMessageDto> messages,
     List<ReadableDto> frontendReadables,
-    List<ActionDto> frontendActions
-) {}
+    List<ActionDto> frontendActions,
+    String threadId,
+    String runId
+) {
+    public AguiChatRequest(List<ChatMessageDto> messages, List<ReadableDto> frontendReadables, List<ActionDto> frontendActions) {
+        this(messages, frontendReadables, frontendActions, null, null);
+    }
+}

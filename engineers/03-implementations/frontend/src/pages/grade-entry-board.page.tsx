@@ -3,6 +3,10 @@ import { Renderer, useStateStore, useStateValue } from '@json-render/react';
 import { componentRegistry } from '@/json-render/component-registry';
 import spec from '@/schemas/grade-entry-board.render-schema.json';
 
+import { z } from 'zod';
+import { CopilotKit, useAgentContext, useFrontendTool, CopilotPopup } from '@copilotkit/react-core/v2';
+import '@copilotkit/react-core/v2/styles.css';
+
 import { useGetSemesterById } from '@/hooks/use-get-semester-by-id';
 import { useGetClassById } from '@/hooks/use-get-class-by-id';
 import { useListStudents } from '@/hooks/use-list-students';
@@ -210,7 +214,7 @@ registerBehavior('Delete an Attachment', async (_ref, store) => {
   return '附件已刪除';
 });
 
-export default function GradeEntryBoardPage() {
+function GradeEntryBoardContent() {
   const store = useStateStore();
 
   // Retrieve selected class/semester from store reactively
@@ -224,6 +228,73 @@ export default function GradeEntryBoardPage() {
   const { data: studentsData, isLoading: isStudentsLoading } = useListStudents(classId ? { classId } : undefined);
   const { data: gradeItemsData, isLoading: isGradeItemsLoading } = useListGradeItems(classId ? { classId } : undefined);
   const { data: gradeRecordsData, isLoading: isGradeRecordsLoading } = useListGradeRecords();
+
+  // Register Copilot Readables
+  useAgentContext({
+    description: "The list of students in the current class with their IDs, names, and student numbers",
+    value: (studentsData ?? []) as any,
+  });
+
+  useAgentContext({
+    description: "The list of grade items / assignments / exams with their IDs, names, types, max scores, and weights",
+    value: (gradeItemsData ?? []) as any,
+  });
+
+  useAgentContext({
+    description: "The list of grade records, showing the assigned scores for each student on different grade items",
+    value: (gradeRecordsData ?? []) as any,
+  });
+
+  // Register Copilot Actions
+  useFrontendTool({
+    name: "updateStudentGrade",
+    description: "Registers or updates a score for a specific student on a specific grade item",
+    parameters: z.object({
+      studentId: z.string().describe("The unique ID of the student"),
+      gradeItemId: z.string().describe("The unique ID of the grade item"),
+      score: z.number().describe("The grade score (number) to assign"),
+    }),
+    handler: async ({ studentId, gradeItemId, score }) => {
+      const existingRecord = gradeRecordsData?.find(
+        (r: any) => r.studentId === studentId && r.gradeItemId === gradeItemId
+      );
+      const recordId = existingRecord?.id;
+      const payload = {
+        gradeItemId,
+        studentId,
+        score,
+      };
+
+      if (recordId) {
+        await api.put(`${API_BASE}/grade-records/${recordId}`, payload);
+      } else {
+        await api.post(`${API_BASE}/grade-records`, payload);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['listGradeRecords'] });
+      return `Successfully updated grade to ${score}`;
+    },
+  });
+
+  useFrontendTool({
+    name: "clearStudentGrade",
+    description: "Clears (removes) a registered grade score for a specific student on a specific grade item",
+    parameters: z.object({
+      studentId: z.string().describe("The unique ID of the student"),
+      gradeItemId: z.string().describe("The unique ID of the grade item"),
+    }),
+    handler: async ({ studentId, gradeItemId }) => {
+      const existingRecord = gradeRecordsData?.find(
+        (r: any) => r.studentId === studentId && r.gradeItemId === gradeItemId
+      );
+      if (existingRecord?.id) {
+        await api.delete(`${API_BASE}/grade-records/${existingRecord.id}`);
+        await queryClient.invalidateQueries({ queryKey: ['listGradeRecords'] });
+        return "Successfully cleared grade";
+      }
+      return "No grade record found to clear";
+    },
+  });
 
   // Sync loading states reactively
   useEffect(() => {
@@ -322,4 +393,19 @@ export default function GradeEntryBoardPage() {
   }, [allAttachmentsData, store]);
 
   return <Renderer spec={spec as any} registry={componentRegistry} />;
+}
+
+export default function GradeEntryBoardPage() {
+  return (
+    <CopilotKit runtimeUrl="/api/agui/grade-entry-agent/chat">
+      <GradeEntryBoardContent />
+      <CopilotPopup
+        defaultOpen={false}
+        clickOutsideToClose={false}
+        labels={{
+          welcomeMessageText: "老師您好！我是您的成績輸入助教。您可以告訴我座號與要登錄的成績項目（例如：『幫 01 號同學在 Homework 1 登錄 90 分』），我會幫您完成輸入。"
+        }}
+      />
+    </CopilotKit>
+  );
 }

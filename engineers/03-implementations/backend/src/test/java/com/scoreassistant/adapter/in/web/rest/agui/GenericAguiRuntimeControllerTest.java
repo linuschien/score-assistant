@@ -64,7 +64,9 @@ class GenericAguiRuntimeControllerTest {
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", "hi")),
                 List.of(),
-                List.of()
+                List.of(),
+                "t1",
+                "r1"
         );
 
         // Act & Assert
@@ -74,16 +76,22 @@ class GenericAguiRuntimeControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType("text/event-stream;charset=UTF-8")
-                .expectBodyList(AguiEvent.class)
+                .expectBodyList(Map.class)
                 .value(events -> {
-                    assertThat(events).hasSize(3);
-                    assertThat(events.get(0).event()).isEqualTo("text");
-                    assertThat(events.get(0).data()).isEqualTo("Hello");
-                    
-                    assertThat(events.get(1).event()).isEqualTo("text");
-                    assertThat(events.get(1).data()).isEqualTo(" world");
-                    
-                    assertThat(events.get(2).event()).isEqualTo("completed");
+                    assertThat(events).hasSize(4);
+                    assertThat(events.get(0).get("type")).isEqualTo("RUN_STARTED");
+                    assertThat(events.get(0).get("threadId")).isEqualTo("t1");
+                    assertThat(events.get(0).get("runId")).isEqualTo("r1");
+
+                    assertThat(events.get(1).get("type")).isEqualTo("TEXT_MESSAGE_CHUNK");
+                    assertThat(events.get(1).get("delta")).isEqualTo("Hello");
+
+                    assertThat(events.get(2).get("type")).isEqualTo("TEXT_MESSAGE_CHUNK");
+                    assertThat(events.get(2).get("delta")).isEqualTo(" world");
+
+                    assertThat(events.get(3).get("type")).isEqualTo("RUN_FINISHED");
+                    assertThat(events.get(3).get("threadId")).isEqualTo("t1");
+                    assertThat(events.get(3).get("runId")).isEqualTo("r1");
                 });
     }
 
@@ -104,7 +112,9 @@ class GenericAguiRuntimeControllerTest {
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", "check weather")),
                 List.of(),
-                List.of()
+                List.of(),
+                "t1",
+                "r1"
         );
 
         // Act & Assert
@@ -113,20 +123,58 @@ class GenericAguiRuntimeControllerTest {
                 .bodyValue(request)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(AguiEvent.class)
+                .expectBodyList(Map.class)
                 .value(events -> {
-                    assertThat(events).hasSize(2);
-                    assertThat(events.get(0).event()).isEqualTo("tool_call");
+                    assertThat(events).hasSize(5);
+                    assertThat(events.get(0).get("type")).isEqualTo("RUN_STARTED");
                     
-                    Map<String, Object> dataMap = objectMapper.convertValue(events.get(0).data(), Map.class);
-                    assertThat(dataMap.get("toolName")).isEqualTo("fetchWeather");
-                    assertThat(dataMap.get("status")).isEqualTo("executing");
-                    
-                    Map<String, Object> argsMap = (Map<String, Object>) dataMap.get("arguments");
-                    assertThat(argsMap.get("city")).isEqualTo("Taipei");
+                    assertThat(events.get(1).get("type")).isEqualTo("TOOL_CALL_START");
+                    assertThat(events.get(1).get("toolCallName")).isEqualTo("fetchWeather");
 
-                    assertThat(events.get(1).event()).isEqualTo("completed");
+                    assertThat(events.get(2).get("type")).isEqualTo("TOOL_CALL_ARGS");
+                    assertThat(events.get(2).get("delta")).isEqualTo("{\"city\":\"Taipei\"}");
+
+                    assertThat(events.get(3).get("type")).isEqualTo("TOOL_CALL_END");
+                    assertThat(events.get(4).get("type")).isEqualTo("RUN_FINISHED");
                 });
+    }
+
+    @Test
+    void shouldRegisterFrontendActionsAsDynamicTools() {
+        // Arrange
+        ChatClient.ChatClientRequestSpec mockRequestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+        ChatClient.StreamResponseSpec mockResponseSpec = mock(ChatClient.StreamResponseSpec.class);
+
+        when(mockChatClient.prompt()).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.messages(anyList())).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.tools(any(Object[].class))).thenReturn(mockRequestSpec);
+        when(mockRequestSpec.stream()).thenReturn(mockResponseSpec);
+
+        ChatResponse resp1 = mockChatResponse("Hello");
+        when(mockResponseSpec.chatResponse()).thenReturn(Flux.just(resp1));
+
+        // Create an ActionDto representing a frontend action
+        ActionDto action = new ActionDto(
+                "updateStudentGrade",
+                "Updates a score",
+                Map.of("type", "object", "properties", Map.of("score", Map.of("type", "number")))
+        );
+
+        AguiChatRequest request = new AguiChatRequest(
+                List.of(new ChatMessageDto("user", "hi")),
+                List.of(),
+                List.of(action)
+        );
+
+        // Act
+        webTestClient.post()
+                .uri("/api/agui/test-agent/chat")
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk();
+
+        // Assert that requestSpec.tools was called to register the frontend action
+        verify(mockRequestSpec).tools(any(Object[].class));
     }
 
     private ChatResponse mockChatResponse(String text) {
