@@ -5,6 +5,7 @@ import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
@@ -79,8 +80,16 @@ public class GradeEntryAgent implements AguiAgent {
 
     @Override
     public ChatOptions getChatOptions(List<ToolCallback> dynamicTools) {
-        return OpenAiChatOptions.builder()
-                .toolCallbacks(dynamicTools)
-                .build();
+        ChatOptions defaultOpts = chatModel.getDefaultOptions();
+        if (defaultOpts instanceof OpenAiChatOptions) {
+            return OpenAiChatOptions.builder()
+                    .toolCallbacks(dynamicTools)
+                    .build();
+        } else if (defaultOpts instanceof GoogleGenAiChatOptions) {
+            return GoogleGenAiChatOptions.builder()
+                    .toolCallbacks(dynamicTools)
+                    .build();
+        }
+        return defaultOpts;
     }
 }
