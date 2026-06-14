@@ -14,7 +14,7 @@ export function StudentGradesPreview() {
   const isLoading = isItemsLoading || isRecordsLoading;
 
   // Find the selected student
-  const student = students.find((s) => String(s.id) === String(selectedStudentId));
+  const student = students.find((s) => String(s.id).toLowerCase() === String(selectedStudentId).toLowerCase());
 
   if (!selectedStudentId || !student) {
     return (
@@ -27,7 +27,7 @@ export function StudentGradesPreview() {
   // Filter grade records for this student and map them to their corresponding grade items
   const mappedGrades = gradeItems.map((gi: any) => {
     const record = gradeRecords.find(
-      (r: any) => String(r.studentId) === String(selectedStudentId) && String(r.gradeItemId) === String(gi.id)
+      (r: any) => String(r.studentId).toLowerCase() === String(selectedStudentId).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(gi.id).toLowerCase()
     );
     const scoreVal = record?.score ?? null;
     const scoreNum = scoreVal !== null ? Number(scoreVal) : 0;

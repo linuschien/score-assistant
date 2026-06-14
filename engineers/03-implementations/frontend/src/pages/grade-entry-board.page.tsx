@@ -256,7 +256,8 @@ function GradeEntryBoardContent() {
     }),
     handler: async ({ studentId, gradeItemId, score }) => {
       const existingRecord = gradeRecordsData?.find(
-        (r: any) => r.studentId === studentId && r.gradeItemId === gradeItemId
+        (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && 
+                    String(r.gradeItemId).toLowerCase() === String(gradeItemId).toLowerCase()
       );
       const recordId = existingRecord?.id;
       const payload = {
@@ -285,7 +286,8 @@ function GradeEntryBoardContent() {
     }),
     handler: async ({ studentId, gradeItemId }) => {
       const existingRecord = gradeRecordsData?.find(
-        (r: any) => r.studentId === studentId && r.gradeItemId === gradeItemId
+        (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && 
+                    String(r.gradeItemId).toLowerCase() === String(gradeItemId).toLowerCase()
       );
       if (existingRecord?.id) {
         await api.delete(`${API_BASE}/grade-records/${existingRecord.id}`);

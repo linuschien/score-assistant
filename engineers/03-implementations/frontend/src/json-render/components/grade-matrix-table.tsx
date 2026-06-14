@@ -133,7 +133,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
   const handleScoreInputBlur = async (studentId: string, itemId: string, newScore: number | null) => {
     if (store) {
       const record = gradeRecords.find(
-        (r: any) => String(r.studentId) === String(studentId) && String(r.gradeItemId) === String(itemId)
+        (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(itemId).toLowerCase()
       );
 
       store.set('/form/activeStudentId', studentId);
@@ -156,7 +156,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
   const handleAttendanceChange = async (studentId: string, itemId: string, status: string) => {
     if (store) {
       const record = gradeRecords.find(
-        (r: any) => String(r.studentId) === String(studentId) && String(r.gradeItemId) === String(itemId)
+        (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(itemId).toLowerCase()
       );
 
       let mappedScore = null;
@@ -193,7 +193,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
   const handleOpenAttachmentOverlay = async (studentId: string, itemId: string) => {
     if (store) {
       let record = gradeRecords.find(
-        (r: any) => String(r.studentId) === String(studentId) && String(r.gradeItemId) === String(itemId)
+        (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(itemId).toLowerCase()
       );
 
       if (!record) {
@@ -214,7 +214,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
         
         const updatedRecords = store.get('/data/listGradeRecords') || [];
         record = updatedRecords.find(
-          (r: any) => String(r.studentId) === String(studentId) && String(r.gradeItemId) === String(itemId)
+          (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(itemId).toLowerCase()
         );
       }
 
@@ -289,7 +289,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
                   </td>
                   {gradeItems.map((gi: any) => {
                     const record = gradeRecords.find(
-                      (r: any) => String(r.studentId) === String(st.id) && String(r.gradeItemId) === String(gi.id)
+                      (r: any) => String(r.studentId).toLowerCase() === String(st.id).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(gi.id).toLowerCase()
                     );
                     const scoreVal = record?.score ?? null;
 
@@ -298,7 +298,7 @@ export const GradeMatrixTable: ComponentType<any> = ({ element, emit, on }: any)
                     const isAttachment = itemType === 'ASSIGNMENT' || itemType === 'REPORT' || itemType === '作業' || itemType === '報告';
                     const isClassroomPerformance = itemType === 'CLASSROOM_PERFORMANCE' || itemType === '課堂表現';
 
-                    const recordAttachments = record ? attachments.filter((a: any) => String(a.gradeRecordId) === String(record.id)) : [];
+                    const recordAttachments = record ? attachments.filter((a: any) => String(a.gradeRecordId).toLowerCase() === String(record.id).toLowerCase()) : [];
 
                     return (
                       <td key={gi.id} className="px-6 py-4 border-r border-slate-800/40">

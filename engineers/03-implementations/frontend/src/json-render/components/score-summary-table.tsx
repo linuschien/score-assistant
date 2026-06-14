@@ -80,7 +80,7 @@ export const ScoreSummaryTable = (props: any) => {
                     </td>
                     {gradeItems.map((gi: any) => {
                       const record = gradeRecords.find(
-                        (r: any) => String(r.studentId) === String(st.id) && String(r.gradeItemId) === String(gi.id)
+                        (r: any) => String(r.studentId).toLowerCase() === String(st.id).toLowerCase() && String(r.gradeItemId).toLowerCase() === String(gi.id).toLowerCase()
                       );
                       const scoreVal = record?.score ?? null;
 
