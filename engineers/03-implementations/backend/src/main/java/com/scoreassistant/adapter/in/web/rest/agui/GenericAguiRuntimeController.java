@@ -198,61 +198,22 @@ public class GenericAguiRuntimeController {
             List<Message> messages = new ArrayList<>();
             messages.add(new SystemMessage(systemPrompt.toString()));
             
-            // Keep track of toolCallId to toolName mapping so we can populate ToolResponseMessage
             Map<String, String> toolCallIdToName = new HashMap<>();
 
             if (request.messages() != null) {
                 for (ChatMessageDto msg : request.messages()) {
+                    Message mapped = null;
                     if ("user".equalsIgnoreCase(msg.getRole())) {
-                        messages.add(new UserMessage(msg.getContent()));
-                        log.debug("Added User message to prompt context: '{}'", msg.getContent());
+                        mapped = mapUserMessage(msg);
                     } else if ("assistant".equalsIgnoreCase(msg.getRole())) {
-                        String assistantContent = msg.getContent() != null ? msg.getContent() : "";
-                        if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
-                            List<AssistantMessage.ToolCall> springToolCalls = new ArrayList<>();
-                            for (ChatMessageDto.ToolCallDto tc : msg.getToolCalls()) {
-                                String tcType = tc.getType() != null ? tc.getType() : "function";
-                                String tcName = tc.getFunction() != null ? tc.getFunction().getName() : "";
-                                String tcArgs = tc.getFunction() != null ? tc.getFunction().getArguments() : "{}";
-                                springToolCalls.add(new AssistantMessage.ToolCall(tc.getId(), tcType, tcName, tcArgs));
-                                toolCallIdToName.put(tc.getId(), tcName);
-                                log.debug("Parsed tool call in assistant message: id={}, name={}", tc.getId(), tcName);
-                            }
-                            
-                            AssistantMessage assistantMessage = AssistantMessage.builder()
-                                    .content(assistantContent)
-                                    .toolCalls(springToolCalls)
-                                    .build();
-                            messages.add(assistantMessage);
-                            log.debug("Added Assistant message with {} tool calls: '{}'", springToolCalls.size(), assistantContent);
-                        } else {
-                            if (assistantContent.isBlank()) {
-                                log.debug("Skipping blank assistant message (no text, no tool calls)");
-                                continue;
-                            }
-                            messages.add(new AssistantMessage(assistantContent));
-                            log.debug("Added Assistant message to prompt context: '{}'", assistantContent);
-                        }
+                        mapped = mapAssistantMessage(msg, toolCallIdToName);
                     } else if ("tool".equalsIgnoreCase(msg.getRole())) {
-                        String toolCallId = msg.getToolCallId();
-                        if (toolCallId == null) {
-                            log.warn("Skipping 'tool' message because tool_call_id is null: content='{}'", msg.getContent());
-                            continue;
-                        }
-                        String toolName = msg.getName();
-                        if (toolName == null || toolName.isEmpty()) {
-                            toolName = toolCallIdToName.getOrDefault(toolCallId, "");
-                        }
-                        String responseContent = msg.getContent() != null ? msg.getContent() : "";
-                        
-                        ToolResponseMessage.ToolResponse toolResponse = new ToolResponseMessage.ToolResponse(toolCallId, toolName, responseContent);
-                        ToolResponseMessage toolResponseMessage = ToolResponseMessage.builder()
-                                .responses(List.of(toolResponse))
-                                .build();
-                        messages.add(toolResponseMessage);
-                        log.debug("Added ToolResponseMessage: id={}, name={}, content='{}'", toolCallId, toolName, responseContent);
+                        mapped = mapToolMessage(msg, toolCallIdToName);
                     } else {
                         log.debug("Skipping unknown role '{}' message", msg.getRole());
+                    }
+                    if (mapped != null) {
+                        messages.add(mapped);
                     }
                 }
             }
@@ -471,5 +432,57 @@ public class GenericAguiRuntimeController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("ok", true));
+    }
+
+    private Message mapUserMessage(ChatMessageDto msg) {
+        log.debug("Added User message to prompt context: '{}'", msg.getContent());
+        return new UserMessage(msg.getContent());
+    }
+
+    private Message mapAssistantMessage(ChatMessageDto msg, Map<String, String> toolCallIdToName) {
+        String assistantContent = msg.getContent() != null ? msg.getContent() : "";
+        if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
+            List<AssistantMessage.ToolCall> springToolCalls = new ArrayList<>();
+            for (ChatMessageDto.ToolCallDto tc : msg.getToolCalls()) {
+                String tcType = tc.getType() != null ? tc.getType() : "function";
+                String tcName = tc.getFunction() != null ? tc.getFunction().getName() : "";
+                String tcArgs = tc.getFunction() != null ? tc.getFunction().getArguments() : "{}";
+                springToolCalls.add(new AssistantMessage.ToolCall(tc.getId(), tcType, tcName, tcArgs));
+                toolCallIdToName.put(tc.getId(), tcName);
+                log.debug("Parsed tool call in assistant message: id={}, name={}", tc.getId(), tcName);
+            }
+            
+            log.debug("Added Assistant message with {} tool calls: '{}'", springToolCalls.size(), assistantContent);
+            return AssistantMessage.builder()
+                    .content(assistantContent)
+                    .toolCalls(springToolCalls)
+                    .build();
+        } else {
+            if (assistantContent.isBlank()) {
+                log.debug("Skipping blank assistant message (no text, no tool calls)");
+                return null;
+            }
+            log.debug("Added Assistant message to prompt context: '{}'", assistantContent);
+            return new AssistantMessage(assistantContent);
+        }
+    }
+
+    private Message mapToolMessage(ChatMessageDto msg, Map<String, String> toolCallIdToName) {
+        String toolCallId = msg.getToolCallId();
+        if (toolCallId == null) {
+            log.warn("Skipping 'tool' message because tool_call_id is null: content='{}'", msg.getContent());
+            return null;
+        }
+        String toolName = msg.getName();
+        if (toolName == null || toolName.isEmpty()) {
+            toolName = toolCallIdToName.getOrDefault(toolCallId, "");
+        }
+        String responseContent = msg.getContent() != null ? msg.getContent() : "";
+        
+        ToolResponseMessage.ToolResponse toolResponse = new ToolResponseMessage.ToolResponse(toolCallId, toolName, responseContent);
+        log.debug("Added ToolResponseMessage: id={}, name={}, content='{}'", toolCallId, toolName, responseContent);
+        return ToolResponseMessage.builder()
+                .responses(List.of(toolResponse))
+                .build();
     }
 }
