@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -162,7 +162,7 @@ public class GenericAguiRuntimeController {
 
             // If messages is empty, return a quick welcome message immediately without calling the LLM
             if (request.messages() == null || request.messages().isEmpty()) {
-                String welcomeText = "您好！我是您的成績輸入助教。請選擇班級與學期，並告訴我您想登錄的學生成績（例如：「座號 01 期中考 90分」），我會為您自動比對並登錄。";
+                String welcomeText = agent.getWelcomeMessage();
                 ServerSentEvent<Object> welcomeEvent = ServerSentEvent.builder()
                         .data(Map.of(
                             "type", "TEXT_MESSAGE_CHUNK",
@@ -243,12 +243,8 @@ public class GenericAguiRuntimeController {
                 }
             }
 
-            // Use OpenAiChatOptions so OpenAiChatModel.buildRequestPrompt() can cast it correctly.
-            // Do NOT call .model(...) — leaving model=null means the merge logic in OpenAiChatModel
-            // will fall back to the model configured in application.yml (google/gemma-4-26b-a4b-qat).
-            OpenAiChatOptions options = OpenAiChatOptions.builder()
-                    .toolCallbacks(toolsList)
-                    .build();
+            // Build ChatOptions via agent implementation to remain LLM provider agnostic
+            ChatOptions options = agent.getChatOptions(toolsList);
 
             Prompt prompt = new Prompt(messages, options);
 

@@ -2,6 +2,8 @@ package com.scoreassistant.application.agent;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
 import java.util.List;
 
@@ -35,4 +37,17 @@ public interface AguiAgent {
      * Gets the list of backend tools (Beans with @Tool methods) available to this Agent.
      */
     List<Object> getTools();
+
+    /**
+     * Gets the welcome message to return when the conversation history is empty.
+     */
+    default String getWelcomeMessage() {
+        return "您好！我是您的 AI 助教。請問有什麼我可以協助您的？";
+    }
+
+    /**
+     * Creates ChatOptions containing the merged tool callbacks (both backend static tools
+     * and dynamic frontend tools).
+     */
+    ChatOptions getChatOptions(List<ToolCallback> dynamicTools);
 }

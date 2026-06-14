@@ -4,6 +4,9 @@ import com.scoreassistant.application.agent.AguiAgent;
 import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -67,5 +70,17 @@ public class GradeEntryAgent implements AguiAgent {
     @Override
     public List<Object> getTools() {
         return List.of();
+    }
+
+    @Override
+    public String getWelcomeMessage() {
+        return "您好！我是您的成績輸入助教。請選擇班級與學期，並告訴我您想登錄的學生成績（例如：「座號 01 期中考 90分」），我會為您自動比對並登錄。";
+    }
+
+    @Override
+    public ChatOptions getChatOptions(List<ToolCallback> dynamicTools) {
+        return OpenAiChatOptions.builder()
+                .toolCallbacks(dynamicTools)
+                .build();
     }
 }

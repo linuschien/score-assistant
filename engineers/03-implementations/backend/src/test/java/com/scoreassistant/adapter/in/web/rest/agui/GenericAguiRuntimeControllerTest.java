@@ -43,6 +43,8 @@ class GenericAguiRuntimeControllerTest {
         when(mockAgent.getChatModel()).thenReturn(mockChatModel);
         when(mockAgent.getSystemInstruction(any())).thenReturn("Test system instruction");
         when(mockAgent.getTools()).thenReturn(List.of());
+        when(mockAgent.getWelcomeMessage()).thenCallRealMethod();
+        when(mockAgent.getChatOptions(any())).thenReturn(mock(org.springframework.ai.chat.prompt.ChatOptions.class));
 
         GenericAguiRuntimeController controller = new GenericAguiRuntimeController(
                 List.of(mockAgent),
