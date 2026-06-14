@@ -397,13 +397,17 @@ function GradeEntryBoardContent() {
 
 export default function GradeEntryBoardPage() {
   return (
-    <CopilotKit runtimeUrl="/api/agui/grade-entry-agent/chat">
+    <CopilotKit 
+      runtimeUrl="/api/agui/grade-entry-agent/chat"
+      enableInspector={false}
+    >
       <GradeEntryBoardContent />
       <CopilotPopup
         defaultOpen={false}
         clickOutsideToClose={false}
         labels={{
-          welcomeMessageText: "老師您好！我是您的成績輸入助教。您可以告訴我座號與要登錄的成績項目（例如：『幫 01 號同學在 Homework 1 登錄 90 分』），我會幫您完成輸入。"
+          modalHeaderTitle: "成績輸入助教",
+          welcomeMessageText: "老師您好！我是您的成績輸入助教。您可以告訴我座號與要登錄的成績項目（例如：『幫 01 號同學在 Homework 1 登錄 90 分』），我會為您自動比對並登錄。"
         }}
       />
     </CopilotKit>
