@@ -138,8 +138,8 @@ class GenericAguiRuntimeControllerTest {
         ChatResponse resp1 = mockChatResponse("Hello");
         when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
 
-        // Create an ActionDto representing a frontend action
-        ActionDto action = new ActionDto(
+        // Create a FrontendToolDto representing a frontend tool
+        FrontendToolDto action = new FrontendToolDto(
                 "updateStudentGrade",
                 "Updates a score",
                 Map.of("type", "object", "properties", Map.of("score", Map.of("type", "number")))

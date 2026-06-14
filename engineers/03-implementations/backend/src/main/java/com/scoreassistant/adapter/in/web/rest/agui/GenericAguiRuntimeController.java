@@ -188,7 +188,7 @@ public class GenericAguiRuntimeController {
             StringBuilder systemPrompt = new StringBuilder(agent.getSystemInstruction(request));
             if (request.context() != null && !request.context().isEmpty()) {
                 systemPrompt.append("\n\n當前網頁狀態資料 (Current Frontend Readables Context):\n");
-                for (ReadableDto readable : request.context()) {
+                for (ContextDto readable : request.context()) {
                     systemPrompt.append(String.format("- %s: %s\n", readable.description(), readable.value()));
                     log.debug("Bound frontend context readable: '{}' = '{}'", readable.description(), readable.value());
                 }
@@ -229,7 +229,7 @@ public class GenericAguiRuntimeController {
             }
 
             if (request.tools() != null && !request.tools().isEmpty()) {
-                for (ActionDto action : request.tools()) {
+                for (FrontendToolDto action : request.tools()) {
                     String inputSchemaJson = "{}";
                     try {
                         if (action.parameters() != null) {
