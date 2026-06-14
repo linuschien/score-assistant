@@ -300,6 +300,8 @@ public class GenericAguiRuntimeController {
                         if (fullArgs.length() > alreadySent.length() && fullArgs.startsWith(alreadySent)) {
                             String delta = fullArgs.substring(alreadySent.length());
                             sentArguments.put(toolCallId, fullArgs);
+                            log.info("[DEBUG-TOOL-ARGS] toolCall='{}' toolCallId='{}' accumulatedArgs='{}'",
+                                    toolCall.name(), toolCallId, fullArgs);
                             events.add(ServerSentEvent.builder()
                                     .data(Map.of(
                                         "type", "TOOL_CALL_ARGS",

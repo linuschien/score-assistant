@@ -266,10 +266,22 @@ function GradeEntryBoardContent() {
         score,
       };
 
+      let newRec: any = null;
       if (recordId) {
-        await api.put(`${API_BASE}/grade-records/${recordId}`, payload);
+        newRec = await api.put(`${API_BASE}/grade-records/${recordId}`, payload);
       } else {
-        await api.post(`${API_BASE}/grade-records`, payload);
+        newRec = await api.post(`${API_BASE}/grade-records`, payload);
+      }
+
+      // Synchronously update the store so the matrix renders immediately,
+      // without waiting for TanStack Query async refetch to complete.
+      if (newRec) {
+        const currentList = (store.get('/data/listGradeRecords') || []) as any[];
+        const idx = currentList.findIndex((r: any) => r.id === newRec.id);
+        const nextList = idx !== -1
+          ? currentList.map((r: any, i: number) => i === idx ? newRec : r)
+          : [...currentList, newRec];
+        store.set('/data/listGradeRecords', nextList);
       }
 
       await queryClient.invalidateQueries({ queryKey: ['listGradeRecords'] });
@@ -291,6 +303,11 @@ function GradeEntryBoardContent() {
       );
       if (existingRecord?.id) {
         await api.delete(`${API_BASE}/grade-records/${existingRecord.id}`);
+
+        // Synchronously remove the record from the store so the matrix updates immediately.
+        const currentList = (store.get('/data/listGradeRecords') || []) as any[];
+        store.set('/data/listGradeRecords', currentList.filter((r: any) => r.id !== existingRecord.id));
+
         await queryClient.invalidateQueries({ queryKey: ['listGradeRecords'] });
         return "Successfully cleared grade";
       }
