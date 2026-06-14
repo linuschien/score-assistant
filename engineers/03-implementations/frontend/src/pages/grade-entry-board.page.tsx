@@ -250,7 +250,7 @@ function GradeEntryBoardContent() {
     name: "updateStudentGrade",
     description: "Registers or updates a score for a specific student on a specific grade item",
     parameters: z.object({
-      studentId: z.string().describe("The unique ID of the student"),
+      studentId: z.string().describe("The database UUID of the student (map from the student's 'id' field, NOT the 'studentId' registration number field)"),
       gradeItemId: z.string().describe("The unique ID of the grade item"),
       score: z.number().describe("The grade score (number) to assign"),
     }),
@@ -280,7 +280,7 @@ function GradeEntryBoardContent() {
     name: "clearStudentGrade",
     description: "Clears (removes) a registered grade score for a specific student on a specific grade item",
     parameters: z.object({
-      studentId: z.string().describe("The unique ID of the student"),
+      studentId: z.string().describe("The database UUID of the student (map from the student's 'id' field, NOT the 'studentId' registration number field)"),
       gradeItemId: z.string().describe("The unique ID of the grade item"),
     }),
     handler: async ({ studentId, gradeItemId }) => {

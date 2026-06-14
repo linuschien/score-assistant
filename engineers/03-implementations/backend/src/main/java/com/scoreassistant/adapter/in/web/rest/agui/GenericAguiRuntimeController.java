@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -138,6 +139,7 @@ public class GenericAguiRuntimeController {
 
         log.info("Received AGUI chat request for agentId: '{}', threadId: '{}', runId: '{}'", 
                 agentId, request.threadId(), request.runId());
+        log.info("Raw request body: {}", root.toString());
         log.info("Received payload counts - Messages: {}, Context variables: {}, Registered tools: {}",
                 request.messages() != null ? request.messages().size() : 0,
                 request.context() != null ? request.context().size() : 0,
@@ -195,14 +197,62 @@ public class GenericAguiRuntimeController {
             // 2. Map conversation history from request DTOs to Spring AI Messages
             List<Message> messages = new ArrayList<>();
             messages.add(new SystemMessage(systemPrompt.toString()));
+            
+            // Keep track of toolCallId to toolName mapping so we can populate ToolResponseMessage
+            Map<String, String> toolCallIdToName = new HashMap<>();
+
             if (request.messages() != null) {
                 for (ChatMessageDto msg : request.messages()) {
-                    if ("user".equalsIgnoreCase(msg.role())) {
-                        messages.add(new UserMessage(msg.content()));
-                        log.debug("Added User message to prompt context: '{}'", msg.content());
-                    } else if ("assistant".equalsIgnoreCase(msg.role())) {
-                        messages.add(new AssistantMessage(msg.content()));
-                        log.debug("Added Assistant message to prompt context: '{}'", msg.content());
+                    if ("user".equalsIgnoreCase(msg.getRole())) {
+                        messages.add(new UserMessage(msg.getContent()));
+                        log.debug("Added User message to prompt context: '{}'", msg.getContent());
+                    } else if ("assistant".equalsIgnoreCase(msg.getRole())) {
+                        String assistantContent = msg.getContent() != null ? msg.getContent() : "";
+                        if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
+                            List<AssistantMessage.ToolCall> springToolCalls = new ArrayList<>();
+                            for (ChatMessageDto.ToolCallDto tc : msg.getToolCalls()) {
+                                String tcType = tc.getType() != null ? tc.getType() : "function";
+                                String tcName = tc.getFunction() != null ? tc.getFunction().getName() : "";
+                                String tcArgs = tc.getFunction() != null ? tc.getFunction().getArguments() : "{}";
+                                springToolCalls.add(new AssistantMessage.ToolCall(tc.getId(), tcType, tcName, tcArgs));
+                                toolCallIdToName.put(tc.getId(), tcName);
+                                log.debug("Parsed tool call in assistant message: id={}, name={}", tc.getId(), tcName);
+                            }
+                            
+                            AssistantMessage assistantMessage = AssistantMessage.builder()
+                                    .content(assistantContent)
+                                    .toolCalls(springToolCalls)
+                                    .build();
+                            messages.add(assistantMessage);
+                            log.debug("Added Assistant message with {} tool calls: '{}'", springToolCalls.size(), assistantContent);
+                        } else {
+                            if (assistantContent.isBlank()) {
+                                log.debug("Skipping blank assistant message (no text, no tool calls)");
+                                continue;
+                            }
+                            messages.add(new AssistantMessage(assistantContent));
+                            log.debug("Added Assistant message to prompt context: '{}'", assistantContent);
+                        }
+                    } else if ("tool".equalsIgnoreCase(msg.getRole())) {
+                        String toolCallId = msg.getToolCallId();
+                        if (toolCallId == null) {
+                            log.warn("Skipping 'tool' message because tool_call_id is null: content='{}'", msg.getContent());
+                            continue;
+                        }
+                        String toolName = msg.getName();
+                        if (toolName == null || toolName.isEmpty()) {
+                            toolName = toolCallIdToName.getOrDefault(toolCallId, "");
+                        }
+                        String responseContent = msg.getContent() != null ? msg.getContent() : "";
+                        
+                        ToolResponseMessage.ToolResponse toolResponse = new ToolResponseMessage.ToolResponse(toolCallId, toolName, responseContent);
+                        ToolResponseMessage toolResponseMessage = ToolResponseMessage.builder()
+                                .responses(List.of(toolResponse))
+                                .build();
+                        messages.add(toolResponseMessage);
+                        log.debug("Added ToolResponseMessage: id={}, name={}, content='{}'", toolCallId, toolName, responseContent);
+                    } else {
+                        log.debug("Skipping unknown role '{}' message", msg.getRole());
                     }
                 }
             }
@@ -232,11 +282,20 @@ public class GenericAguiRuntimeController {
                 }
             }
 
+            // Use OpenAiChatOptions so OpenAiChatModel.buildRequestPrompt() can cast it correctly.
+            // Do NOT call .model(...) — leaving model=null means the merge logic in OpenAiChatModel
+            // will fall back to the model configured in application.yml (google/gemma-4-26b-a4b-qat).
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .toolCallbacks(toolsList)
                     .build();
 
             Prompt prompt = new Prompt(messages, options);
+
+            // Keep track of tool calling state for this stream to ensure starts/args/ends are emitted correctly
+            Set<String> seenToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
+            Map<String, String> sentArguments = new java.util.concurrent.ConcurrentHashMap<>();
+            Set<String> completedToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
+            Map<Integer, String> indexToToolCallId = new java.util.concurrent.ConcurrentHashMap<>();
 
             // 4. Stream the execution flow via raw ChatModel to prevent auto backend execution
             Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
@@ -250,33 +309,48 @@ public class GenericAguiRuntimeController {
 
                 List<ServerSentEvent<Object>> events = new ArrayList<>();
 
-                // If model executes a tool call, yield tool call start/args/end events
+                // If model executes a tool call, yield tool call start and incremental args events
                 AssistantMessage assistantMessage = gen.getOutput();
                 if (assistantMessage != null && assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
-                    for (var toolCall : assistantMessage.getToolCalls()) {
-                        String toolCallId = toolCall.id() != null ? toolCall.id() : "call-" + UUID.randomUUID().toString();
-                        log.info("LLM triggered tool call: name={}, toolCallId={}, args={}", 
-                                toolCall.name(), toolCallId, toolCall.arguments());
-                        events.add(ServerSentEvent.builder()
-                                .data(Map.of(
-                                    "type", "TOOL_CALL_START",
-                                    "toolCallId", toolCallId,
-                                    "toolCallName", toolCall.name()
-                                ))
-                                .build());
-                        events.add(ServerSentEvent.builder()
-                                .data(Map.of(
-                                    "type", "TOOL_CALL_ARGS",
-                                    "toolCallId", toolCallId,
-                                    "delta", toolCall.arguments()
-                                ))
-                                .build());
-                        events.add(ServerSentEvent.builder()
-                                .data(Map.of(
-                                    "type", "TOOL_CALL_END",
-                                    "toolCallId", toolCallId
-                                ))
-                                .build());
+                    List<AssistantMessage.ToolCall> toolCalls = assistantMessage.getToolCalls();
+                    for (int i = 0; i < toolCalls.size(); i++) {
+                        AssistantMessage.ToolCall toolCall = toolCalls.get(i);
+                        String rawId = toolCall.id();
+                        String toolCallId;
+                        if (rawId != null && !rawId.isEmpty()) {
+                            toolCallId = rawId;
+                        } else {
+                            toolCallId = indexToToolCallId.computeIfAbsent(i, idx -> "call-idx-" + idx + "-" + UUID.randomUUID().toString());
+                        }
+
+                        // Emit TOOL_CALL_START if not seen before
+                        if (!seenToolCalls.contains(toolCallId)) {
+                            seenToolCalls.add(toolCallId);
+                            sentArguments.put(toolCallId, "");
+                            log.info("LLM tool call start: name={}, toolCallId={}", toolCall.name(), toolCallId);
+                            events.add(ServerSentEvent.builder()
+                                    .data(Map.of(
+                                        "type", "TOOL_CALL_START",
+                                        "toolCallId", toolCallId,
+                                        "toolCallName", toolCall.name()
+                                    ))
+                                    .build());
+                        }
+
+                        // Emit incremental TOOL_CALL_ARGS delta
+                        String fullArgs = toolCall.arguments() != null ? toolCall.arguments() : "";
+                        String alreadySent = sentArguments.getOrDefault(toolCallId, "");
+                        if (fullArgs.length() > alreadySent.length() && fullArgs.startsWith(alreadySent)) {
+                            String delta = fullArgs.substring(alreadySent.length());
+                            sentArguments.put(toolCallId, fullArgs);
+                            events.add(ServerSentEvent.builder()
+                                    .data(Map.of(
+                                        "type", "TOOL_CALL_ARGS",
+                                        "toolCallId", toolCallId,
+                                        "delta", delta
+                                    ))
+                                    .build());
+                        }
                     }
                 }
 
@@ -296,6 +370,24 @@ public class GenericAguiRuntimeController {
                 return Flux.fromIterable(events);
             });
 
+            // Helper to generate TOOL_CALL_END events for any uncompleted tool calls
+            Mono<List<ServerSentEvent<Object>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
+                List<ServerSentEvent<Object>> endEvents = new ArrayList<>();
+                for (String toolCallId : seenToolCalls) {
+                    if (!completedToolCalls.contains(toolCallId)) {
+                        completedToolCalls.add(toolCallId);
+                        log.info("LLM tool call end: toolCallId={}", toolCallId);
+                        endEvents.add(ServerSentEvent.builder()
+                                .data(Map.of(
+                                    "type", "TOOL_CALL_END",
+                                    "toolCallId", toolCallId
+                                ))
+                                .build());
+                    }
+                }
+                return endEvents;
+            });
+
             // Last event: RUN_FINISHED
             ServerSentEvent<Object> runFinishedEvent = ServerSentEvent.builder()
                     .data(Map.of(
@@ -309,6 +401,7 @@ public class GenericAguiRuntimeController {
             Flux<ServerSentEvent<Object>> resultFlux = Flux.concat(
                 Flux.just(runStartedEvent),
                 eventFlux,
+                toolCallEndEventsMono.flatMapMany(Flux::fromIterable),
                 Flux.just(runFinishedEvent)
             )
             .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))

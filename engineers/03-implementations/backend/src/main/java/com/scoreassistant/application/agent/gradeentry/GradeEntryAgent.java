@@ -11,6 +11,8 @@ import java.util.List;
 /**
  * AI agent dedicated to assisting teachers with student grade registration and updates.
  * Registered as a Spring bean and routed automatically by GenericAguiRuntimeController.
+ *
+ * <p>Tool calls are forwarded to the frontend as AGUI SSE events.</p>
  */
 @Component
 public class GradeEntryAgent implements AguiAgent {
@@ -48,7 +50,7 @@ public class GradeEntryAgent implements AguiAgent {
             1. **學生 (Students) 匹配**：
                - 老師通常只會提供座號（例如：「座號 01」、「01號」、「1號」）、學號或姓名。
                - 請將老師提供的學生資訊，與「學生名單」中的 `studentNumber`（座號，例如 "01"、"02"）、`studentName`（姓名，例如 "Integration Bob"）等欄位進行精確或模糊比對。
-               - 找出對應學生的 `id` 作為 `studentId`。
+               - 找出對應學生的資料庫 UUID 主鍵 `id` 作為 `studentId`。**請特別注意**：不要使用學生的學號（即 `studentId` 屬性，例如 "S101"），因為該學號不是一個有效的 UUID，後端資料庫寫入會失敗；你必須始終選取 `id` 欄位的值。
             2. **成績項目 (Grade Items) 匹配**：
                - 老師只會提供成績項目名稱（例如：「期中考」、「期中測驗」、「Midterm Exam」或「學期專題」、「Final Project」）。
                - 請將老師提到的成績項目名稱與「成績項目」中的 `name` 屬性（如 "Midterm Exam"、"Final Project" 等）進行模糊匹配或繁簡/英中翻譯比對。
