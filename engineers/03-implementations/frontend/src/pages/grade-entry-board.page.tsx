@@ -255,7 +255,9 @@ function GradeEntryBoardContent() {
       score: z.number().describe("The grade score (number) to assign"),
     }),
     handler: async ({ studentId, gradeItemId, score }) => {
-      const existingRecord = gradeRecordsData?.find(
+      // Read from store (always up-to-date) instead of stale closure gradeRecordsData
+      const currentRecords = (store.get('/data/listGradeRecords') || []) as any[];
+      const existingRecord = currentRecords.find(
         (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && 
                     String(r.gradeItemId).toLowerCase() === String(gradeItemId).toLowerCase()
       );
@@ -297,7 +299,9 @@ function GradeEntryBoardContent() {
       gradeItemId: z.string().describe("The unique ID of the grade item"),
     }),
     handler: async ({ studentId, gradeItemId }) => {
-      const existingRecord = gradeRecordsData?.find(
+      // Read from store (always up-to-date) instead of stale closure gradeRecordsData
+      const currentRecords = (store.get('/data/listGradeRecords') || []) as any[];
+      const existingRecord = currentRecords.find(
         (r: any) => String(r.studentId).toLowerCase() === String(studentId).toLowerCase() && 
                     String(r.gradeItemId).toLowerCase() === String(gradeItemId).toLowerCase()
       );
