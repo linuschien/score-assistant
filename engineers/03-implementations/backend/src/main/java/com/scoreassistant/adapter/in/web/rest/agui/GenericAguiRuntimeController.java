@@ -115,26 +115,15 @@ public class GenericAguiRuntimeController {
         AguiAgent agent = agentRegistry.get(agentId);
         if (agent == null) {
             log.error("Agent execution failed: Agent '{}' not found", agentId);
-            return ResponseEntity.status(444).body(Map.of(
-                "type", "RUN_ERROR",
-                "message", "Agent not found: " + agentId
-            ));
+            return errorResponse(444, "Agent not found: " + agentId);
         }
 
-        // Deserialize request body
         AguiChatRequest request;
         try {
-            if (root.has("body") && (root.has("method") || root.has("params"))) {
-                request = objectMapper.treeToValue(root.get("body"), AguiChatRequest.class);
-            } else {
-                request = objectMapper.treeToValue(root, AguiChatRequest.class);
-            }
+            request = parseChatRequest(root);
         } catch (Exception e) {
             log.error("Failed to map request body to DTO: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of(
-                "type", "RUN_ERROR",
-                "message", "Failed to deserialize request: " + e.getMessage()
-            ));
+            return errorResponse(400, "Failed to deserialize request: " + e.getMessage());
         }
 
         log.info("Received AGUI chat request for agentId: '{}', threadId: '{}', runId: '{}'", 
@@ -145,200 +134,219 @@ public class GenericAguiRuntimeController {
                 request.context() != null ? request.context().size() : 0,
                 request.tools() != null ? request.tools().size() : 0);
 
+        if (isWelcomeRequest(request)) {
+            return welcomeResponse(agent, request);
+        }
+
         try {
-            // Generate ids for protocol compliance
-            String finalThreadId = request.threadId() != null ? request.threadId() : UUID.randomUUID().toString();
-            String finalRunId = request.runId() != null ? request.runId() : UUID.randomUUID().toString();
-            String messageId = "msg-" + UUID.randomUUID().toString();
-
-            // First event: RUN_STARTED
-            ServerSentEvent<AguiEvent> runStartedEvent = AguiEvent.RunStarted.of(finalThreadId, finalRunId);
-
-            // If messages is empty, return a quick welcome message immediately without calling the LLM
-            if (request.messages() == null || request.messages().isEmpty()) {
-                String welcomeText = agent.getWelcomeMessage();
-                ServerSentEvent<AguiEvent> welcomeEvent = AguiEvent.TextMessageChunk.of(messageId, welcomeText);
-                ServerSentEvent<AguiEvent> runFinishedEvent = AguiEvent.RunFinished.of(finalThreadId, finalRunId);
-                log.info("Empty messages payload. Returning instant welcome response for agentId: '{}'", agentId);
-                return ResponseEntity.ok()
-                        .contentType(MediaType.TEXT_EVENT_STREAM)
-                        .body(Flux.just(runStartedEvent, welcomeEvent, runFinishedEvent));
-            }
-
-            // 1. Build dynamic system prompt using the agent's base instructions + readables context
-            StringBuilder systemPrompt = new StringBuilder(agent.getSystemInstruction(request));
-            if (request.context() != null && !request.context().isEmpty()) {
-                systemPrompt.append("\n\n當前網頁狀態資料 (Current Frontend Readables Context):\n");
-                for (ContextDto readable : request.context()) {
-                    systemPrompt.append(String.format("- %s: %s\n", readable.description(), readable.value()));
-                    log.debug("Bound frontend context readable: '{}' = '{}'", readable.description(), readable.value());
-                }
-            }
-
-            // 2. Map conversation history from request DTOs to Spring AI Messages
-            List<Message> messages = new ArrayList<>();
-            messages.add(new SystemMessage(systemPrompt.toString()));
-            
-            Map<String, String> toolCallIdToName = new HashMap<>();
-
-            if (request.messages() != null) {
-                for (ChatMessageDto msg : request.messages()) {
-                    Message mapped = null;
-                    if ("user".equalsIgnoreCase(msg.getRole())) {
-                        mapped = mapUserMessage(msg);
-                    } else if ("assistant".equalsIgnoreCase(msg.getRole())) {
-                        mapped = mapAssistantMessage(msg, toolCallIdToName);
-                    } else if ("tool".equalsIgnoreCase(msg.getRole())) {
-                        mapped = mapToolMessage(msg, toolCallIdToName);
-                    } else {
-                        log.debug("Skipping unknown role '{}' message", msg.getRole());
-                    }
-                    if (mapped != null) {
-                        messages.add(mapped);
-                    }
-                }
-            }
-
-            // 3. Configure the chat options and bind registered tools (backend tools + frontend dynamic tools)
-            List<org.springframework.ai.tool.ToolCallback> toolsList = new ArrayList<>();
-            if (agent.getTools() != null) {
-                for (Object tool : agent.getTools()) {
-                    if (tool instanceof org.springframework.ai.tool.ToolCallback) {
-                        toolsList.add((org.springframework.ai.tool.ToolCallback) tool);
-                    }
-                }
-            }
-
-            if (request.tools() != null && !request.tools().isEmpty()) {
-                for (FrontendToolDto action : request.tools()) {
-                    String inputSchemaJson = "{}";
-                    try {
-                        if (action.parameters() != null) {
-                            inputSchemaJson = objectMapper.writeValueAsString(action.parameters());
-                        }
-                    } catch (Exception e) {
-                        log.warn("Failed to serialize parameters for frontend tool '{}'", action.name(), e);
-                    }
-                    toolsList.add(new FrontendToolCallback(action.name(), action.description(), inputSchemaJson));
-                    log.info("Registered frontend tool: '{}' (params: {})", action.name(), inputSchemaJson);
-                }
-            }
-
-            // Build ChatOptions via agent implementation to remain LLM provider agnostic
-            ChatOptions options = agent.getChatOptions(toolsList);
-
-            Prompt prompt = new Prompt(messages, options);
-
-            // Keep track of tool calling state for this stream to ensure starts/args/ends are emitted correctly
-            Set<String> seenToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
-            Map<String, String> sentArguments = new java.util.concurrent.ConcurrentHashMap<>();
-            Set<String> completedToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
-            Map<Integer, String> indexToToolCallId = new java.util.concurrent.ConcurrentHashMap<>();
-
-            // 4. Stream the execution flow via raw ChatModel to prevent auto backend execution
-            Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
-
-            // 5. Translate ChatResponse stream chunks into EventType events
-            Flux<ServerSentEvent<AguiEvent>> eventFlux = responseFlux.flatMap(chatResponse -> {
-                Generation gen = chatResponse.getResult();
-                if (gen == null) {
-                    return Flux.empty();
-                }
-
-                List<ServerSentEvent<AguiEvent>> events = new ArrayList<>();
-
-                // If model executes a tool call, yield tool call start and incremental args events
-                AssistantMessage assistantMessage = gen.getOutput();
-                if (assistantMessage != null && assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
-                    List<AssistantMessage.ToolCall> toolCalls = assistantMessage.getToolCalls();
-                    for (int i = 0; i < toolCalls.size(); i++) {
-                        AssistantMessage.ToolCall toolCall = toolCalls.get(i);
-                        String rawId = toolCall.id();
-                        String toolCallId;
-                        if (rawId != null && !rawId.isEmpty()) {
-                            toolCallId = rawId;
-                        } else {
-                            toolCallId = indexToToolCallId.computeIfAbsent(i, idx -> "call-idx-" + idx + "-" + UUID.randomUUID().toString());
-                        }
-
-                        // Emit TOOL_CALL_START if not seen before
-                        if (!seenToolCalls.contains(toolCallId)) {
-                            seenToolCalls.add(toolCallId);
-                            sentArguments.put(toolCallId, "");
-                            log.info("LLM tool call start: name={}, toolCallId={}", toolCall.name(), toolCallId);
-                            events.add(AguiEvent.ToolCallStart.of(toolCallId, toolCall.name()));
-                        }
-
-                        // Emit incremental TOOL_CALL_ARGS delta
-                        String fullArgs = toolCall.arguments() != null ? toolCall.arguments() : "";
-                        String alreadySent = sentArguments.getOrDefault(toolCallId, "");
-                        if (fullArgs.length() > alreadySent.length() && fullArgs.startsWith(alreadySent)) {
-                            String delta = fullArgs.substring(alreadySent.length());
-                            sentArguments.put(toolCallId, fullArgs);
-                            log.info("[DEBUG-TOOL-ARGS] toolCall='{}' toolCallId='{}' accumulatedArgs='{}'",
-                                    toolCall.name(), toolCallId, fullArgs);
-                            events.add(AguiEvent.ToolCallArgs.of(toolCallId, delta));
-                        }
-                    }
-                }
-
-                // Yield standard text chunk event
-                String content = gen.getOutput().getText();
-                if (content != null && !content.isEmpty()) {
-                    log.debug("LLM streamed text content chunk: '{}'", content);
-                    events.add(AguiEvent.TextMessageChunk.of(messageId, content));
-                }
-
-                return Flux.fromIterable(events);
-            });
-
-            // Helper to generate TOOL_CALL_END events for any uncompleted tool calls
-            Mono<List<ServerSentEvent<AguiEvent>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
-                List<ServerSentEvent<AguiEvent>> endEvents = new ArrayList<>();
-                for (String toolCallId : seenToolCalls) {
-                    if (!completedToolCalls.contains(toolCallId)) {
-                        completedToolCalls.add(toolCallId);
-                        log.info("LLM tool call end: toolCallId={}", toolCallId);
-                        endEvents.add(AguiEvent.ToolCallEnd.of(toolCallId));
-                    }
-                }
-                return endEvents;
-            });
-
-            // Last event: RUN_FINISHED
-            ServerSentEvent<AguiEvent> runFinishedEvent = AguiEvent.RunFinished.of(finalThreadId, finalRunId);
-
-            Flux<ServerSentEvent<AguiEvent>> resultFlux = Flux.concat(
-                Flux.just(runStartedEvent),
-                eventFlux,
-                toolCallEndEventsMono.flatMapMany(Flux::fromIterable),
-                Flux.just(runFinishedEvent)
-            )
-            .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))
-            .onErrorResume(throwable -> {
-                log.warn("Exception caught in AGUI Event Stream for runId '{}': {}", finalRunId, throwable.getMessage());
-                // Stream failed is often thrown at the end of the stream by Spring AI when parsing
-                // LM Studio's usage stats chunk. Fallback gracefully to RUN_FINISHED.
-                if (throwable.getMessage() != null && 
-                    (throwable.getMessage().contains("Stream failed") || throwable.getMessage().contains("Connection closed"))) {
-                    log.info("Handling expected LM Studio stream end exception. Gracefully completing with RUN_FINISHED.");
-                    return Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId));
-                }
-                log.error("Fatal exception in AGUI Event Stream:", throwable);
-                return Flux.just(AguiEvent.RunError.of("An error occurred during agent execution: " + throwable.getMessage()));
-            });
-
+            Prompt prompt = buildPrompt(agent, request);
+            Flux<ServerSentEvent<AguiEvent>> sseStream = executeAgentStream(agent, request, prompt);
             return ResponseEntity.ok()
                     .contentType(MediaType.TEXT_EVENT_STREAM)
-                    .body(resultFlux);
-
+                    .body(sseStream);
         } catch (Exception e) {
             log.error("Fatal exception during agent chat setup: ", e);
-            return ResponseEntity.status(500).body(Map.of(
-                "type", "RUN_ERROR",
-                "message", "Failed to start agent session: " + e.getMessage()
-            ));
+            return errorResponse(500, "Failed to start agent session: " + e.getMessage());
         }
+    }
+
+    private AguiChatRequest parseChatRequest(JsonNode root) throws Exception {
+        if (root.has("body") && (root.has("method") || root.has("params"))) {
+            return objectMapper.treeToValue(root.get("body"), AguiChatRequest.class);
+        } else {
+            return objectMapper.treeToValue(root, AguiChatRequest.class);
+        }
+    }
+
+    private boolean isWelcomeRequest(AguiChatRequest request) {
+        return request.messages() == null || request.messages().isEmpty();
+    }
+
+    private ResponseEntity<Object> welcomeResponse(AguiAgent agent, AguiChatRequest request) {
+        String finalThreadId = request.threadId() != null ? request.threadId() : UUID.randomUUID().toString();
+        String finalRunId = request.runId() != null ? request.runId() : UUID.randomUUID().toString();
+        String messageId = "msg-" + UUID.randomUUID().toString();
+
+        log.info("Empty messages payload. Returning instant welcome response for agentId: '{}'", agent.getId());
+        Flux<ServerSentEvent<AguiEvent>> welcomeFlux = Flux.just(
+            AguiEvent.RunStarted.of(finalThreadId, finalRunId),
+            AguiEvent.TextMessageChunk.of(messageId, agent.getWelcomeMessage()),
+            AguiEvent.RunFinished.of(finalThreadId, finalRunId)
+        );
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .body(welcomeFlux);
+    }
+
+    private ResponseEntity<Object> errorResponse(int status, String message) {
+        return ResponseEntity.status(status).body(Map.of(
+            "type", "RUN_ERROR",
+            "message", message
+        ));
+    }
+
+    private Prompt buildPrompt(AguiAgent agent, AguiChatRequest request) {
+        // 1. Build dynamic system prompt using the agent's base instructions + readables context
+        StringBuilder systemPrompt = new StringBuilder(agent.getSystemInstruction(request));
+        if (request.context() != null && !request.context().isEmpty()) {
+            systemPrompt.append("\n\n當前網頁狀態資料 (Current Frontend Readables Context):\n");
+            for (ContextDto readable : request.context()) {
+                systemPrompt.append(String.format("- %s: %s\n", readable.description(), readable.value()));
+                log.debug("Bound frontend context readable: '{}' = '{}'", readable.description(), readable.value());
+            }
+        }
+
+        // 2. Map conversation history from request DTOs to Spring AI Messages
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(systemPrompt.toString()));
+        
+        Map<String, String> toolCallIdToName = new HashMap<>();
+
+        if (request.messages() != null) {
+            for (ChatMessageDto msg : request.messages()) {
+                Message mapped = null;
+                if ("user".equalsIgnoreCase(msg.getRole())) {
+                    mapped = mapUserMessage(msg);
+                } else if ("assistant".equalsIgnoreCase(msg.getRole())) {
+                    mapped = mapAssistantMessage(msg, toolCallIdToName);
+                } else if ("tool".equalsIgnoreCase(msg.getRole())) {
+                    mapped = mapToolMessage(msg, toolCallIdToName);
+                } else {
+                    log.debug("Skipping unknown role '{}' message", msg.getRole());
+                }
+                if (mapped != null) {
+                    messages.add(mapped);
+                }
+            }
+        }
+
+        // 3. Configure the chat options and bind registered tools (backend tools + frontend dynamic tools)
+        List<org.springframework.ai.tool.ToolCallback> toolsList = new ArrayList<>();
+        if (agent.getTools() != null) {
+            for (Object tool : agent.getTools()) {
+                if (tool instanceof org.springframework.ai.tool.ToolCallback) {
+                    toolsList.add((org.springframework.ai.tool.ToolCallback) tool);
+                }
+            }
+        }
+
+        if (request.tools() != null && !request.tools().isEmpty()) {
+            for (FrontendToolDto action : request.tools()) {
+                String inputSchemaJson = "{}";
+                try {
+                    if (action.parameters() != null) {
+                        inputSchemaJson = objectMapper.writeValueAsString(action.parameters());
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to serialize parameters for frontend tool '{}'", action.name(), e);
+                }
+                toolsList.add(new FrontendToolCallback(action.name(), action.description(), inputSchemaJson));
+                log.info("Registered frontend tool: '{}' (params: {})", action.name(), inputSchemaJson);
+            }
+        }
+
+        // Build ChatOptions via agent implementation to remain LLM provider agnostic
+        ChatOptions options = agent.getChatOptions(toolsList);
+
+        return new Prompt(messages, options);
+    }
+
+    private Flux<ServerSentEvent<AguiEvent>> executeAgentStream(AguiAgent agent, AguiChatRequest request, Prompt prompt) {
+        String finalThreadId = request.threadId() != null ? request.threadId() : UUID.randomUUID().toString();
+        String finalRunId = request.runId() != null ? request.runId() : UUID.randomUUID().toString();
+        String messageId = "msg-" + UUID.randomUUID().toString();
+
+        // Keep track of tool calling state for this stream to ensure starts/args/ends are emitted correctly
+        Set<String> seenToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
+        Map<String, String> sentArguments = new java.util.concurrent.ConcurrentHashMap<>();
+        Set<String> completedToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
+        Map<Integer, String> indexToToolCallId = new java.util.concurrent.ConcurrentHashMap<>();
+
+        // Stream the execution flow via raw ChatModel to prevent auto backend execution
+        Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
+
+        // Translate ChatResponse stream chunks into EventType events
+        Flux<ServerSentEvent<AguiEvent>> eventFlux = responseFlux.flatMap(chatResponse -> {
+            Generation gen = chatResponse.getResult();
+            if (gen == null) {
+                return Flux.empty();
+            }
+
+            List<ServerSentEvent<AguiEvent>> events = new ArrayList<>();
+
+            // If model executes a tool call, yield tool call start and incremental args events
+            AssistantMessage assistantMessage = gen.getOutput();
+            if (assistantMessage != null && assistantMessage.getToolCalls() != null && !assistantMessage.getToolCalls().isEmpty()) {
+                List<AssistantMessage.ToolCall> toolCalls = assistantMessage.getToolCalls();
+                for (int i = 0; i < toolCalls.size(); i++) {
+                    AssistantMessage.ToolCall toolCall = toolCalls.get(i);
+                    String rawId = toolCall.id();
+                    String toolCallId = (rawId != null && !rawId.isEmpty()) ? rawId :
+                            indexToToolCallId.computeIfAbsent(i, idx -> "call-idx-" + idx + "-" + UUID.randomUUID().toString());
+
+                    // Emit TOOL_CALL_START if not seen before
+                    if (!seenToolCalls.contains(toolCallId)) {
+                        seenToolCalls.add(toolCallId);
+                        sentArguments.put(toolCallId, "");
+                        log.info("LLM tool call start: name={}, toolCallId={}", toolCall.name(), toolCallId);
+                        events.add(AguiEvent.ToolCallStart.of(toolCallId, toolCall.name()));
+                    }
+
+                    // Emit incremental TOOL_CALL_ARGS delta
+                    String fullArgs = toolCall.arguments() != null ? toolCall.arguments() : "";
+                    String alreadySent = sentArguments.getOrDefault(toolCallId, "");
+                    if (fullArgs.length() > alreadySent.length() && fullArgs.startsWith(alreadySent)) {
+                        String delta = fullArgs.substring(alreadySent.length());
+                        sentArguments.put(toolCallId, fullArgs);
+                        log.info("[DEBUG-TOOL-ARGS] toolCall='{}' toolCallId='{}' accumulatedArgs='{}'",
+                                toolCall.name(), toolCallId, fullArgs);
+                        events.add(AguiEvent.ToolCallArgs.of(toolCallId, delta));
+                    }
+                }
+            }
+
+            // Yield standard text chunk event
+            String content = gen.getOutput().getText();
+            if (content != null && !content.isEmpty()) {
+                log.debug("LLM streamed text content chunk: '{}'", content);
+                events.add(AguiEvent.TextMessageChunk.of(messageId, content));
+            }
+
+            return Flux.fromIterable(events);
+        });
+
+        // Helper to generate TOOL_CALL_END events for any uncompleted tool calls
+        Mono<List<ServerSentEvent<AguiEvent>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
+            List<ServerSentEvent<AguiEvent>> endEvents = new ArrayList<>();
+            for (String toolCallId : seenToolCalls) {
+                if (!completedToolCalls.contains(toolCallId)) {
+                    completedToolCalls.add(toolCallId);
+                    log.info("LLM tool call end: toolCallId={}", toolCallId);
+                    endEvents.add(AguiEvent.ToolCallEnd.of(toolCallId));
+                }
+            }
+            return endEvents;
+        });
+
+        return Flux.concat(
+            Flux.just(AguiEvent.RunStarted.of(finalThreadId, finalRunId)),
+            eventFlux,
+            toolCallEndEventsMono.flatMapMany(Flux::fromIterable),
+            Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId))
+        )
+        .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))
+        .onErrorResume(throwable -> {
+            log.warn("Exception caught in AGUI Event Stream for runId '{}': {}", finalRunId, throwable.getMessage());
+            // Stream failed is often thrown at the end of the stream by Spring AI when parsing
+            // LM Studio's usage stats chunk. Fallback gracefully to RUN_FINISHED.
+            if (throwable.getMessage() != null && 
+                (throwable.getMessage().contains("Stream failed") || throwable.getMessage().contains("Connection closed"))) {
+                log.info("Handling expected LM Studio stream end exception. Gracefully completing with RUN_FINISHED.");
+                return Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId));
+            }
+            log.error("Fatal exception in AGUI Event Stream:", throwable);
+            return Flux.just(AguiEvent.RunError.of("An error occurred during agent execution: " + throwable.getMessage()));
+        });
     }
 
     @GetMapping(value = "/{agentId}/chat/threads")
