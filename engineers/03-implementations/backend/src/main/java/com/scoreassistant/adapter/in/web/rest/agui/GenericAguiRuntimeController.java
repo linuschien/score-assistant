@@ -152,32 +152,13 @@ public class GenericAguiRuntimeController {
             String messageId = "msg-" + UUID.randomUUID().toString();
 
             // First event: RUN_STARTED
-            ServerSentEvent<Object> runStartedEvent = ServerSentEvent.builder()
-                    .data(Map.of(
-                        "type", "RUN_STARTED",
-                        "threadId", finalThreadId,
-                        "runId", finalRunId
-                    ))
-                    .build();
+            ServerSentEvent<AguiEvent> runStartedEvent = AguiEvent.RunStarted.of(finalThreadId, finalRunId);
 
             // If messages is empty, return a quick welcome message immediately without calling the LLM
             if (request.messages() == null || request.messages().isEmpty()) {
                 String welcomeText = agent.getWelcomeMessage();
-                ServerSentEvent<Object> welcomeEvent = ServerSentEvent.builder()
-                        .data(Map.of(
-                            "type", "TEXT_MESSAGE_CHUNK",
-                            "messageId", messageId,
-                            "delta", welcomeText
-                        ))
-                        .build();
-                ServerSentEvent<Object> runFinishedEvent = ServerSentEvent.builder()
-                        .data(Map.of(
-                            "type", "RUN_FINISHED",
-                            "threadId", finalThreadId,
-                            "runId", finalRunId,
-                            "outcome", Map.of("type", "success")
-                        ))
-                        .build();
+                ServerSentEvent<AguiEvent> welcomeEvent = AguiEvent.TextMessageChunk.of(messageId, welcomeText);
+                ServerSentEvent<AguiEvent> runFinishedEvent = AguiEvent.RunFinished.of(finalThreadId, finalRunId);
                 log.info("Empty messages payload. Returning instant welcome response for agentId: '{}'", agentId);
                 return ResponseEntity.ok()
                         .contentType(MediaType.TEXT_EVENT_STREAM)
@@ -258,13 +239,13 @@ public class GenericAguiRuntimeController {
             Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
 
             // 5. Translate ChatResponse stream chunks into EventType events
-            Flux<ServerSentEvent<Object>> eventFlux = responseFlux.flatMap(chatResponse -> {
+            Flux<ServerSentEvent<AguiEvent>> eventFlux = responseFlux.flatMap(chatResponse -> {
                 Generation gen = chatResponse.getResult();
                 if (gen == null) {
                     return Flux.empty();
                 }
 
-                List<ServerSentEvent<Object>> events = new ArrayList<>();
+                List<ServerSentEvent<AguiEvent>> events = new ArrayList<>();
 
                 // If model executes a tool call, yield tool call start and incremental args events
                 AssistantMessage assistantMessage = gen.getOutput();
@@ -285,13 +266,7 @@ public class GenericAguiRuntimeController {
                             seenToolCalls.add(toolCallId);
                             sentArguments.put(toolCallId, "");
                             log.info("LLM tool call start: name={}, toolCallId={}", toolCall.name(), toolCallId);
-                            events.add(ServerSentEvent.builder()
-                                    .data(Map.of(
-                                        "type", "TOOL_CALL_START",
-                                        "toolCallId", toolCallId,
-                                        "toolCallName", toolCall.name()
-                                    ))
-                                    .build());
+                            events.add(AguiEvent.ToolCallStart.of(toolCallId, toolCall.name()));
                         }
 
                         // Emit incremental TOOL_CALL_ARGS delta
@@ -302,13 +277,7 @@ public class GenericAguiRuntimeController {
                             sentArguments.put(toolCallId, fullArgs);
                             log.info("[DEBUG-TOOL-ARGS] toolCall='{}' toolCallId='{}' accumulatedArgs='{}'",
                                     toolCall.name(), toolCallId, fullArgs);
-                            events.add(ServerSentEvent.builder()
-                                    .data(Map.of(
-                                        "type", "TOOL_CALL_ARGS",
-                                        "toolCallId", toolCallId,
-                                        "delta", delta
-                                    ))
-                                    .build());
+                            events.add(AguiEvent.ToolCallArgs.of(toolCallId, delta));
                         }
                     }
                 }
@@ -317,47 +286,29 @@ public class GenericAguiRuntimeController {
                 String content = gen.getOutput().getText();
                 if (content != null && !content.isEmpty()) {
                     log.debug("LLM streamed text content chunk: '{}'", content);
-                    events.add(ServerSentEvent.builder()
-                            .data(Map.of(
-                                "type", "TEXT_MESSAGE_CHUNK",
-                                "messageId", messageId,
-                                "delta", content
-                            ))
-                            .build());
+                    events.add(AguiEvent.TextMessageChunk.of(messageId, content));
                 }
 
                 return Flux.fromIterable(events);
             });
 
             // Helper to generate TOOL_CALL_END events for any uncompleted tool calls
-            Mono<List<ServerSentEvent<Object>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
-                List<ServerSentEvent<Object>> endEvents = new ArrayList<>();
+            Mono<List<ServerSentEvent<AguiEvent>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
+                List<ServerSentEvent<AguiEvent>> endEvents = new ArrayList<>();
                 for (String toolCallId : seenToolCalls) {
                     if (!completedToolCalls.contains(toolCallId)) {
                         completedToolCalls.add(toolCallId);
                         log.info("LLM tool call end: toolCallId={}", toolCallId);
-                        endEvents.add(ServerSentEvent.builder()
-                                .data(Map.of(
-                                    "type", "TOOL_CALL_END",
-                                    "toolCallId", toolCallId
-                                ))
-                                .build());
+                        endEvents.add(AguiEvent.ToolCallEnd.of(toolCallId));
                     }
                 }
                 return endEvents;
             });
 
             // Last event: RUN_FINISHED
-            ServerSentEvent<Object> runFinishedEvent = ServerSentEvent.builder()
-                    .data(Map.of(
-                        "type", "RUN_FINISHED",
-                        "threadId", finalThreadId,
-                        "runId", finalRunId,
-                        "outcome", Map.of("type", "success")
-                    ))
-                    .build();
+            ServerSentEvent<AguiEvent> runFinishedEvent = AguiEvent.RunFinished.of(finalThreadId, finalRunId);
 
-            Flux<ServerSentEvent<Object>> resultFlux = Flux.concat(
+            Flux<ServerSentEvent<AguiEvent>> resultFlux = Flux.concat(
                 Flux.just(runStartedEvent),
                 eventFlux,
                 toolCallEndEventsMono.flatMapMany(Flux::fromIterable),
@@ -371,22 +322,10 @@ public class GenericAguiRuntimeController {
                 if (throwable.getMessage() != null && 
                     (throwable.getMessage().contains("Stream failed") || throwable.getMessage().contains("Connection closed"))) {
                     log.info("Handling expected LM Studio stream end exception. Gracefully completing with RUN_FINISHED.");
-                    return Flux.just(ServerSentEvent.builder()
-                            .data(Map.of(
-                                "type", "RUN_FINISHED",
-                                "threadId", finalThreadId,
-                                "runId", finalRunId,
-                                "outcome", Map.of("type", "success")
-                            ))
-                            .build());
+                    return Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId));
                 }
                 log.error("Fatal exception in AGUI Event Stream:", throwable);
-                return Flux.just(ServerSentEvent.builder()
-                        .data(Map.of(
-                            "type", "RUN_ERROR",
-                            "message", "An error occurred during agent execution: " + throwable.getMessage()
-                        ))
-                        .build());
+                return Flux.just(AguiEvent.RunError.of("An error occurred during agent execution: " + throwable.getMessage()));
             });
 
             return ResponseEntity.ok()
