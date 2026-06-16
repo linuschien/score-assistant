@@ -52,7 +52,7 @@
 
 ## 🤖 Agent Workflows (.agents/workflows/)
 
-Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格。從最初的需求解析到最終的端到端驗證，十一項核心工作流程在開發管線中展開為 12 個依序執行的生命週期節點：
+Workflows 是 Agent 的操作指引，負責編排與轉換不同階段的設計規格。從最初的需求解析到最終的端到端驗證，十二項核心工作流程在開發管線中展開為 13 個依序執行的生命週期節點：
 
 ```mermaid
 graph TD
@@ -66,15 +66,16 @@ graph TD
     QA1["8. /qa-engineer [Mode 1] (介面感知 E2E 測試案例生成)"]
     BE["9. /spring-backend-engineer (響應式後端實作)"]
     FE["10. /react-frontend-engineer (JSON-render 規格轉譯)"]
-    QA2["11. /qa-engineer [Mode 2] (瀏覽器自動化驗證與報告)"]
-    DE["12. /devops-engineer (容器化與雲端原生部署)"]
+    AAE["11. /agentic-ai-engineer (Agentic AI 助理外掛開發)"]
+    QA2["12. /qa-engineer [Mode 2] (瀏覽器自動化驗證與報告)"]
+    DE["13. /devops-engineer (容器化與雲端原生部署)"]
 
-    PO --> DM --> SysA --> TL --> BA --> SA --> UID --> QA1 --> BE --> FE --> QA2 --> DE
+    PO --> DM --> SysA --> TL --> BA --> SA --> UID --> QA1 --> BE --> FE --> AAE --> QA2 --> DE
 ```
 
 以下為各 Agent Workflow 的詳細職責說明：
 
-
+- **/agentic-ai-engineer**：Agentic AI 開發工程師，專精於 CopilotKit V2、Spring AI 2.0.0+ 與 AGUI 協定，依照使用者需求與現有系統行為，開發能像外掛一般協助處理資料的 Agentic AI。
 - **/behavior-architect**：資深 SDD 架構師，專精於事件驅動架構 (EDA) 與六角架構 (Hexagonal Architecture) 的 BDD 生成。
 - **/devops-engineer**：資深 DevOps 工程師，專精於容器化、CI/CD 管道以及雲端原生部署。
 - **/domain-modeler**：資深領域建模師，專精於領域驅動設計 (DDD) 與平台無關建模 (PIM)，將原始需求轉換為結構化、型別安全的 PlantUML 類別圖。
