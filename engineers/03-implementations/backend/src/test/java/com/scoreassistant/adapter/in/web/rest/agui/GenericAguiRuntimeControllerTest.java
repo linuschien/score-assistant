@@ -78,20 +78,25 @@ class GenericAguiRuntimeControllerTest {
                 .expectHeader().contentType("text/event-stream;charset=UTF-8")
                 .expectBodyList(Map.class)
                 .value(events -> {
-                    assertThat(events).hasSize(4);
+                    assertThat(events).hasSize(6);
                     assertThat(events.get(0).get("type")).isEqualTo("RUN_STARTED");
                     assertThat(events.get(0).get("threadId")).isEqualTo("t1");
                     assertThat(events.get(0).get("runId")).isEqualTo("r1");
 
-                    assertThat(events.get(1).get("type")).isEqualTo("TEXT_MESSAGE_CHUNK");
-                    assertThat(events.get(1).get("delta")).isEqualTo("Hello");
+                    assertThat(events.get(1).get("type")).isEqualTo("TEXT_MESSAGE_START");
+                    assertThat(events.get(1).get("role")).isEqualTo("assistant");
 
-                    assertThat(events.get(2).get("type")).isEqualTo("TEXT_MESSAGE_CHUNK");
-                    assertThat(events.get(2).get("delta")).isEqualTo(" world");
+                    assertThat(events.get(2).get("type")).isEqualTo("TEXT_MESSAGE_CONTENT");
+                    assertThat(events.get(2).get("delta")).isEqualTo("Hello");
 
-                    assertThat(events.get(3).get("type")).isEqualTo("RUN_FINISHED");
-                    assertThat(events.get(3).get("threadId")).isEqualTo("t1");
-                    assertThat(events.get(3).get("runId")).isEqualTo("r1");
+                    assertThat(events.get(3).get("type")).isEqualTo("TEXT_MESSAGE_CONTENT");
+                    assertThat(events.get(3).get("delta")).isEqualTo(" world");
+
+                    assertThat(events.get(4).get("type")).isEqualTo("TEXT_MESSAGE_END");
+
+                    assertThat(events.get(5).get("type")).isEqualTo("RUN_FINISHED");
+                    assertThat(events.get(5).get("threadId")).isEqualTo("t1");
+                    assertThat(events.get(5).get("runId")).isEqualTo("r1");
                 });
     }
 

@@ -8,12 +8,19 @@ import org.springframework.http.codec.ServerSentEvent;
  */
 public sealed interface AguiEvent permits
         AguiEvent.RunStarted,
-        AguiEvent.TextMessageChunk,
+        AguiEvent.TextMessageStart,
+        AguiEvent.TextMessageContent,
+        AguiEvent.TextMessageEnd,
         AguiEvent.ToolCallStart,
         AguiEvent.ToolCallArgs,
         AguiEvent.ToolCallEnd,
         AguiEvent.RunFinished,
-        AguiEvent.RunError {
+        AguiEvent.RunError,
+        AguiEvent.ReasoningStart,
+        AguiEvent.ReasoningMessageStart,
+        AguiEvent.ReasoningMessageContent,
+        AguiEvent.ReasoningMessageEnd,
+        AguiEvent.ReasoningEnd {
 
     @JsonProperty("type")
     String type();
@@ -28,13 +35,79 @@ public sealed interface AguiEvent permits
         }
     }
 
-    record TextMessageChunk(
+    record TextMessageStart(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId,
+            @JsonProperty("role") String role
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId, String role) {
+            return ServerSentEvent.<AguiEvent>builder(new TextMessageStart("TEXT_MESSAGE_START", messageId, role)).build();
+        }
+    }
+
+    record TextMessageContent(
             String type,
             String messageId,
             String delta
     ) implements AguiEvent {
         public static ServerSentEvent<AguiEvent> of(String messageId, String delta) {
-            return ServerSentEvent.<AguiEvent>builder(new TextMessageChunk("TEXT_MESSAGE_CHUNK", messageId, delta)).build();
+            return ServerSentEvent.<AguiEvent>builder(new TextMessageContent("TEXT_MESSAGE_CONTENT", messageId, delta)).build();
+        }
+    }
+
+    record TextMessageEnd(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId) {
+            return ServerSentEvent.<AguiEvent>builder(new TextMessageEnd("TEXT_MESSAGE_END", messageId)).build();
+        }
+    }
+
+    record ReasoningStart(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId) {
+            return ServerSentEvent.<AguiEvent>builder(new ReasoningStart("REASONING_START", messageId)).build();
+        }
+    }
+
+    record ReasoningMessageStart(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId,
+            @JsonProperty("role") String role
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId) {
+            return ServerSentEvent.<AguiEvent>builder(new ReasoningMessageStart("REASONING_MESSAGE_START", messageId, "reasoning")).build();
+        }
+    }
+
+    record ReasoningMessageContent(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId,
+            @JsonProperty("delta") String delta
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId, String delta) {
+            return ServerSentEvent.<AguiEvent>builder(new ReasoningMessageContent("REASONING_MESSAGE_CONTENT", messageId, delta)).build();
+        }
+    }
+
+    record ReasoningMessageEnd(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId) {
+            return ServerSentEvent.<AguiEvent>builder(new ReasoningMessageEnd("REASONING_MESSAGE_END", messageId)).build();
+        }
+    }
+
+    record ReasoningEnd(
+            @JsonProperty("type") String type,
+            @JsonProperty("messageId") String messageId
+    ) implements AguiEvent {
+        public static ServerSentEvent<AguiEvent> of(String messageId) {
+            return ServerSentEvent.<AguiEvent>builder(new ReasoningEnd("REASONING_END", messageId)).build();
         }
     }
 

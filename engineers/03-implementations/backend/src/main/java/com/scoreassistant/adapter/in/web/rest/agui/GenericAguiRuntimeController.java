@@ -170,7 +170,9 @@ public class GenericAguiRuntimeController {
         log.info("Empty messages payload. Returning instant welcome response for agentId: '{}'", agent.getId());
         Flux<ServerSentEvent<AguiEvent>> welcomeFlux = Flux.just(
             AguiEvent.RunStarted.of(finalThreadId, finalRunId),
-            AguiEvent.TextMessageChunk.of(messageId, agent.getWelcomeMessage()),
+            AguiEvent.TextMessageStart.of(messageId, "assistant"),
+            AguiEvent.TextMessageContent.of(messageId, agent.getWelcomeMessage()),
+            AguiEvent.TextMessageEnd.of(messageId),
             AguiEvent.RunFinished.of(finalThreadId, finalRunId)
         );
         return ResponseEntity.ok()
@@ -203,13 +205,15 @@ public class GenericAguiRuntimeController {
         Map<String, String> toolCallIdToName = new HashMap<>();
 
         if (request.messages() != null) {
-            for (ChatMessageDto msg : request.messages()) {
+            for (int i = 0; i < request.messages().size(); i++) {
+                ChatMessageDto msg = request.messages().get(i);
                 Message mapped = null;
-                if ("user".equalsIgnoreCase(msg.getRole())) {
+                
+                if ("user".equals(msg.getRole())) {
                     mapped = mapUserMessage(msg);
-                } else if ("assistant".equalsIgnoreCase(msg.getRole())) {
+                } else if ("assistant".equals(msg.getRole())) {
                     mapped = mapAssistantMessage(msg, toolCallIdToName);
-                } else if ("tool".equalsIgnoreCase(msg.getRole())) {
+                } else if ("tool".equals(msg.getRole())) {
                     mapped = mapToolMessage(msg, toolCallIdToName);
                 } else {
                     log.debug("Skipping unknown role '{}' message", msg.getRole());
@@ -254,19 +258,22 @@ public class GenericAguiRuntimeController {
     private Flux<ServerSentEvent<AguiEvent>> executeAgentStream(AguiAgent agent, AguiChatRequest request, Prompt prompt) {
         String finalThreadId = request.threadId() != null ? request.threadId() : UUID.randomUUID().toString();
         String finalRunId = request.runId() != null ? request.runId() : UUID.randomUUID().toString();
-        String messageId = "msg-" + UUID.randomUUID().toString();
-
+        String baseMessageId = "msg-" + UUID.randomUUID().toString();
+        String reasoningMessageId = baseMessageId + "-reasoning";
+        String textMessageId = baseMessageId + "-text";
         // Keep track of tool calling state for this stream to ensure starts/args/ends are emitted correctly
-        Set<String> seenToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
-        Map<String, String> sentArguments = new java.util.concurrent.ConcurrentHashMap<>();
-        Set<String> completedToolCalls = new java.util.concurrent.ConcurrentSkipListSet<>();
-        Map<Integer, String> indexToToolCallId = new java.util.concurrent.ConcurrentHashMap<>();
+        Set<String> seenToolCalls = new HashSet<>();
+        Set<String> completedToolCalls = new HashSet<>();
+        Map<String, String> sentArguments = new HashMap<>();
+        Map<Integer, String> indexToToolCallId = new HashMap<>();
+        boolean[] hasStartedReasoning = {false};
+        boolean[] hasStartedText = {false};
 
         // Stream the execution flow via raw ChatModel to prevent auto backend execution
         Flux<ChatResponse> responseFlux = agent.getChatModel().stream(prompt);
 
         // Translate ChatResponse stream chunks into EventType events
-        Flux<ServerSentEvent<AguiEvent>> eventFlux = responseFlux.flatMap(chatResponse -> {
+        Flux<ServerSentEvent<AguiEvent>> eventFlux = responseFlux.concatMap(chatResponse -> {
             Generation gen = chatResponse.getResult();
             if (gen == null) {
                 return Flux.empty();
@@ -305,18 +312,48 @@ public class GenericAguiRuntimeController {
                 }
             }
 
+            // Yield reasoning text chunk event (if present)
+            if (gen.getOutput() != null && gen.getOutput().getMetadata() != null) {
+                log.trace("Generation metadata keys: {}", gen.getOutput().getMetadata().keySet());
+                Object reasoningObj = gen.getOutput().getMetadata().get("reasoningContent");
+                if (reasoningObj == null) {
+                    reasoningObj = gen.getOutput().getMetadata().get("reasoning_content");
+                }
+                if (reasoningObj instanceof String reasoningText && !reasoningText.isEmpty()) {
+                    if (!hasStartedReasoning[0]) {
+                        hasStartedReasoning[0] = true;
+                        log.info("LLM reasoning start: messageId={}", reasoningMessageId);
+                        events.add(AguiEvent.ReasoningStart.of(reasoningMessageId));
+                        events.add(AguiEvent.ReasoningMessageStart.of(reasoningMessageId));
+                    }
+                    log.debug("LLM streamed reasoning content chunk: '{}'", reasoningText);
+                    events.add(AguiEvent.ReasoningMessageContent.of(reasoningMessageId, reasoningText));
+                }
+            }
+
             // Yield standard text chunk event
             String content = gen.getOutput().getText();
             if (content != null && !content.isEmpty()) {
+                if (hasStartedReasoning[0]) {
+                    hasStartedReasoning[0] = false;
+                    log.info("LLM reasoning end: messageId={}", reasoningMessageId);
+                    events.add(AguiEvent.ReasoningMessageEnd.of(reasoningMessageId));
+                    events.add(AguiEvent.ReasoningEnd.of(reasoningMessageId));
+                }
+                if (!hasStartedText[0]) {
+                    hasStartedText[0] = true;
+                    log.info("LLM text start: messageId={}", textMessageId);
+                    events.add(AguiEvent.TextMessageStart.of(textMessageId, "assistant"));
+                }
                 log.debug("LLM streamed text content chunk: '{}'", content);
-                events.add(AguiEvent.TextMessageChunk.of(messageId, content));
+                events.add(AguiEvent.TextMessageContent.of(textMessageId, content));
             }
 
             return Flux.fromIterable(events);
         });
 
-        // Helper to generate TOOL_CALL_END events for any uncompleted tool calls
-        Mono<List<ServerSentEvent<AguiEvent>>> toolCallEndEventsMono = Mono.fromCallable(() -> {
+        // Helper to generate END events for any uncompleted tool calls and reasoning
+        Mono<List<ServerSentEvent<AguiEvent>>> finalEventsMono = Mono.fromCallable(() -> {
             List<ServerSentEvent<AguiEvent>> endEvents = new ArrayList<>();
             for (String toolCallId : seenToolCalls) {
                 if (!completedToolCalls.contains(toolCallId)) {
@@ -325,13 +362,24 @@ public class GenericAguiRuntimeController {
                     endEvents.add(AguiEvent.ToolCallEnd.of(toolCallId));
                 }
             }
+            if (hasStartedReasoning[0]) {
+                hasStartedReasoning[0] = false;
+                log.info("LLM reasoning end: messageId={}", reasoningMessageId);
+                endEvents.add(AguiEvent.ReasoningMessageEnd.of(reasoningMessageId));
+                endEvents.add(AguiEvent.ReasoningEnd.of(reasoningMessageId));
+            }
+            if (hasStartedText[0]) {
+                hasStartedText[0] = false;
+                log.info("LLM text end: messageId={}", textMessageId);
+                endEvents.add(AguiEvent.TextMessageEnd.of(textMessageId));
+            }
             return endEvents;
         });
 
         return Flux.concat(
             Flux.just(AguiEvent.RunStarted.of(finalThreadId, finalRunId)),
             eventFlux,
-            toolCallEndEventsMono.flatMapMany(Flux::fromIterable),
+            finalEventsMono.flatMapMany(Flux::fromIterable),
             Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId))
         )
         .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))
@@ -381,8 +429,9 @@ public class GenericAguiRuntimeController {
     }
 
     private Message mapUserMessage(ChatMessageDto msg) {
-        log.debug("Added User message to prompt context: '{}'", msg.getContent());
-        return new UserMessage(msg.getContent());
+        String content = msg.getContent();
+        log.debug("Added User message to prompt context: '{}'", content);
+        return new UserMessage(content);
     }
 
     private Message mapAssistantMessage(ChatMessageDto msg, Map<String, String> toolCallIdToName) {
