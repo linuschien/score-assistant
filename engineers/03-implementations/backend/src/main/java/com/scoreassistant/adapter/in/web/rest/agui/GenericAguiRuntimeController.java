@@ -335,6 +335,7 @@ public class GenericAguiRuntimeController {
             Flux.just(AguiEvent.RunFinished.of(finalThreadId, finalRunId))
         )
         .doOnComplete(() -> log.info("AGUI Event Stream completed successfully for runId: '{}'", finalRunId))
+        .doOnCancel(() -> log.info("AGUI Event Stream was cancelled (client disconnected) for runId: '{}'", finalRunId))
         .onErrorResume(throwable -> {
             log.warn("Exception caught in AGUI Event Stream for runId '{}': {}", finalRunId, throwable.getMessage());
             // Stream failed is often thrown at the end of the stream by Spring AI when parsing
