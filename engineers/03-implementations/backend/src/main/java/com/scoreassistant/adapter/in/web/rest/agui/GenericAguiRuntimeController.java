@@ -205,12 +205,14 @@ public class GenericAguiRuntimeController {
         Map<String, String> toolCallIdToName = new HashMap<>();
 
         if (request.messages() != null) {
+            int lastIndex = request.messages().size() - 1;
             for (int i = 0; i < request.messages().size(); i++) {
                 ChatMessageDto msg = request.messages().get(i);
                 Message mapped = null;
+                boolean isLast = (i == lastIndex);
                 
                 if ("user".equals(msg.getRole())) {
-                    mapped = mapUserMessage(msg);
+                    mapped = mapUserMessage(msg, isLast);
                 } else if ("assistant".equals(msg.getRole())) {
                     mapped = mapAssistantMessage(msg, toolCallIdToName);
                 } else if ("tool".equals(msg.getRole())) {
@@ -334,19 +336,35 @@ public class GenericAguiRuntimeController {
             // Yield standard text chunk event
             String content = gen.getOutput().getText();
             if (content != null && !content.isEmpty()) {
-                if (hasStartedReasoning[0]) {
+                if (content.contains("<think>") || content.contains("<|channel>thought")) {
+                    content = content.replace("<think>", "").replace("<|channel>thought", "");
+                    hasStartedReasoning[0] = true;
+                    log.info("LLM reasoning start: messageId={}", reasoningMessageId);
+                    events.add(AguiEvent.ReasoningStart.of(reasoningMessageId));
+                    events.add(AguiEvent.ReasoningMessageStart.of(reasoningMessageId));
+                }
+                if (content.contains("</think>") || content.contains("<channel|>")) {
+                    content = content.replace("</think>", "").replace("<channel|>", "");
                     hasStartedReasoning[0] = false;
                     log.info("LLM reasoning end: messageId={}", reasoningMessageId);
                     events.add(AguiEvent.ReasoningMessageEnd.of(reasoningMessageId));
                     events.add(AguiEvent.ReasoningEnd.of(reasoningMessageId));
                 }
-                if (!hasStartedText[0]) {
-                    hasStartedText[0] = true;
-                    log.info("LLM text start: messageId={}", textMessageId);
-                    events.add(AguiEvent.TextMessageStart.of(textMessageId, "assistant"));
+
+                if (hasStartedReasoning[0]) {
+                    if (!content.isEmpty()) {
+                        events.add(AguiEvent.ReasoningMessageContent.of(reasoningMessageId, content));
+                    }
+                } else {
+                    if (!hasStartedText[0]) {
+                        hasStartedText[0] = true;
+                        log.info("LLM text start: messageId={}", textMessageId);
+                        events.add(AguiEvent.TextMessageStart.of(textMessageId, "assistant"));
+                    }
+                    if (!content.isEmpty()) {
+                        events.add(AguiEvent.TextMessageContent.of(textMessageId, content));
+                    }
                 }
-                log.debug("LLM streamed text content chunk: '{}'", content);
-                events.add(AguiEvent.TextMessageContent.of(textMessageId, content));
             }
 
             return Flux.fromIterable(events);
@@ -428,9 +446,14 @@ public class GenericAguiRuntimeController {
                 .body(Map.of("ok", true));
     }
 
-    private Message mapUserMessage(ChatMessageDto msg) {
+    private Message mapUserMessage(ChatMessageDto msg, boolean isLast) {
         String content = msg.getContent();
-        log.debug("Added User message to prompt context: '{}'", content);
+        if (isLast) {
+            content = "<|think|>\n" + content;
+            log.debug("Injected <|think|> token into the LAST user message: '{}'", content);
+        } else {
+            log.debug("Added User message to prompt context: '{}'", content);
+        }
         return new UserMessage(content);
     }
 
@@ -468,8 +491,12 @@ public class GenericAguiRuntimeController {
             log.warn("Skipping 'tool' message because tool_call_id is null: content='{}'", msg.getContent());
             return null;
         }
-        String toolName = msg.getName();
-        if (toolName == null || toolName.isEmpty()) {
+        
+        String toolName = "";
+        if (msg.getName() != null) {
+            toolName = msg.getName();
+            toolCallIdToName.put(toolCallId, toolName);
+        } else {
             toolName = toolCallIdToName.getOrDefault(toolCallId, "");
         }
         String responseContent = msg.getContent() != null ? msg.getContent() : "";
