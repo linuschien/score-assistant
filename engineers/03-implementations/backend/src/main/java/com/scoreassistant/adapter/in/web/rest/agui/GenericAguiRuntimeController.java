@@ -336,6 +336,10 @@ public class GenericAguiRuntimeController {
             // Yield standard text chunk event
             String content = gen.getOutput().getText();
             if (content != null && !content.isEmpty()) {
+                // TODO: Spring AI 2.0.0 GA streaming lacks generic extraction of 'reasoning_content' via Flux mapping.
+                // Revisit this raw string parsing logic after upgrading to Spring AI 2.0.1 GA. 
+                // Once fixed upstream, we can rely purely on `gen.getOutput().getMetadata().get("reasoningContent")`
+                // and remove this state-machine parser.
                 if (content.contains("<think>") || content.contains("<|channel>thought")) {
                     content = content.replace("<think>", "").replace("<|channel>thought", "");
                     hasStartedReasoning[0] = true;
