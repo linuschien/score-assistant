@@ -4,7 +4,7 @@ import { componentRegistry } from '@/json-render/component-registry';
 import spec from '@/schemas/grade-entry-board.render-schema.json';
 
 import { z } from 'zod';
-import { CopilotKit, useAgentContext, useFrontendTool, CopilotPopup } from '@copilotkit/react-core/v2';
+import { CopilotKit, CopilotPopup, useAttachments, useAgentContext, useFrontendTool } from '@copilotkit/react-core/v2';
 import '@copilotkit/react-core/v2/styles.css';
 
 import { useGetSemesterById } from '@/hooks/use-get-semester-by-id';
@@ -418,21 +418,37 @@ function GradeEntryBoardContent() {
   return <Renderer spec={spec as any} registry={componentRegistry} />;
 }
 
-export default function GradeEntryBoardPage() {
+function GradeEntryBoardLayout() {
+  const { containerRef, handleDragOver, handleDrop } = useAttachments({
+    config: { enabled: true, accept: "image/*" }
+  });
+
   return (
-    <CopilotKit 
-      runtimeUrl="/api/agui/grade-entry-agent/chat"
-      enableInspector={false}
-    >
+    <div ref={containerRef} onDragOver={handleDragOver} onDrop={handleDrop} className="h-full w-full min-h-screen">
       <GradeEntryBoardContent />
       <CopilotPopup
         defaultOpen={false}
         clickOutsideToClose={false}
         labels={{
           modalHeaderTitle: "成績輸入助教",
-          welcomeMessageText: "老師您好！我是您的成績輸入助教。您可以告訴我座號與要登錄的成績項目（例如：『幫 01 號同學在 Homework 1 登錄 90 分』），我會為您自動比對並登錄。"
+          welcomeMessageText: "老師您好！我是您的成績與出席紀錄助教。您可以直接將「上課出席紀錄」的照片拖曳進視窗中 (或使用 Ctrl+V 貼上)，讓我為您自動辨識並登錄。"
+        }}
+        attachments={{
+          enabled: true,
+          accept: "image/*"
         }}
       />
+    </div>
+  );
+}
+
+export default function GradeEntryBoardPage() {
+  return (
+    <CopilotKit 
+      runtimeUrl="/api/agui/grade-entry-agent/chat"
+      enableInspector={false}
+    >
+      <GradeEntryBoardLayout />
     </CopilotKit>
   );
 }

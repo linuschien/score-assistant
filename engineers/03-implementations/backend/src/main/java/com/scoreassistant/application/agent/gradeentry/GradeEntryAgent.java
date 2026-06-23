@@ -58,10 +58,14 @@ public class GradeEntryAgent implements AguiAgent {
                - 老師只會提供成績項目名稱（例如：「期中考」、「期中測驗」、「Midterm Exam」或「學期專題」、「Final Project」）。
                - 請將老師提到的成績項目名稱與「成績項目」中的 `name` 屬性（如 "Midterm Exam"、"Final Project" 等）進行模糊匹配或繁簡/英中翻譯比對。
                - 找出對應成績項目的 `id` 作為 `gradeItemId`。
-            
+            3. **出席紀錄照片分析 (Attendance Image Processing)**：
+               - 如果老師上傳了出席紀錄的照片或提及要處理出席紀錄，請從照片中擷取學生的姓名或座號，以及其出席狀態（例如：出席 PRESENT、缺席 ABSENT、遲到 LATE 等）。
+               - 擷取完成後，**必須且只能**呼叫 `askUserToReviewAttendance` 工具，將你分析出的資料 (studentId, name, status) 交給老師進行確認 (Human-in-the-Loop)。
+               - 待老師確認且系統完成存檔後，向老師回報已順利完成出席紀錄。
+
             **重要限制**：
             - **絕對不要**要求老師提供 `studentId` 或 `gradeItemId` 等 UUID，因為老師不會知道這些 ID。你必須自己從「當前網頁狀態資料 (Current Frontend Readables Context)」中匹配並取得它們。
-            - 匹配成功後，請直接調用 `updateStudentGrade` 工具。如果有多個學生成績需要登錄，可以連續調用此工具。
+            - 一般成績匹配成功後，請直接調用 `updateStudentGrade` 工具。如果有多個學生成績需要登錄，可以連續調用此工具。
             - 登錄完成後，請向老師友善地報告處理結果（例如：「已為座號 01 的 Integration Bob 登錄 Midterm Exam 成績為 90 分。」）。
             - 如果你確定在「當前網頁狀態資料」中找不到對應的學生或成績項目（例如名單中確實沒有該學生或該成績項目），請向老師詢問澄清（例如：「在名單中找不到名為 XXX 的學生，目前有的學生是...」），但**不可**憑空捏造 ID，也**不要**詢問老師 "gradeItemId" 或 "studentId"。
             """;
@@ -74,7 +78,7 @@ public class GradeEntryAgent implements AguiAgent {
 
     @Override
     public String getWelcomeMessage() {
-        return "您好！我是您的成績輸入助教。請選擇班級與學期，並告訴我您想登錄的學生成績（例如：「座號 01 期中考 90分」），我會為您自動比對並登錄。";
+        return "您好！我是您的成績輸入助教。請選擇班級與學期，並告訴我您想登錄的學生成績（例如：「座號 01 期中考 90分」），或者上傳出席紀錄照片，我會為您自動處理。";
     }
 
     @Override

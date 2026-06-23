@@ -124,4 +124,34 @@ class GradeRecordServiceTest {
                 .expectNextCount(1)
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("batchUpsert() should update existing record")
+    void batchUpsert_shouldUpdateExisting() {
+        var req = new GradeRecordRequest(gradeItemId, studentId, BigDecimal.valueOf(90));
+        when(gradeItemRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(gradeRecordRepository.findOne(any(Example.class))).thenReturn(Mono.just(testRecord));
+        var updatedRecord = new GradeRecordEntity(recordId, gradeItemId, studentId, BigDecimal.valueOf(90), LocalDateTime.now(), 2, LocalDateTime.now(), LocalDateTime.now(), false, null);
+        when(gradeRecordRepository.save(any(GradeRecordEntity.class))).thenReturn(Mono.just(updatedRecord));
+
+        StepVerifier.create(gradeRecordService.batchUpsert(java.util.List.of(req)))
+                .expectNextMatches(r -> r.score().compareTo(BigDecimal.valueOf(90)) == 0)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("batchUpsert() should insert new record")
+    void batchUpsert_shouldInsertNew() {
+        var req = new GradeRecordRequest(gradeItemId, studentId, BigDecimal.valueOf(80));
+        when(gradeItemRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(studentRepository.exists(any(Example.class))).thenReturn(Mono.just(true));
+        when(gradeRecordRepository.findOne(any(Example.class))).thenReturn(Mono.empty());
+        var newRecord = new GradeRecordEntity(UUID.randomUUID(), gradeItemId, studentId, BigDecimal.valueOf(80), LocalDateTime.now(), 1, LocalDateTime.now(), LocalDateTime.now(), false, null);
+        when(gradeRecordRepository.save(any(GradeRecordEntity.class))).thenReturn(Mono.just(newRecord));
+
+        StepVerifier.create(gradeRecordService.batchUpsert(java.util.List.of(req)))
+                .expectNextMatches(r -> r.score().compareTo(BigDecimal.valueOf(80)) == 0)
+                .verifyComplete();
+    }
 }

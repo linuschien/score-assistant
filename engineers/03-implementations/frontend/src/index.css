@@ -169,3 +169,8 @@ button[data-variant="outline"]:hover {
 [class*="CopilotReasoning"] {
   color: hsl(217.9, 10.6%, 75%) !important; /* Slightly brighter muted text */
 }
+
+/* Fix CopilotKit + button DropdownMenu rendering behind CopilotPopup (z-index 1100) */
+[data-radix-popper-content-wrapper] {
+  z-index: 1200 !important;
+}

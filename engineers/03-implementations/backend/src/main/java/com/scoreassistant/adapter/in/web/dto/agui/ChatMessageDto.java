@@ -3,6 +3,7 @@ package com.scoreassistant.adapter.in.web.dto.agui;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -12,7 +13,7 @@ public class ChatMessageDto {
     private String role;
     
     @JsonProperty("content")
-    private String content;
+    private JsonNode content;
     
     @JsonProperty("tool_calls")
     @JsonAlias({"tool_calls", "toolCalls"})
@@ -27,12 +28,12 @@ public class ChatMessageDto {
 
     public ChatMessageDto() {}
 
-    public ChatMessageDto(String role, String content) {
+    public ChatMessageDto(String role, JsonNode content) {
         this.role = role;
         this.content = content;
     }
 
-    public ChatMessageDto(String role, String content, List<ToolCallDto> toolCalls, String toolCallId, String name) {
+    public ChatMessageDto(String role, JsonNode content, List<ToolCallDto> toolCalls, String toolCallId, String name) {
         this.role = role;
         this.content = content;
         this.toolCalls = toolCalls;
@@ -45,8 +46,8 @@ public class ChatMessageDto {
     public void setRole(String role) { this.role = role; }
 
     @JsonProperty("content")
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    public JsonNode getContent() { return content; }
+    public void setContent(JsonNode content) { this.content = content; }
 
     @JsonProperty("tool_calls")
     public List<ToolCallDto> getToolCalls() { return toolCalls; }

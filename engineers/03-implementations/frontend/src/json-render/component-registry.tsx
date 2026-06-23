@@ -13,6 +13,7 @@ import { RechartsPieChartComponent } from './components/pie-chart';
 import { ChartPlaceholder } from './components/chart-placeholder';
 import { StudentGradesPreview } from './components/student-grades-preview';
 import { GradeMatrixTable } from './components/grade-matrix-table';
+import { AttendanceReviewTool } from './components/attendance-review-tool';
 import { WeightInlineInput } from './components/weight-inline-input';
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export const componentRegistry: Record<string, ComponentType<any>> = {
   'DatePicker': DatePicker,
   'StudentGradesPreview': StudentGradesPreview,
   'GradeMatrixTable': GradeMatrixTable,
+  'AttendanceReviewTool': AttendanceReviewTool,
   'WeightInlineInput': WeightInlineInput,
 
   // ── 4. Chart wrappers ───────────────────────────────────────────────────────

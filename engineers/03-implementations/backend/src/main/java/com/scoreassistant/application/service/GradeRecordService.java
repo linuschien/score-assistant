@@ -147,6 +147,31 @@ public class GradeRecordService {
         return gradeRecordRepository.findAll(Example.of(probe, matcher)).map(this::toResponse);
     }
 
+    @Transactional
+    public Flux<GradeRecordResponse> batchUpsert(java.util.List<GradeRecordRequest> requests) {
+        return Flux.fromIterable(requests)
+                .flatMap(req -> validateParentExistence(req.gradeItemId(), req.studentId()).thenReturn(req))
+                .flatMap(req -> {
+                    var probe = new GradeRecordEntity(null, req.gradeItemId(), req.studentId(), null, null, 0, null, null, false, null);
+                    var matcher = ExampleMatcher.matching().withIgnorePaths("version").withIgnoreNullValues();
+                    return gradeRecordRepository.findOne(Example.of(probe, matcher))
+                            .flatMap(existing -> {
+                                var updated = new GradeRecordEntity(
+                                        existing.id(), req.gradeItemId(), req.studentId(), req.score(),
+                                        LocalDateTime.now(), existing.version(), existing.createdAt(), LocalDateTime.now(), false, null);
+                                return gradeRecordRepository.save(updated);
+                            })
+                            .switchIfEmpty(Mono.defer(() -> {
+                                var now = LocalDateTime.now();
+                                var newEntity = new GradeRecordEntity(
+                                        null, req.gradeItemId(), req.studentId(), req.score(),
+                                        now, 0, now, now, false, null);
+                                return gradeRecordRepository.save(newEntity);
+                            }));
+                })
+                .map(this::toResponse);
+    }
+
     private GradeRecordResponse toResponse(GradeRecordEntity e) {
         return new GradeRecordResponse(
                 e.id().toString(), e.gradeItemId().toString(), e.studentId().toString(),

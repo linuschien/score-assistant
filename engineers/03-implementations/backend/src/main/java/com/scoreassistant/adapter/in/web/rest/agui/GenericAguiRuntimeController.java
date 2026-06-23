@@ -10,6 +10,10 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.content.Media;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
@@ -451,18 +455,53 @@ public class GenericAguiRuntimeController {
     }
 
     private Message mapUserMessage(ChatMessageDto msg, boolean isLast) {
-        String content = msg.getContent();
-        if (isLast) {
-            content = "<|think|>\n" + content;
-            log.debug("Injected <|think|> token into the LAST user message: '{}'", content);
-        } else {
-            log.debug("Added User message to prompt context: '{}'", content);
+        StringBuilder textContent = new StringBuilder();
+        List<Media> mediaList = new ArrayList<>();
+
+        if (msg.getContent() != null) {
+            if (msg.getContent().isTextual()) {
+                textContent.append(msg.getContent().asText());
+            } else if (msg.getContent().isArray()) {
+                for (JsonNode part : msg.getContent()) {
+                    if (part.has("type")) {
+                        String type = part.get("type").asText();
+                        if ("text".equals(type) && part.has("text")) {
+                            textContent.append(part.get("text").asText());
+                        } else if ("image".equals(type) && part.has("source")) {
+                            JsonNode source = part.get("source");
+                            if (source.has("type") && "data".equals(source.get("type").asText())) {
+                                String base64 = source.get("value").asText();
+                                String mimeTypeStr = source.has("mimeType") ? source.get("mimeType").asText() : "image/jpeg";
+                                MimeType mimeType = MimeTypeUtils.parseMimeType(mimeTypeStr);
+                                byte[] decodedBytes = java.util.Base64.getDecoder().decode(base64);
+                                ByteArrayResource resource = new ByteArrayResource(decodedBytes);
+                                mediaList.add(new Media(mimeType, resource));
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return new UserMessage(content);
+
+        String finalContent = textContent.toString();
+        if (isLast) {
+            finalContent = "<|think|>\n" + finalContent;
+            log.debug("Injected <|think|> token into the LAST user message: '{}'", finalContent);
+        } else {
+            log.debug("Added User message to prompt context: '{}'", finalContent);
+        }
+
+        if (!mediaList.isEmpty()) {
+            return UserMessage.builder()
+                .text(finalContent)
+                .media(mediaList.toArray(new Media[0]))
+                .build();
+        }
+        return UserMessage.builder().text(finalContent).build();
     }
 
     private Message mapAssistantMessage(ChatMessageDto msg, Map<String, String> toolCallIdToName) {
-        String assistantContent = msg.getContent() != null ? msg.getContent() : "";
+        String assistantContent = msg.getContent() != null && msg.getContent().isTextual() ? msg.getContent().asText() : "";
         if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
             List<AssistantMessage.ToolCall> springToolCalls = new ArrayList<>();
             for (ChatMessageDto.ToolCallDto tc : msg.getToolCalls()) {
@@ -503,7 +542,7 @@ public class GenericAguiRuntimeController {
         } else {
             toolName = toolCallIdToName.getOrDefault(toolCallId, "");
         }
-        String responseContent = msg.getContent() != null ? msg.getContent() : "";
+        String responseContent = msg.getContent() != null && msg.getContent().isTextual() ? msg.getContent().asText() : "";
         
         ToolResponseMessage.ToolResponse toolResponse = new ToolResponseMessage.ToolResponse(toolCallId, toolName, responseContent);
         log.debug("Added ToolResponseMessage: id={}, name={}, content='{}'", toolCallId, toolName, responseContent);

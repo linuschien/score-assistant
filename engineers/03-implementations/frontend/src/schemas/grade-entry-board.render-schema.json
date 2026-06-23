@@ -388,8 +388,16 @@
         "page-breadcrumb",
         "header-section",
         "grade-matrix-section",
-        "attachment-overlay"
+        "attachment-overlay",
+        "attendance-review-tool"
       ]
+    },
+    "attendance-review-tool": {
+      "type": "AttendanceReviewTool",
+      "props": {
+        "id": "attendance-review-tool"
+      },
+      "children": []
     }
   }
 }

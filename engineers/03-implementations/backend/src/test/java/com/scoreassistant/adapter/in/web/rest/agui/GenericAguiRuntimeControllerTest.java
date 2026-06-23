@@ -1,6 +1,7 @@
 package com.scoreassistant.adapter.in.web.rest.agui;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.scoreassistant.adapter.in.web.dto.agui.*;
 import com.scoreassistant.application.agent.AguiAgent;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +63,7 @@ class GenericAguiRuntimeControllerTest {
         when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1, resp2));
 
         AguiChatRequest request = new AguiChatRequest(
-                List.of(new ChatMessageDto("user", "hi")),
+                List.of(new ChatMessageDto("user", TextNode.valueOf("hi"))),
                 List.of(),
                 List.of(),
                 "t1",
@@ -108,7 +109,7 @@ class GenericAguiRuntimeControllerTest {
         when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
 
         AguiChatRequest request = new AguiChatRequest(
-                List.of(new ChatMessageDto("user", "check weather")),
+                List.of(new ChatMessageDto("user", TextNode.valueOf("check weather"))),
                 List.of(),
                 List.of(),
                 "t1",
@@ -151,7 +152,7 @@ class GenericAguiRuntimeControllerTest {
         );
 
         AguiChatRequest request = new AguiChatRequest(
-                List.of(new ChatMessageDto("user", "hi")),
+                List.of(new ChatMessageDto("user", TextNode.valueOf("hi"))),
                 List.of(),
                 List.of(action)
         );
