@@ -67,7 +67,7 @@ export const AttendanceReviewTool: ComponentType<any> = () => {
             const newItem = (await api.post(`${API_BASE}/semesters/${semesterId}/classes/${classId}/grade-items`, {
               itemName: `出席紀錄 - ${new Date().toLocaleDateString()}`,
               itemType: 'ATTENDANCE',
-              maxScore: 100,
+              maxScore: 1,
               weight: 0,
             })) as any;
             gradeItemId = newItem.id;
@@ -78,16 +78,16 @@ export const AttendanceReviewTool: ComponentType<any> = () => {
           }
 
           const statusToScore: Record<string, number> = {
-            PRESENT: 100,
-            ABSENT: 0,
-            LATE: 80,
-            EXCUSED: 0,
+            PRESENT: 1.0,
+            ABSENT: 0.0,
+            LATE: 0.5,
+            EXCUSED: 0.5,
           };
 
           const payload = localRecords.map((r) => ({
             gradeItemId: gradeItemId,
             studentId: r.studentId,
-            score: statusToScore[r.status?.toUpperCase()] ?? 100,
+            score: statusToScore[r.status?.toUpperCase()] ?? 1.0,
           }));
 
           const upsertedRecords = (await api.post(`${API_BASE}/grade-records:batchUpsert`, payload)) as any[];

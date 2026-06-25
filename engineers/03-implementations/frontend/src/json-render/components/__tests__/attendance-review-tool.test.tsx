@@ -86,8 +86,8 @@ describe('AttendanceReviewTool', () => {
       expect(api.post).toHaveBeenCalledTimes(2);
       expect(api.post).toHaveBeenNthCalledWith(1, '/api/v1/semesters/mock-semester-id/classes/mock-class-id/grade-items', expect.any(Object));
       expect(api.post).toHaveBeenNthCalledWith(2, '/api/v1/grade-records:batchUpsert', [
-        { gradeItemId: 'new-grade-item', studentId: 'stu-1', score: 100 },
-        { gradeItemId: 'new-grade-item', studentId: 'stu-2', score: 0 },
+        { gradeItemId: 'new-grade-item', studentId: 'stu-1', score: 1.0 },
+        { gradeItemId: 'new-grade-item', studentId: 'stu-2', score: 0.0 },
       ]);
       expect(mockRespond).toHaveBeenCalledWith('Records saved successfully');
     });
