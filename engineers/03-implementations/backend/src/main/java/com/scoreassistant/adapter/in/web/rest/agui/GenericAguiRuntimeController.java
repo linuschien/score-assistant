@@ -42,6 +42,13 @@ public class GenericAguiRuntimeController {
     private final Map<String, AguiAgent> agentRegistry = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.chat.options.model:}")
+    private String modelName;
+
+    private boolean isGemmaModel() {
+        return modelName != null && modelName.toLowerCase().contains("gemma");
+    }
+
     public GenericAguiRuntimeController(List<AguiAgent> agents, @Autowired(required = false) ObjectMapper objectMapper) {
         this.objectMapper = objectMapper != null ? objectMapper.copy() : new ObjectMapper();
         this.objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -216,7 +223,7 @@ public class GenericAguiRuntimeController {
                 boolean isLast = (i == lastIndex);
                 
                 if ("user".equals(msg.getRole())) {
-                    mapped = mapUserMessage(msg, isLast);
+                    mapped = mapUserMessage(msg, isLast, isGemmaModel());
                 } else if ("assistant".equals(msg.getRole())) {
                     mapped = mapAssistantMessage(msg, toolCallIdToName);
                 } else if ("tool".equals(msg.getRole())) {
@@ -344,19 +351,21 @@ public class GenericAguiRuntimeController {
                 // Revisit this raw string parsing logic after upgrading to Spring AI 2.0.1 GA. 
                 // Once fixed upstream, we can rely purely on `gen.getOutput().getMetadata().get("reasoningContent")`
                 // and remove this state-machine parser.
-                if (content.contains("<think>") || content.contains("<|channel>thought")) {
-                    content = content.replace("<think>", "").replace("<|channel>thought", "");
-                    hasStartedReasoning[0] = true;
-                    log.info("LLM reasoning start: messageId={}", reasoningMessageId);
-                    events.add(AguiEvent.ReasoningStart.of(reasoningMessageId));
-                    events.add(AguiEvent.ReasoningMessageStart.of(reasoningMessageId));
-                }
-                if (content.contains("</think>") || content.contains("<channel|>")) {
-                    content = content.replace("</think>", "").replace("<channel|>", "");
-                    hasStartedReasoning[0] = false;
-                    log.info("LLM reasoning end: messageId={}", reasoningMessageId);
-                    events.add(AguiEvent.ReasoningMessageEnd.of(reasoningMessageId));
-                    events.add(AguiEvent.ReasoningEnd.of(reasoningMessageId));
+                if (isGemmaModel()) {
+                    if (content.contains("<think>") || content.contains("<|channel>thought")) {
+                        content = content.replace("<think>", "").replace("<|channel>thought", "");
+                        hasStartedReasoning[0] = true;
+                        log.info("LLM reasoning start: messageId={}", reasoningMessageId);
+                        events.add(AguiEvent.ReasoningStart.of(reasoningMessageId));
+                        events.add(AguiEvent.ReasoningMessageStart.of(reasoningMessageId));
+                    }
+                    if (content.contains("</think>") || content.contains("<channel|>")) {
+                        content = content.replace("</think>", "").replace("<channel|>", "");
+                        hasStartedReasoning[0] = false;
+                        log.info("LLM reasoning end: messageId={}", reasoningMessageId);
+                        events.add(AguiEvent.ReasoningMessageEnd.of(reasoningMessageId));
+                        events.add(AguiEvent.ReasoningEnd.of(reasoningMessageId));
+                    }
                 }
 
                 if (hasStartedReasoning[0]) {
@@ -454,7 +463,7 @@ public class GenericAguiRuntimeController {
                 .body(Map.of("ok", true));
     }
 
-    private Message mapUserMessage(ChatMessageDto msg, boolean isLast) {
+    private Message mapUserMessage(ChatMessageDto msg, boolean isLast, boolean isGemma) {
         StringBuilder textContent = new StringBuilder();
         List<Media> mediaList = new ArrayList<>();
 
@@ -484,7 +493,7 @@ public class GenericAguiRuntimeController {
         }
 
         String finalContent = textContent.toString();
-        if (isLast) {
+        if (isLast && isGemma) {
             finalContent = "<|think|>\n" + finalContent;
             log.debug("Injected <|think|> token into the LAST user message: '{}'", finalContent);
         } else {
