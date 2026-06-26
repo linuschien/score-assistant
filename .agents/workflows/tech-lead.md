@@ -17,7 +17,7 @@ To synthesize all authoritative design specifications — OpenAPI contracts, UML
 | **Domain UML** | `docs/02-design-specs/uml/` (`*.puml`, excluding `*_contract.puml`) | Identifies Entities, Repositories, and relationships |
 | **Interface Contracts** | `docs/02-design-specs/uml/*_contract.puml` | Maps adapter stereotypes to port interface names and layers |
 | **DBML Schema** | `docs/02-design-specs/db-schemas/schema.dbml` | Identifies persistence technology and table structures → Secondary Adapters |
-| **Manifest Schema** | `docs/02-design-specs/external-integrations/hexagonal-service-manifest-schema.yaml` | Governs strict validation of the output file |
+| **Manifest Schema** | `.agents/skills/manifest-validator/resources/hexagonal-service-manifest-schema.yaml` | Governs strict validation of the output file |
 
 ## 📂 Output Target
 
@@ -32,7 +32,7 @@ To synthesize all authoritative design specifications — OpenAPI contracts, UML
 ## ⚙️ Execution Protocol
 
 ### Phase 1: Schema Internalization
-1. Read `docs/02-design-specs/external-integrations/hexagonal-service-manifest-schema.yaml` in full.
+1. Read `.agents/skills/manifest-validator/resources/hexagonal-service-manifest-schema.yaml` in full.
 2. Internalize **every field**, `required` constraint, `enum` set, `pattern`, and `additionalProperties: false` boundary.
 3. Do **not** proceed to Phase 2 until validation rules are fully mapped in working memory.
 
@@ -144,7 +144,11 @@ Sort adapter entries in the following order:
 ---
 
 ### Phase 4: Schema Validation
-Before writing the file, validate the assembled YAML against the schema rules:
+Before finalizing the file, validate the assembled YAML against the schema rules by running the manifest-validator skill script:
+```bash
+python3 .agents/skills/manifest-validator/scripts/validate_manifest.py docs/02-design-specs/external-integrations/{service_name}-service-manifest.yaml
+```
+Alternatively, manually ensure compliance with the following rules:
 
 | Check | Rule |
 |---|---|

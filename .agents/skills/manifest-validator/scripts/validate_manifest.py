@@ -5,8 +5,13 @@ import os
 
 def validate():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    manifest_path = os.path.join(current_dir, 'score-assistant-service-manifest.yaml')
-    schema_path = os.path.join(current_dir, 'hexagonal-service-manifest-schema.yaml')
+    schema_path = os.path.abspath(os.path.join(current_dir, '..', 'resources', 'hexagonal-service-manifest-schema.yaml'))
+    
+    if len(sys.argv) > 1:
+        manifest_path = sys.argv[1]
+    else:
+        # Default fallback
+        manifest_path = os.path.abspath(os.path.join(current_dir, '..', '..', '..', '..', 'docs', '02-design-specs', 'external-integrations', 'score-assistant-service-manifest.yaml'))
     
     if not os.path.exists(manifest_path):
         print(f"Error: Manifest file not found at '{manifest_path}'")
