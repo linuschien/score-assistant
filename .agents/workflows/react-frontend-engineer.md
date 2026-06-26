@@ -14,7 +14,7 @@ Transpile structured `*.ui-manifest.json` files into runtime-ready flat JSON-ren
 | Source | Path | Role |
 |---|---|---|
 | **UI Manifest(s)** | `docs/02-design-specs/ui-schemas/*.ui-manifest.json` | Authoritative structural spec |
-| **UI Manifest Schema** | `docs/02-design-specs/ui-schemas/ui-manifest-schema.json` | Validates `abstract_type` enum & interaction rules |
+| **UI Manifest Schema** | `.agents/skills/ui-manifest-validator/resources/ui-manifest-schema.json` | Validates `abstract_type` enum & interaction rules |
 | **OpenAPI Contract** | `docs/02-design-specs/api-contracts/openapi.yaml` | REST `operationId` → HTTP method + path + response shape (mutations & single-entity reads) |
 | **Interface Contracts** | `docs/02-design-specs/uml/*_contract.puml` | GraphQL resolver method names → return type + filter input (collection reads via `<<GraphQLResolver>>`) |
 | **Hexagonal Manifest** | `docs/02-design-specs/external-integrations/*.hexagonal-service-manifest.yaml` | Service boundary & port definitions |

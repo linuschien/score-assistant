@@ -124,7 +124,8 @@
                 "label": "刪除",
                 "behavior_ref": "Delete an Attachment",
                 "feedback": {
-                  "on_success": { "type": "toast", "message_key": "success.attachment.deleted" }
+                  "on_success": { "type": "toast", "message_key": "success.attachment.deleted" },
+                  "on_error": { "type": "dialog", "message_key": "error.attachment.deleteFailed" }
                 }
               }
             ]

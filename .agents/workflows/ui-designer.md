@@ -18,7 +18,7 @@ Transform business requirements and behavioral contracts into schema-validated U
 | Behavior Specs | `docs/02-design-specs/behavior-specs/user/` | BDD Scenario titles → `behavior_ref` |
 | OpenAPI Contract | `docs/02-design-specs/api-contracts/openapi.yaml` | `operationId` → `data_ref` |
 | Domain UML | `docs/02-design-specs/uml/` (non-`*_contract.puml`) | Entity attributes, cardinality, date fields |
-| UI Manifest Schema | `docs/02-design-specs/ui-schemas/ui-manifest-schema.json` | Output structure authority |
+| UI Manifest Schema | `.agents/skills/ui-manifest-validator/resources/ui-manifest-schema.json` | Output structure authority |
 
 ## 📂 Output Target
 
