@@ -35,7 +35,7 @@
 6. **external-integrations/ (外部系統整合)**
    - **內容**：外部系統的映射與 Mock 規格。
    - **意義**：作為**防腐層 (Anticorruption Layer)**，將廠商雜亂的暫存器 (如 Modbus `0x4001`) 轉換為系統內部的清潔模型 (如 `Grid_Voltage`)。
-   - **`hexagonal-service-manifest-schema.yaml`**：標準化的六角架構微服務清單 (Hexagonal Microservice Manifest) Schema 定義。它強制執行 Ports 與 Adapters 的嚴格驗證，確保所有的介面與外部實作均遵守架構規範。
+   - **`{service_name}-service-manifest.yaml`**：由 Tech Lead 根據設計規格生成的六角架構微服務清單，定義系統中所有的 Ports 與 Adapters。
 
 ## 📁 工程實作與驗證目錄結構 (engineers/)
 
@@ -101,6 +101,7 @@ Skills 是提供給 Agent 的特定專項能力模組：
 - **docker-image-builder**：自動編譯 React 前端、打包 Spring Boot 後端，並建置安全且極小化體積的 Java 25 Docker 映像檔。
 - **frontend-coding-policy**：強制執行的前端開發規範，涵蓋必填欄位紅星註記、送出前驗證、詳細 Toast 錯誤訊息、ISO 8601 日期格式以及檔案上傳範本。
 - **json-render-transpiler**：確定性轉譯器，將 `ui-manifest.json` 組件樹轉換為輕量級執行期 JSON-render 規格，原生優先使用 `@json-render/shadcn` 的 36 個預置組件。
+- **manifest-validator**：嚴格驗證六角架構微服務清單 (Hexagonal Service Manifest) 是否符合架構拓樸與 Schema 規範的驗證工具。
 - **oas-generator**：將 API 詮釋資料轉換為 OpenAPI 3.2 YAML 的確定性生成器。強制執行回傳碼、Payload 範例、PATCH/PUT 並發控制與 GraphQL 重定向的嚴格標準。
 - **robot-log-analyzer**：自動解析 Robot Framework 的 `output.xml` 測試結果，提取失敗步驟與錯誤訊息，並結合需求與 BDD 規格自動生成標準化的 E2E 測試稽核報告。
 - **vitest-msw-tester**：針對 `@json-render/react` 頁面組件生成確定性的 Vitest + MSW 單元測試。強制使用 userEvent 代替 fireEvent、進行 Store 狀態斷言、驗證 executeBehavior 模擬呼叫以及 MSW 攔截檢查。
