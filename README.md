@@ -104,5 +104,6 @@ Skills 是提供給 Agent 的特定專項能力模組：
 - **manifest-validator**：嚴格驗證六角架構微服務清單 (Hexagonal Service Manifest) 是否符合架構拓樸與 Schema 規範的驗證工具。
 - **oas-generator**：將 API 詮釋資料轉換為 OpenAPI 3.2 YAML 的確定性生成器。強制執行回傳碼、Payload 範例、PATCH/PUT 並發控制與 GraphQL 重定向的嚴格標準。
 - **robot-log-analyzer**：自動解析 Robot Framework 的 `output.xml` 測試結果，提取失敗步驟與錯誤訊息，並結合需求與 BDD 規格自動生成標準化的 E2E 測試稽核報告。
+- **ui-manifest-validator**：嚴格驗證 UI Manifest 檔案 (`*.ui-manifest.json`) 是否符合 Universal SDD UI PIM Meta-Schema 規範的驗證工具。
 - **vitest-msw-tester**：針對 `@json-render/react` 頁面組件生成確定性的 Vitest + MSW 單元測試。強制使用 userEvent 代替 fireEvent、進行 Store 狀態斷言、驗證 executeBehavior 模擬呼叫以及 MSW 攔截檢查。
 ***
