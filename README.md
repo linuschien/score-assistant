@@ -92,6 +92,7 @@ graph TD
 
 Skills 是提供給 Agent 的特定專項能力模組：
 
+- **agui-plugin-builder**：使用 Hexagonal Architecture (LlmPort) 與 `AbstractAguiAgent` 開發 Agentic AI Plugins 的標準框架技能。包含 One-In, One-Out 架構，並提供全新專案 Bootstrapping 時所需的 AGUI 基礎建設檔案。
 - **api-hook-generator**：自 UI Manifests 中作為 `data_ref` 參照的 OpenAPI `operationId` 項目，生成帶有型別的 TanStack Query (React Query) Hook 存根 (Stubs)。
 - **bdd-generator**：將需求轉換為 Gherkin 特性文件 (Features) 的邏輯引擎，並具備 EDA 架構感知能力。
 - **cloud-run-deployer**：將本地建置的 Docker 映像檔推送至 Google Artifact Registry，並對目標 Google Cloud Run 服務觸發無中斷滾動式重新部署。從作用中的 gcloud CLI 上下文讀取 GCP 設定，無需硬編碼憑證。

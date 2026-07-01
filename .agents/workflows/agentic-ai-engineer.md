@@ -27,14 +27,11 @@ Design and implement Agentic AI assistants acting as intelligent plugins that he
 ---
 
 ## ♻️ Reusable AGUI Infrastructure (Do Not Re-implement)
-The following core framework components have already been implemented in the workspace. **DO NOT** rewrite, duplicate, or alter these core components when building new agents. You only need to *use* them:
+The core AGUI framework has been abstracted into the **`agui-plugin-builder`** skill.
+**DO NOT** rewrite or duplicate the core infrastructure (Controllers, Ports, Adapters, Event Mappers) when building new agents.
 
-| Class / File | Purpose & How to Reuse |
-|---|---|
-| `com.scoreassistant.application.agent.AguiAgent` | Interface. Implement this to define a new agent. Do not create new base interfaces. |
-| `com.scoreassistant.adapter.in.web.rest.agui.FrontendToolCallback` | Class. Return instances of this class when defining schema for deferred frontend tools. |
-| `com.scoreassistant.adapter.in.web.rest.agui.GenericAguiRuntimeController` | The universal SSE chat endpoint (`/api/agui/{agentId}/chat`). **Do not write new `@RestController`s for agent chats.** Ensure your new agent implements `AguiAgent` and is a Spring bean; the controller automatically discovers and routes to it. |
-| `com.scoreassistant.adapter.in.web.dto.agui.*` | Use existing DTOs (`AguiEvent`, `AguiChatRequest`, etc.) if manual payload manipulation is needed. |
+If you are working in an existing repository that has the AGUI framework, simply reuse it.
+If you are bootstrapping AGUI in a new repository, copy the necessary framework files from the `resources/` directory inside the **`agui-plugin-builder`** skill.
 
 ---
 
@@ -48,12 +45,12 @@ The following core framework components have already been implemented in the wor
    - **Frontend Tools (AGUI Deferred)**: Any tool requiring user confirmation, DOM reading, or client-side navigation MUST be defined as a `FrontendToolCallback` on the backend and executed via CopilotKit on the frontend.
 
 ### Phase 2 — Backend Agent Implementation (Spring AI 2.0.0+)
-1. Create a class implementing the `AguiAgent` interface.
-2. Define the agent's identity (`getId()`) and initial greeting (`getWelcomeMessage()`).
-3. Craft a precise system instruction (`getSystemInstruction()`) dictating the agent's persona and logic based on the required system behavior.
-4. Implement **Backend Tools** using Spring AI 2.0.0+ `@Tool` annotations or `java.util.function.Function` beans.
-5. Define schemas for **Frontend Tools** using `FrontendToolCallback` so the LLM is aware of the frontend capabilities.
-6. Register the agent in the Spring context (e.g., via `@Bean` or `@Component`).
+1. Use the **`agui-plugin-builder`** skill to guide your implementation.
+2. Create a class extending `AbstractAguiAgent` (not the raw interface).
+3. Define the agent's identity (`getId()`) and initial greeting (`getWelcomeMessage()`).
+4. Craft a precise system instruction (`getSystemInstruction()`) dictating the agent's persona.
+5. Implement **Backend Tools** using Spring AI 2.0.0+ `java.util.function.Function` beans and return their names in `getTools()`.
+6. Register the agent in the Spring context (via `@Component`).
 
 ### Phase 3 — Frontend Integration (CopilotKit V2+)
 1. Ensure the target React page is wrapped with `<CopilotKit url="/api/agui/{agentId}/chat">` pointing to the new agent's AGUI endpoint.
