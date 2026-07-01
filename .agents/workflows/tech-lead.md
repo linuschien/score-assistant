@@ -65,7 +65,10 @@ Execute the following scans **in parallel** and accumulate a unified metadata ta
   |---|---|---|
   | `adapter.in.web.rest` | `Primary` | `domain.ports.input` |
   | `adapter.in.web.graphql` | `Primary` | `domain.ports.input` |
+  | `adapter.in.web.agui` | `Primary` | `domain.ports.input` |
+  | `application.agent` | `Primary` | `domain.ports.input` |
   | `adapter.out.persistence` | `Secondary` | `domain.ports.output` |
+  | `adapter.out.llm` | `Secondary` | `domain.ports.output` |
   | `application.port.in` | `Primary` | `domain.ports.input` |
 
 - For each interface found, record:
@@ -119,17 +122,21 @@ For **each adapter** identified in Phase 2, emit exactly one entry conforming to
 |---|---|---|
 | 1 | REST verbs in OpenAPI + Spring indicators | `Spring WebFlux + Reactor Netty` |
 | 2 | GraphQL path in OpenAPI | `Spring for GraphQL + Reactor Netty` |
-| 3 | DBML Table — no explicit DB comment (default) | `Spring Data R2DBC (H2)` |
-| 4 | DBML Table — comment explicitly states PostgreSQL | `Spring Data R2DBC (PostgreSQL)` |
-| 5 | DBML Table — comment explicitly states MongoDB | `Spring Data MongoDB Reactive` |
-| 6 | DBML Table — comment explicitly states Redis | `Spring Data Redis Reactive` |
-| 7 | Event-driven pub/sub (incoming) in UML | `Spring Integration + RabbitMQ` |
-| 8 | Event-driven pub/sub (outgoing) in UML | `Spring Integration + RabbitMQ` |
+| 3 | AGUI Agent interface or `/api/agui/` path | `Spring AI 2.0.0+ / AGUI Protocol` |
+| 4 | LLM Client interface (`adapter.out.llm`) | `Spring AI 2.0.0+ / LLM API` |
+| 5 | DBML Table — no explicit DB comment (default) | `Spring Data R2DBC (H2)` |
+| 6 | DBML Table — comment explicitly states PostgreSQL | `Spring Data R2DBC (PostgreSQL)` |
+| 7 | DBML Table — comment explicitly states MongoDB | `Spring Data MongoDB Reactive` |
+| 8 | DBML Table — comment explicitly states Redis | `Spring Data Redis Reactive` |
+| 9 | Event-driven pub/sub (incoming) in UML | `Spring Integration + RabbitMQ` |
+| 10 | Event-driven pub/sub (outgoing) in UML | `Spring Integration + RabbitMQ` |
 | — | No clear signal | `FIXME_TECH` ← emit warning in Phase 4 report |
 
 > **DB Selection Policy**: H2 and PostgreSQL both use **Spring Data R2DBC** as the framework layer (via `io.r2dbc:r2dbc-h2` and `io.r2dbc:r2dbc-postgresql` drivers respectively). The default is **H2** (`Spring Data R2DBC (H2)`) for embedded, zero-config development. Upgrade to `Spring Data R2DBC (PostgreSQL)` only when the DBML schema has an explicit comment such as `// db: postgresql`. Never assume a production driver without explicit evidence.
 
 > **Web Server Selection Policy**: All non-blocking reactive web endpoints utilizing **Spring WebFlux** or **Spring for GraphQL** MUST be natively paired with **Reactor Netty** as the underlying asynchronous runtime engine. Assign `tech: "Spring WebFlux + Reactor Netty"` for REST Primary Adapters and `tech: "Spring for GraphQL + Reactor Netty"` for GraphQL Primary Adapters to reflect this mandated combination.
+
+> **Agentic AI Policy**: Any Primary Adapter generated from an `*Agent` interface (in `application.agent` or `adapter.in.web.agui`) MUST be assigned `tech: "Spring AI 2.0.0+ / AGUI Protocol"`. Any Secondary Adapter from an `LlmClient` interface (in `adapter.out.llm`) MUST be assigned `tech: "Spring AI 2.0.0+ / LLM API"`. This reflects the use of CopilotKit V2 frontend components talking to Spring AI LLM abstractions over SSE.
 
 > **Broker Selection Policy**: The designated message broker for all pub/sub event channels is a **lightweight broker** (e.g., RabbitMQ / MQTT). Heavyweight streaming platforms (e.g., Apache Kafka) are **prohibited** unless explicitly approved by the project architect. Always pair the broker with **Spring Integration** for channel routing, message transformation, and adapter wiring.
 
@@ -137,9 +144,11 @@ For **each adapter** identified in Phase 2, emit exactly one entry conforming to
 Sort adapter entries in the following order:
 1. Primary — REST (`adapter.in.web.rest`)
 2. Primary — GraphQL (`adapter.in.web.graphql`)
-3. Primary — Event / pub/sub incoming (`Spring Integration + RabbitMQ`)
-4. Secondary — Persistence (`adapter.out.persistence`)
-5. Secondary — Event / pub/sub outgoing (`Spring Integration + RabbitMQ`)
+3. Primary — Agentic AI (`adapter.in.web.agui`, `application.agent`)
+4. Primary — Event / pub/sub incoming (`Spring Integration + RabbitMQ`)
+5. Secondary — Persistence (`adapter.out.persistence`)
+6. Secondary — Agentic AI LLM API (`adapter.out.llm`)
+7. Secondary — Event / pub/sub outgoing (`Spring Integration + RabbitMQ`)
 
 ---
 
