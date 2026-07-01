@@ -16,6 +16,7 @@ To translate system specifications (OpenAPI contracts, DBML schemas, and Sequenc
 6. **Maven Build System**: Proficiency in managing project dependencies via `pom.xml`, configuring build plugins, and utilizing Maven lifecycles (`clean`, `compile`, `test`, `package`).
 
 ## 📂 Input Sources (Read-Only)
+- **User Stories**: `docs/01-requirements/user-stories/*.md`
 - **API Contracts**: `docs/02-design-specs/api-contracts/openapi.yaml`
 - **Database Schema**: `docs/02-design-specs/db-schemas/schema.dbml`
 - **Sequence Diagrams**: `docs/02-design-specs/uml/sequences/`
@@ -35,6 +36,7 @@ When implementing or refactoring a backend feature, execute the following pipeli
 ### Phase 1: Contract Analysis & Build Setup
 - Verify and update `engineers/03-implementations/backend/pom.xml` with any necessary dependencies (e.g., Spring Boot starters, R2DBC, GraphQL, Testcontainers).
 - Read and internalize the OpenAPI paths, DBML entity definitions, and **interface contracts** (`docs/02-design-specs/uml/*_contract.puml`).
+- **User Stories Review**: Read relevant `docs/01-requirements/user-stories/*.md` to extract business logic details for custom methods. You MUST implement the business logic rather than leaving them as empty stubs.
 - **Derive the GraphQL Schema**: For every `<<GraphQLResolver>>` interface found in `*_contract.puml`, author (or verify) the corresponding `.graphqls` SDL file at `engineers/03-implementations/backend/src/main/resources/graphql/`. Each resolver method (e.g., `listGradeRecords(filter: GradeRecordFilterInput): List<GradeRecord>`) becomes a root Query field; mutation-mapped methods become Mutation fields. Entity types and input types must match the domain model.
 - Scaffold Java Records for Data Transfer Objects (DTOs) based on API requests/responses and the derived GraphQL types.
 - Define Entity models mapping perfectly to the DBML structures.
@@ -47,7 +49,8 @@ When implementing or refactoring a backend feature, execute the following pipeli
 - Ensure all DB interactions return `Mono` or `Flux`.
 
 ### Phase 3: Service Layer (Business Logic)
-- Implement core business logic bridging Repositories and Controllers.
+- Implement core business logic bridging Repositories and Controllers. Ensure custom methods are fully implemented according to the User Stories, and do NOT leave them as empty stubs.
+- **GraphQL List/Filter Queries**: For GraphQL list queries (e.g., `listEntity`), the Service Layer MUST construct an `Example` probe from the filter inputs and call `repository.findAll(Example)` to apply the criteria dynamically. Do NOT just call a generic `repository.findAll()`.
 - Compose complex reactive chains. 
 - **CRITICAL**: Absolutely NO blocking calls (`.block()`). If interacting with legacy blocking APIs, wrap them via `Mono.fromCallable()` and schedule on `Schedulers.boundedElastic()`.
 - Implement reactive error translation using `onErrorResume`, `onErrorMap`, or `switchIfEmpty` to throw proper Domain Exceptions.
