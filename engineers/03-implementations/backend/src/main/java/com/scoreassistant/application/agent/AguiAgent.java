@@ -1,11 +1,8 @@
 package com.scoreassistant.application.agent;
 
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.ai.tool.ToolCallback;
 import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
-import java.util.List;
+import org.springframework.ai.chat.model.ChatResponse;
+import reactor.core.publisher.Flux;
 
 /**
  * Interface representing a task-specific AI Agent compatible with the AGUI runtime.
@@ -18,27 +15,6 @@ public interface AguiAgent {
     String getId();
 
     /**
-     * Gets the configured ChatClient for this Agent.
-     */
-    ChatClient getChatClient();
-
-    /**
-     * Gets the raw ChatModel for this Agent to handle custom tool execution loops.
-     */
-    ChatModel getChatModel();
-
-    /**
-     * Computes the system instruction block for the agent run, dynamically injecting
-     * context from the front-end readables.
-     */
-    String getSystemInstruction(AguiChatRequest request);
-
-    /**
-     * Gets the list of backend tools (Beans with @Tool methods) available to this Agent.
-     */
-    List<Object> getTools();
-
-    /**
      * Gets the welcome message to return when the conversation history is empty.
      */
     default String getWelcomeMessage() {
@@ -46,8 +22,12 @@ public interface AguiAgent {
     }
 
     /**
-     * Creates ChatOptions containing the merged tool callbacks (both backend static tools
-     * and dynamic frontend tools).
+     * Executes the agent interaction using the incoming request, yielding a stream of raw chat responses.
      */
-    ChatOptions getChatOptions(List<ToolCallback> dynamicTools);
+    Flux<ChatResponse> execute(AguiChatRequest request);
+
+    /**
+     * Returns whether the underlying LLM port is a Gemma model (which needs special handling).
+     */
+    boolean isGemmaModel();
 }

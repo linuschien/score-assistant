@@ -7,9 +7,7 @@ import com.scoreassistant.application.agent.AguiAgent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -29,23 +27,15 @@ class GenericAguiRuntimeControllerTest {
 
     private WebTestClient webTestClient;
     private AguiAgent mockAgent;
-    private ChatClient mockChatClient;
-    private ChatModel mockChatModel;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         mockAgent = mock(AguiAgent.class);
-        mockChatClient = mock(ChatClient.class);
-        mockChatModel = mock(ChatModel.class);
         
         when(mockAgent.getId()).thenReturn("test-agent");
-        when(mockAgent.getChatClient()).thenReturn(mockChatClient);
-        when(mockAgent.getChatModel()).thenReturn(mockChatModel);
-        when(mockAgent.getSystemInstruction(any())).thenReturn("Test system instruction");
-        when(mockAgent.getTools()).thenReturn(List.of());
         when(mockAgent.getWelcomeMessage()).thenCallRealMethod();
-        when(mockAgent.getChatOptions(any())).thenReturn(mock(org.springframework.ai.chat.prompt.ChatOptions.class));
+        when(mockAgent.isGemmaModel()).thenReturn(false);
 
         GenericAguiRuntimeController controller = new GenericAguiRuntimeController(
                 List.of(mockAgent),
@@ -60,7 +50,7 @@ class GenericAguiRuntimeControllerTest {
         // Arrange
         ChatResponse resp1 = mockChatResponse("Hello");
         ChatResponse resp2 = mockChatResponse(" world");
-        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1, resp2));
+        when(mockAgent.execute(any(AguiChatRequest.class))).thenReturn(Flux.just(resp1, resp2));
 
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", TextNode.valueOf("hi"))),
@@ -106,7 +96,7 @@ class GenericAguiRuntimeControllerTest {
     void shouldStreamToolCallEvents() {
         // Arrange
         ChatResponse resp1 = mockToolCallResponse("fetchWeather", "{\"city\":\"Taipei\"}");
-        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
+        when(mockAgent.execute(any(AguiChatRequest.class))).thenReturn(Flux.just(resp1));
 
         AguiChatRequest request = new AguiChatRequest(
                 List.of(new ChatMessageDto("user", TextNode.valueOf("check weather"))),
@@ -142,7 +132,7 @@ class GenericAguiRuntimeControllerTest {
     void shouldRegisterFrontendActionsAsDynamicTools() {
         // Arrange
         ChatResponse resp1 = mockChatResponse("Hello");
-        when(mockChatModel.stream(any(Prompt.class))).thenReturn(Flux.just(resp1));
+        when(mockAgent.execute(any(AguiChatRequest.class))).thenReturn(Flux.just(resp1));
 
         // Create a FrontendToolDto representing a frontend tool
         FrontendToolDto action = new FrontendToolDto(
@@ -164,8 +154,7 @@ class GenericAguiRuntimeControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        // Assert that chatModel.stream was called with the Prompt
-        verify(mockChatModel).stream(any(Prompt.class));
+        verify(mockAgent).execute(any(AguiChatRequest.class));
     }
 
     @Test

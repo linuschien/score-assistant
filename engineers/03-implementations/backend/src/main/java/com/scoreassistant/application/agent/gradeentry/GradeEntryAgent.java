@@ -1,9 +1,9 @@
 package com.scoreassistant.application.agent.gradeentry;
 
-import com.scoreassistant.application.agent.AguiAgent;
+import com.scoreassistant.application.agent.AbstractAguiAgent;
 import com.scoreassistant.adapter.in.web.dto.agui.AguiChatRequest;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
+import com.scoreassistant.domain.ports.output.LlmPort;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
@@ -17,30 +17,19 @@ import java.util.List;
  *
  * <p>Tool calls are forwarded to the frontend as AGUI SSE events.</p>
  */
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Component
-public class GradeEntryAgent implements AguiAgent {
+public class GradeEntryAgent extends AbstractAguiAgent {
 
-    private final ChatClient chatClient;
-    private final ChatModel chatModel;
-
-    public GradeEntryAgent(ChatModel chatModel) {
-        this.chatModel = chatModel;
-        this.chatClient = ChatClient.create(chatModel);
+    @Autowired
+    public GradeEntryAgent(LlmPort llmPort, @Autowired(required = false) ObjectMapper objectMapper) {
+        super(llmPort, objectMapper);
     }
 
     @Override
     public String getId() {
         return "grade-entry-agent";
-    }
-
-    @Override
-    public ChatClient getChatClient() {
-        return this.chatClient;
-    }
-
-    @Override
-    public ChatModel getChatModel() {
-        return this.chatModel;
     }
 
     @Override
@@ -82,8 +71,8 @@ public class GradeEntryAgent implements AguiAgent {
     }
 
     @Override
-    public ChatOptions getChatOptions(List<ToolCallback> dynamicTools) {
-        ChatOptions defaultOpts = chatModel.getDefaultOptions();
+    protected ChatOptions getChatOptions(List<ToolCallback> dynamicTools) {
+        ChatOptions defaultOpts = llmPort.getDefaultOptions();
         if (defaultOpts instanceof ToolCallingChatOptions toolCallingOpts) {
             return toolCallingOpts.mutate()
                     .toolCallbacks(dynamicTools)

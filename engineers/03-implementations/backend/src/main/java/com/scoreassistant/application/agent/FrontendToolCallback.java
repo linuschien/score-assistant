@@ -1,4 +1,4 @@
-package com.scoreassistant.adapter.in.web.rest.agui;
+package com.scoreassistant.application.agent;
 
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
@@ -29,7 +29,7 @@ public class FrontendToolCallback implements ToolCallback {
     @Override
     public String call(String toolInput) {
         // This is a stub backend implementation. When the LLM decides to invoke this tool,
-        // the GenericAguiRuntimeController will intercept it from the stream and forward it
+        // the AbstractAguiAgent will intercept it from the stream and forward it
         // as a "tool_call" Server-Sent Event (SSE) to the frontend.
         return "frontend_deferred";
     }
