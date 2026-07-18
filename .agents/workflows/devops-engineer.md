@@ -20,8 +20,8 @@ Before initiating any DevOps action, you MUST analyze the following paths:
 2. **Packaging Phase**:
    - Compile and package the Java Spring Boot backend into a single executable Fat JAR containing both server logic and the static frontend assets.
 3. **Containerization Phase**:
-   - Build a lightweight Docker image using `eclipse-temurin:25-jre-alpine` as the secure base runtime image.
-   - Configure non-root user permissions inside the container to comply with secure coding guidelines.
+   - **MUST USE TEMPLATE**: Copy the highly decoupled, reusable Dockerfile template from `.agents/skills/docker-image-builder/resources/Dockerfile` to `engineers/03-implementations/devops/Dockerfile`.
+   - Build the Docker image using this template, which automatically handles the secure Java 25 Alpine runtime and non-root user configurations.
 4. **Verification Phase**:
    - Locally run the container to verify backend routes (GraphQL/REST) and static frontend rendering.
 

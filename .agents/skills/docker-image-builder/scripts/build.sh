@@ -47,20 +47,26 @@ cd "${BACKEND_DIR}"
 mvn clean package -DskipTests
 echo "✅ Spring Boot backend JAR compiled successfully."
 
+# Retrieve artifact properties from Maven (using tail -n 1 to avoid JVM warnings)
+FINAL_NAME=$(mvn help:evaluate -Dexpression=project.build.finalName -q -DforceStdout | tail -n 1)
+
+# Derive Docker Image Name from the workspace root directory, ensuring valid Docker tag format (lowercase, no spaces)
+IMAGE_NAME=$(basename "${WORKSPACE_ROOT}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
 # 5. Move JAR to DevOps Build Context
 echo ""
 echo "--- 🚚 Step 4: Transferring Artifact to DevOps Context ---"
 # Clear any existing stale JARs in devops directory
 rm -f "${DEVOPS_DIR}"/*.jar
 
-JAR_FILE="${BACKEND_DIR}/target/score-assistant-backend-1.0.0-SNAPSHOT.jar"
+JAR_FILE="${BACKEND_DIR}/target/${FINAL_NAME}.jar"
 if [ ! -f "${JAR_FILE}" ]; then
   echo "❌ Error: Could not locate packaged JAR file at ${JAR_FILE}!"
   exit 1
 fi
 
 echo "Copying ${JAR_FILE} to ${DEVOPS_DIR}..."
-cp "${JAR_FILE}" "${DEVOPS_DIR}/score-assistant-backend-1.0.0-SNAPSHOT.jar"
+cp "${JAR_FILE}" "${DEVOPS_DIR}/${FINAL_NAME}.jar"
 echo "✅ Artifact successfully placed in build context."
 
 # 6. Docker Build
@@ -73,14 +79,14 @@ TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
 TAG="${TIMESTAMP}-${GIT_SHA}"
 
-echo "Building local docker images with tags 'score-assistant:${TAG}' and 'score-assistant:latest'..."
-docker build -t "score-assistant:${TAG}" -t score-assistant:latest .
+echo "Building local docker images with tags '${IMAGE_NAME}:${TAG}' and '${IMAGE_NAME}:latest'..."
+docker build -t "${IMAGE_NAME}:${TAG}" -t "${IMAGE_NAME}:latest" .
 echo "✅ Docker Images built successfully."
 
 # 7. Post-Build Cleanup
 echo ""
 echo "--- 🧹 Step 6: Post-Build Workspace Sanitization ---"
-rm -f "${DEVOPS_DIR}/score-assistant-backend-1.0.0-SNAPSHOT.jar"
+rm -f "${DEVOPS_DIR}/${FINAL_NAME}.jar"
 echo "Cleaning static directory: ${STATIC_DIR}"
 rm -rf "${STATIC_DIR}"
 echo "✅ Transient build JAR and static assets removed. Workspace remains clean."
@@ -88,6 +94,7 @@ echo "✅ Transient build JAR and static assets removed. Workspace remains clean
 echo ""
 echo "======================================================================"
 echo "🎉 DevOps Pipeline: Successfully Containerized Score Assistant!"
-echo "   Image Tags: score-assistant:${TAG}"
-echo "               score-assistant:latest"
+echo "   Image Tags: ${IMAGE_NAME}:${TAG}"
+echo "               ${IMAGE_NAME}:latest"
 echo "======================================================================"
+
