@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Cloud Run Deployer: Tag → Push → Deploy to GCP Cloud Run
-# Prerequisite: a local Docker image named 'score-assistant:latest' must exist.
+# Prerequisite: a local Docker image matching the workspace folder name must exist.
 # ==============================================================================
 set -euo pipefail
 
@@ -33,10 +33,14 @@ if [ -z "${REGION}" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Derive Registry Coordinates
+# 2. Derive Registry Coordinates and Service Name
 # ---------------------------------------------------------------------------
-REPOSITORY="docker"
-IMAGE_NAME="score-assistant"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+
+REPOSITORY="${ARTIFACT_REPOSITORY:-docker}"
+IMAGE_NAME=$(basename "${WORKSPACE_ROOT}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+SERVICE_NAME="${IMAGE_NAME}"
 
 # Find the newest timestamped tag from the local docker daemon by sorting reverse-lexicographically
 TAG=$(docker images "${IMAGE_NAME}" --format '{{.Tag}}' 2>/dev/null | grep -E '^[0-9]{8}-[0-9]{6}' | sort -r | head -n 1 || echo "")
@@ -111,11 +115,11 @@ echo "✅ Image successfully pushed."
 # ---------------------------------------------------------------------------
 echo ""
 echo "--- 🚀 Step 5: Updating Cloud Run Service Image ---"
-echo "Swapping image on service '${IMAGE_NAME}' in '${REGION}'..."
+echo "Swapping image on service '${SERVICE_NAME}' in '${REGION}'..."
 # 'services update --image' ONLY replaces the container image.
 # All existing env vars, volume mounts, IAM bindings, scaling, and
 # traffic splits are preserved untouched.
-gcloud run services update "${IMAGE_NAME}" \
+gcloud run services update "${SERVICE_NAME}" \
   --image="${REGISTRY_URL}" \
   --region="${REGION}" \
   --project="${PROJECT_ID}" \
@@ -125,7 +129,7 @@ gcloud run services update "${IMAGE_NAME}" \
 # ---------------------------------------------------------------------------
 # 8. Print live service URL
 # ---------------------------------------------------------------------------
-SERVICE_URL=$(gcloud run services describe "${IMAGE_NAME}" \
+SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" \
   --region="${REGION}" \
   --project="${PROJECT_ID}" \
   --format='value(status.url)' 2>/dev/null || echo "(URL unavailable)")
